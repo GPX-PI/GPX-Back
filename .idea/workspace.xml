@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="38f299dd-c9d1-4d1e-9267-2461cd39250c" name="Changes" comment="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
+      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/GpxApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/GpxApplication.class" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="David Recovery &lt;davidc.garcia@udea.edu.co&gt;" />
+        <option value="David Recovery" />
+      </list>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;davidc-garciae&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/GPX-PI/GPX-Back&quot;,
+    &quot;accountId&quot;: &quot;a2e1691c-c3b4-4088-a21e-f662f68ccba9&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 1
+}</component>
+  <component name="ProjectId" id="2vQEaUwOtQCngXDFzaKdN0TWqZN" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;JUnit.CategoryControllerTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.EventCategoryControllerTests.executor&quot;: &quot;Debug&quot;,
+    &quot;JUnit.EventCategoryControllerTests.getEventCategoryById_whenCategoryExists_shouldReturnOK.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.EventControllerTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.EventVehicleControllerTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.GPX Tests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.GPX in vueloudea.executor&quot;: &quot;Coverage&quot;,
+    &quot;JUnit.GpxApplicationTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.StageControllerTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.StageResultControllerTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.UserControllerTests.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.VehicleControllerTests.executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;Spring Boot.GpxApplication (1).executor&quot;: &quot;Run&quot;,
+    &quot;Spring Boot.GpxApplication.executor&quot;: &quot;Run&quot;,
+    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/user/Downloads/Proyecto Integrador/GPX-Back&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.repository.indices&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="ReactorSettings">
+    <option name="notificationShown" value="true" />
+  </component>
+  <component name="RecentsManager">
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="com.udea.GPX.controller" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JUnit.GPX Tests">
+    <configuration name="GPX Tests" type="JUnit" factoryName="JUnit" temporary="true">
+      <module name="vueloudea" />
+      <option name="MAIN_CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="TEST_OBJECT" value="directory" />
+      <dir value="$PROJECT_DIR$/src/test/java/com/udea/GPX" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="GpxApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+      <option name="ACTIVE_PROFILES" value="--enable-native-access=ALL-UNNAMED" />
+      <module name="vueloudea" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="com.udea.GPX.GpxApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="JUnit.GPX Tests" />
+      <item itemvalue="Spring Boot.GpxApplication" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.GPX Tests" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-a94e463ab2e7-intellij.indexing.shared.core-IU-243.26053.27" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-IU-243.26053.27" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="38f299dd-c9d1-4d1e-9267-2461cd39250c" name="Changes" comment="" />
+      <created>1744068960437</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1744068960437</updated>
+      <workItem from="1744068961634" duration="1169000" />
+      <workItem from="1744070474183" duration="1270000" />
+      <workItem from="1744118663155" duration="7051000" />
+      <workItem from="1744125802159" duration="1664000" />
+      <workItem from="1744127900771" duration="1277000" />
+    </task>
+    <task id="LOCAL-00001" summary="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
+      <option name="closed" value="true" />
+      <created>1744125281607</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1744125281607</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Add unused setter and getter methods in Category, EventCategory, EventVehicle, and StageResult classes">
+      <option name="closed" value="true" />
+      <created>1744125643706</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1744125643706</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Add unused setter and getter methods in Category, EventCategory, EventVehicle, and StageResult classes">
+      <option name="closed" value="true" />
+      <created>1744126102545</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1744126102545</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Add unused setter and getter methods in Category, EventCategory, EventVehicle, and StageResult classes">
+      <option name="closed" value="true" />
+      <created>1744126116972</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1744126116972</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Add unused setter and getter methods in Category, EventCategory, EventVehicle, and StageResult classes">
+      <option name="closed" value="true" />
+      <created>1744126144445</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1744126144445</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Add unused setter and getter methods in Category, EventCategory, EventVehicle, and StageResult classes">
+      <option name="closed" value="true" />
+      <created>1744126177961</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1744126177961</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
+      <option name="closed" value="true" />
+      <created>1744129129060</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1744129129060</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CODE_SMELLS_PROFILE" value="Project Default" />
+    <option name="CHECK_CODE_CLEANUP_BEFORE_PROJECT_COMMIT_PROFILE" value="Project Default" />
+    <option name="CHECK_CODE_CLEANUP_BEFORE_PROJECT_COMMIT" value="true" />
+    <MESSAGE value="Add unused setter and getter methods in Category, EventCategory, EventVehicle, and StageResult classes" />
+    <MESSAGE value="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities" />
+    <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
+    <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
+  </component>
+  <component name="XDebuggerManager">
+    <watches-manager>
+      <configuration name="JUnit">
+        <watch expression="eventCategoryController" language="JAVA" />
+        <watch expression="eventCategoryController" language="JAVA" />
+        <watch expression="eventCategoryController" language="JAVA" />
+        <watch expression="eventCategoryController" language="JAVA" />
+      </configuration>
+    </watches-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/GPX_Back$GPX_in_vueloudea.ic" NAME="GPX in vueloudea Coverage Results" MODIFIED="1744124736531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true" />
+  </component>
+</project>
