@@ -34,6 +34,20 @@ public class UserService {
         user.setIdentification(updatedUser.getIdentification());
         user.setPhone(updatedUser.getPhone());
         user.setAdmin(updatedUser.isAdmin());
+        user.setEmail(updatedUser.getEmail());
+        user.setRole(updatedUser.getRole());
+        user.setBirthdate(updatedUser.getBirthdate());
+        user.setTypeOfId(updatedUser.getTypeOfId());
+        user.setTeamName(updatedUser.getTeamName());
+        user.setEps(updatedUser.getEps());
+        user.setRh(updatedUser.getRh());
+        user.setEmergencyPhone(updatedUser.getEmergencyPhone());
+        user.setAlergies(updatedUser.getAlergies());
+        user.setWikiloc(updatedUser.getWikiloc());
+        user.setInsurance(updatedUser.getInsurance());
+        user.setTerrapirata(updatedUser.getTerrapirata());
+        user.setInstagram(updatedUser.getInstagram());
+        user.setFacebook(updatedUser.getFacebook());
 
         return userRepository.save(user);
     }

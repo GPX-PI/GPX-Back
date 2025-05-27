@@ -12,6 +12,12 @@ public class Vehicle {
     @Column
     private String name;
 
+    @Column(name = "soat", length = 100)
+    private String soat;
+
+    @Column(name = "plates", length = 10)
+    private String plates;
+
     @ManyToOne
     @JoinColumn(name = "fk_category_id")
     private Category category;
@@ -20,9 +26,11 @@ public class Vehicle {
     @JoinColumn(name = "fk_user_id")
     private User user;
 
-    public Vehicle(Long id, String name, Category category, User user) {
+    public Vehicle(Long id, String name, String soat, String plates, Category category, User user) {
         this.id = id;
         this.name = name;
+        this.soat = soat;
+        this.plates = plates;
         this.category = category;
         this.user = user;
     }
@@ -45,6 +53,22 @@ public class Vehicle {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getSoat() {
+        return soat;
+    }
+
+    public void setSoat(String soat) {
+        this.soat = soat;
+    }
+
+    public String getPlates() {
+        return plates;
+    }
+
+    public void setPlates(String plates) {
+        this.plates = plates;
     }
 
     public Category getCategory() {

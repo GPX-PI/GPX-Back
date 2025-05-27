@@ -63,14 +63,12 @@ categorías de vehículos y los resultados de cada etapa de la carrera.
 - `POST /api/stageresults`: Crea un nuevo resultado de etapa.
 - `PUT /api/stageresults/{id}`: Actualiza un resultado de etapa existente.
 - `DELETE /api/stageresults/{id}`: Elimina un resultado de etapa.
-- `GET /api/stageresults/bycategory?categoryId={categoryId}&stageStart={stageStart}&stageEnd={stageEnd}`: Obtiene
-  resultados por categoría y rango de etapas.
-- `GET /api/stageresults/tiempo-total?vehicleId={vehicleId}&eventId={eventId}`: Calcula el tiempo total de un vehículo
-  en un evento.
-- `GET /api/stageresults/clasificacion?eventId={eventId}&categoryId={categoryId}`: Obtiene la clasificación por
-  categoría en un evento.
-- `GET /api/stageresults/bystagerange?eventId={eventId}&stageStart={stageStart}&stageEnd={stageEnd}`: Obtiene resultados
-  por rango de etapas.
+- `GET /api/stageresults/clasificacion?eventId={eventId}&categoryId={categoryId}`: Obtiene la clasificación por categoría en un evento.
+- `GET /api/stageresults/clasificacion?eventId={eventId}&stageNumber={stageNumber}`: Obtiene la clasificación por etapa en un evento.
+- `GET /api/stageresults/clasificacion?eventId={eventId}`: Obtiene la clasificación general de un evento.
+- `GET /api/stageresults/bystagerange?eventId={eventId}&stageStart={stageStart}&stageEnd={stageEnd}`: Obtiene resultados por rango de etapas (excluye etapas neutralizadas).
+- `POST /api/stageresults/update-elapsed-times/{eventId}`: Calcula y actualiza los tiempos de cada etapa para un evento.
+- `PUT /api/stageresults/penalizacion/{id}?penaltyWaypoint={PT30S}&penaltySpeed={PT10S}&discountClaim={PT5S}`: Aplica penalizaciones o descuentos a un resultado de etapa (los parámetros son opcionales y en formato ISO-8601 de duración, por ejemplo, `PT30S` para 30 segundos).
 
 ### Eventos y Vehículos
 

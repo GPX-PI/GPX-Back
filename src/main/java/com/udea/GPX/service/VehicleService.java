@@ -30,6 +30,8 @@ public class VehicleService {
                 .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
 
         vehicle.setName(updatedVehicle.getName());
+        vehicle.setSoat(updatedVehicle.getSoat());
+        vehicle.setPlates(updatedVehicle.getPlates());
         vehicle.setCategory(updatedVehicle.getCategory());
         vehicle.setUser(updatedVehicle.getUser());
 

@@ -30,6 +30,9 @@ public class StageResult {
     @Column(name = "discount_claim")
     private Duration discountClaim;
 
+    @Column(name = "elapsed_time_seconds")
+    private Integer elapsedTimeSeconds;
+
     @ManyToOne
     @JoinColumn(name = "fk_stage_id", nullable = false)
     private Stage stage;
@@ -38,7 +41,8 @@ public class StageResult {
     @JoinColumn(name = "fk_vehicle_id", nullable = false)
     private Vehicle vehicle;
 
-    public StageResult(Long id, LocalDateTime timestamp, int latitude, int longitude, Duration penaltyWaypoint, Duration penaltySpeed, Duration discountClaim, Stage stage, Vehicle vehicle) {
+    public StageResult(Long id, LocalDateTime timestamp, int latitude, int longitude, Duration penaltyWaypoint,
+            Duration penaltySpeed, Duration discountClaim, Integer elapsedTimeSeconds, Stage stage, Vehicle vehicle) {
         this.id = id;
         this.timestamp = timestamp;
         this.latitude = latitude;
@@ -46,6 +50,7 @@ public class StageResult {
         this.penaltyWaypoint = penaltyWaypoint;
         this.penaltySpeed = penaltySpeed;
         this.discountClaim = discountClaim;
+        this.elapsedTimeSeconds = elapsedTimeSeconds;
         this.stage = stage;
         this.vehicle = vehicle;
     }
@@ -107,6 +112,14 @@ public class StageResult {
 
     public void setDiscountClaim(Duration discountClaim) {
         this.discountClaim = discountClaim;
+    }
+
+    public Integer getElapsedTimeSeconds() {
+        return elapsedTimeSeconds;
+    }
+
+    public void setElapsedTimeSeconds(Integer elapsedTimeSeconds) {
+        this.elapsedTimeSeconds = elapsedTimeSeconds;
     }
 
     public Stage getStage() {

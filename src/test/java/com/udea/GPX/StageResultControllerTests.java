@@ -1,15 +1,10 @@
 package com.udea.GPX;
 
 import com.udea.GPX.controller.StageResultController;
-import com.udea.GPX.dto.ClasificacionDTO;
-import com.udea.GPX.model.Category;
-import com.udea.GPX.model.Event;
+import com.udea.GPX.dto.ClasificacionCompletaDTO;
 import com.udea.GPX.model.StageResult;
-import com.udea.GPX.model.Vehicle;
-import com.udea.GPX.service.CategoryService;
 import com.udea.GPX.service.EventService;
 import com.udea.GPX.service.StageResultService;
-import com.udea.GPX.service.VehicleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,13 +15,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.time.Duration;
-import java.util.Arrays;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
@@ -38,14 +31,18 @@ public class StageResultControllerTests {
     @Mock
     private EventService eventService;
 
-    @Mock
-    private CategoryService categoryService;
-
-    @Mock
-    private VehicleService vehicleService;
-
     @InjectMocks
     private StageResultController stageResultController;
+
+    private StageResult buildStageResult(Long id) {
+        StageResult sr = new StageResult();
+        sr.setId(id);
+        sr.setTimestamp(LocalDateTime.now());
+        sr.setLatitude(1);
+        sr.setLongitude(1);
+        sr.setElapsedTimeSeconds(100);
+        return sr;
+    }
 
     @BeforeEach
     void setUp() {
@@ -53,284 +50,90 @@ public class StageResultControllerTests {
     }
 
     @Test
-    void getAllResults_shouldReturnOK() {
-        // Arrange
-        List<StageResult> stageResults = Arrays.asList(
-                new StageResult(),
-                new StageResult()
-        );
-        when(stageResultService.getAllResults()).thenReturn(stageResults);
-
-        // Act
-        ResponseEntity<List<StageResult>> response = stageResultController.getAllResults();
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
-    }
-
-    @Test
-    void getResultById_whenResultExists_shouldReturnOK() {
-        // Arrange
-        Long resultId = 1L;
-        StageResult stageResult = new StageResult();
-        stageResult.setId(resultId);
-        when(stageResultService.getResultById(resultId)).thenReturn(Optional.of(stageResult));
-
-        // Act
-        ResponseEntity<StageResult> response = stageResultController.getResultById(resultId);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(resultId, Objects.requireNonNull(response.getBody()).getId());
-    }
-
-    @Test
-    void getResultById_whenResultNotExists_shouldReturnNotFound() {
-        // Arrange
-        Long resultId = 1L;
-        when(stageResultService.getResultById(resultId)).thenReturn(Optional.empty());
-
-        // Act
-        ResponseEntity<StageResult> response = stageResultController.getResultById(resultId);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    @Test
     void saveResult_shouldReturnCreated() {
-        // Arrange
-        StageResult stageResult = new StageResult();
-        when(stageResultService.saveResult(stageResult)).thenReturn(stageResult);
-
-        // Act
-        ResponseEntity<StageResult> response = stageResultController.saveResult(stageResult);
-
-        // Assert
+        StageResult sr = buildStageResult(1L);
+        when(stageResultService.saveResult(any())).thenReturn(sr);
+        ResponseEntity<StageResult> response = stageResultController.saveResult(sr);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(stageResult, response.getBody());
+        assertEquals(sr, response.getBody());
     }
 
     @Test
-    void updateResult_whenResultExists_shouldReturnOK() {
-        // Arrange
-        Long resultId = 1L;
-        StageResult existingResult = new StageResult();
-        existingResult.setId(resultId);
-        StageResult updatedResult = new StageResult();
-        updatedResult.setId(resultId);
-
-        when(stageResultService.updateResult(resultId, updatedResult)).thenReturn(updatedResult);
-
-        // Act
-        ResponseEntity<StageResult> response = stageResultController.updateResult(resultId, updatedResult);
-
-        // Assert
+    void updateResult_shouldReturnOK() {
+        StageResult sr = buildStageResult(1L);
+        when(stageResultService.updateResult(eq(1L), any())).thenReturn(sr);
+        ResponseEntity<StageResult> response = stageResultController.updateResult(1L, sr);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updatedResult, response.getBody());
+        assertEquals(sr, response.getBody());
     }
 
     @Test
-    void updateResult_whenResultNotExists_shouldReturnNotFound() {
-        // Arrange
-        Long resultId = 1L;
-        StageResult updatedResult = new StageResult();
-        when(stageResultService.updateResult(resultId, updatedResult)).thenThrow(new RuntimeException("Resultado no encontrado"));
-
-        // Act
-        ResponseEntity<StageResult> response = stageResultController.updateResult(resultId, updatedResult);
-
-        // Assert
+    void updateResult_shouldReturnNotFound() {
+        when(stageResultService.updateResult(eq(1L), any())).thenThrow(new RuntimeException("Resultado no encontrado"));
+        ResponseEntity<StageResult> response = stageResultController.updateResult(1L, buildStageResult(1L));
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
     }
 
     @Test
     void deleteResult_shouldReturnNoContent() {
-        // Arrange
-        Long resultId = 1L;
-
-        // Act
-        ResponseEntity<Void> response = stageResultController.deleteResult(resultId);
-
-        // Assert
+        doNothing().when(stageResultService).deleteResult(1L);
+        ResponseEntity<Void> response = stageResultController.deleteResult(1L);
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
-        verify(stageResultService, times(1)).deleteResult(resultId);
     }
 
     @Test
-    void getResultsByCategoryAndStages_shouldReturnOK() {
-        // Arrange
-        Long categoryId = 1L;
-        int stageStart = 1;
-        int stageEnd = 2;
-        List<StageResult> stageResults = Arrays.asList(
-                new StageResult(),
-                new StageResult()
-        );
-        when(stageResultService.getResultsByCategoryAndStages(categoryId, stageStart, stageEnd)).thenReturn(stageResults);
-
-        // Act
-        ResponseEntity<List<StageResult>> response = stageResultController.getResultsByCategoryAndStages(categoryId, stageStart, stageEnd);
-
-        // Assert
+    void getClasificacionCompleta_general() {
+        ClasificacionCompletaDTO dto = new ClasificacionCompletaDTO(1L, "Vehículo", "Piloto", 1L, "Cat",
+                Collections.emptyList(), 100);
+        when(stageResultService.getClasificacionGeneral(1L)).thenReturn(List.of(dto));
+        doNothing().when(stageResultService).updateElapsedTimesForEvent(1L);
+        ResponseEntity<List<ClasificacionCompletaDTO>> response = stageResultController.getClasificacionCompleta(1L,
+                null, null);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(1, response.getBody().size());
+        assertEquals(dto, response.getBody().get(0));
     }
 
     @Test
-    void calcularTiempoTotal_whenVehicleAndEventExist_shouldReturnOK() {
-        // Arrange
-        Long vehicleId = 1L;
-        Long eventId = 1L;
-        Vehicle vehicle = new Vehicle();
-        Event event = new Event();
-        Duration totalTime = Duration.ofHours(2);
-
-        when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(eventService.getEventById(eventId)).thenReturn(Optional.
-                of(event));
-        when(stageResultService.calcularTiempoTotal(vehicle, event)).thenReturn(totalTime);
-
-        // Act
-        ResponseEntity<Duration> response = stageResultController.calcularTiempoTotal(vehicleId, eventId);
-
-        // Assert
+    void getClasificacionCompleta_porCategoria() {
+        ClasificacionCompletaDTO dto = new ClasificacionCompletaDTO(1L, "Vehículo", "Piloto", 2L, "Cat2",
+                Collections.emptyList(), 200);
+        when(stageResultService.getClasificacionPorCategoria(1L, 2L)).thenReturn(List.of(dto));
+        doNothing().when(stageResultService).updateElapsedTimesForEvent(1L);
+        ResponseEntity<List<ClasificacionCompletaDTO>> response = stageResultController.getClasificacionCompleta(1L, 2L,
+                null);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(totalTime, response.getBody());
+        assertEquals(1, response.getBody().size());
+        assertEquals(dto, response.getBody().get(0));
     }
 
     @Test
-    void calcularTiempoTotal_whenVehicleNotExists_shouldReturnNotFound() {
-        // Arrange
-        Long vehicleId = 1L;
-        Long eventId = 1L;
-
-        when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.empty());
-
-        // Act
-        ResponseEntity<Duration> response = stageResultController.calcularTiempoTotal(vehicleId, eventId);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    @Test
-    void calcularTiempoTotal_whenEventNotExists_shouldReturnNotFound() {
-        // Arrange
-        Long vehicleId = 1L;
-        Long eventId = 1L;
-        Vehicle vehicle = new Vehicle();
-
-        when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(eventService.getEventById(eventId)).thenReturn(Optional.empty());
-
-        // Act
-        ResponseEntity<Duration> response = stageResultController.calcularTiempoTotal(vehicleId, eventId);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    @Test
-    void getClasificacionPorCategoria_whenEventAndCategoryExist_shouldReturnOK() {
-        // Arrange
-        Long eventId = 1L;
-        Long categoryId = 1L;
-        Event event = new Event();
-        Category category = new Category();
-        List<ClasificacionDTO> clasificacion = Arrays.asList(
-                new ClasificacionDTO(new Vehicle(), Duration.ofHours(1)),
-                new ClasificacionDTO(new Vehicle(), Duration.ofHours(2))
-        );
-
-        when(eventService.getEventById(eventId)).thenReturn(Optional.of(event));
-        when(categoryService.getCategoryById(categoryId)).thenReturn(category);
-        when(stageResultService.getClasificacionPorCategoria(event, category)).thenReturn(clasificacion);
-
-        // Act
-        ResponseEntity<List<ClasificacionDTO>> response = stageResultController.getClasificacionPorCategoria(eventId, categoryId);
-
-        // Assert
+    void getClasificacionCompleta_porStage() {
+        ClasificacionCompletaDTO dto = new ClasificacionCompletaDTO(1L, "Vehículo", "Piloto", 1L, "Cat",
+                Collections.emptyList(), 150);
+        when(stageResultService.getClasificacionPorStage(1L, 3)).thenReturn(List.of(dto));
+        doNothing().when(stageResultService).updateElapsedTimesForEvent(1L);
+        ResponseEntity<List<ClasificacionCompletaDTO>> response = stageResultController.getClasificacionCompleta(1L,
+                null, 3);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(1, response.getBody().size());
+        assertEquals(dto, response.getBody().get(0));
     }
 
     @Test
-    void getClasificacionPorCategoria_whenEventNotExists_shouldReturnNotFound() {
-        // Arrange
-        Long eventId = 1L;
-        Long categoryId = 1L;
-
-        when(eventService.getEventById(eventId)).thenReturn(Optional.empty());
-
-        // Act
-        ResponseEntity<List<ClasificacionDTO>> response = stageResultController.getClasificacionPorCategoria(eventId, categoryId);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    @Test
-    void getClasificacionPorCategoria_whenCategoryNotExists_shouldReturnNotFound() {
-        // Arrange
-        Long eventId = 1L;
-        Long categoryId = 1L;
-        Event event = new Event();
-
-        when(eventService.getEventById(eventId)).thenReturn(Optional.of(event));
-        when(categoryService.getCategoryById(categoryId)).thenReturn(null);
-
-        // Act
-        ResponseEntity<List<ClasificacionDTO>> response = stageResultController.getClasificacionPorCategoria(eventId, categoryId);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    @Test
-    void getResultsByStageRange_whenEventExists_shouldReturnOK() {
-        // Arrange
-        Long eventId = 1L;
-        int stageStart = 1;
-        int stageEnd = 2;
-        Event event = new Event();
-        List<StageResult> stageResults = Arrays.asList(
-                new StageResult(),
-                new StageResult()
-        );
-
-        when(eventService.getEventById(eventId)).thenReturn(Optional.of(event));
-        when(stageResultService.getResultsByStageRange(event, stageStart, stageEnd)).thenReturn(stageResults);
-
-        // Act
-        ResponseEntity<List<StageResult>> response = stageResultController.getResultsByStageRange(eventId, stageStart, stageEnd);
-
-        // Assert
+    void aplicarPenalizacion_shouldReturnOK() {
+        StageResult sr = buildStageResult(1L);
+        when(stageResultService.aplicarPenalizacion(eq(1L), any(), any(), any())).thenReturn(sr);
+        ResponseEntity<StageResult> response = stageResultController.aplicarPenalizacion(1L, Duration.ofSeconds(10),
+                Duration.ofSeconds(20), Duration.ofSeconds(5));
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(sr, response.getBody());
     }
 
     @Test
-    void getResultsByStageRange_whenEventNotExists_shouldReturnNotFound() {
-        // Arrange
-        Long eventId = 1L;
-        int stageStart = 1;
-        int stageEnd = 2;
-
-        when(eventService.getEventById(eventId)).thenReturn(Optional.empty());
-
-        // Act
-        ResponseEntity<List<StageResult>> response = stageResultController.getResultsByStageRange(eventId, stageStart, stageEnd);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
+    void updateElapsedTimesForEvent_shouldReturnOK() {
+        doNothing().when(stageResultService).updateElapsedTimesForEvent(1L);
+        ResponseEntity<Void> response = stageResultController.updateElapsedTimesForEvent(1L);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 }

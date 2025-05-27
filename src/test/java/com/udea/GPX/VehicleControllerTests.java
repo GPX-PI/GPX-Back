@@ -41,8 +41,8 @@ public class VehicleControllerTests {
     void getAllVehicles_shouldReturnOK() {
         // Arrange
         List<Vehicle> vehicles = Arrays.asList(
-                new Vehicle(1L, "Carro 1", new Category(), new User()),
-                new Vehicle(2L, "Carro 2", new Category(), new User())
+                new Vehicle(1L, "Carro 1", "SOAT1", "ABC123", new Category(), new User()),
+                new Vehicle(2L, "Carro 2", "SOAT2", "DEF456", new Category(), new User())
         );
         when(vehicleService.getAllVehicles()).thenReturn(vehicles);
 
@@ -58,7 +58,7 @@ public class VehicleControllerTests {
     void getVehicleById_whenVehicleExists_shouldReturnOK() {
         // Arrange
         Long vehicleId = 1L;
-        Vehicle vehicle = new Vehicle(vehicleId, "Carro 1", new Category(), new User());
+        Vehicle vehicle = new Vehicle(vehicleId, "Carro 1", "SOAT1", "ABC123", new Category(), new User());
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
 
         // Act
@@ -86,7 +86,7 @@ public class VehicleControllerTests {
     @Test
     void createVehicle_shouldReturnCreated() {
         // Arrange
-        Vehicle vehicle = new Vehicle(1L, "Carro 1", new Category(), new User());
+        Vehicle vehicle = new Vehicle(1L, "Carro 1", "SOAT1", "ABC123", new Category(), new User());
         when(vehicleService.createVehicle(vehicle)).thenReturn(vehicle);
 
         // Act
@@ -101,8 +101,8 @@ public class VehicleControllerTests {
     void updateVehicle_whenVehicleExists_shouldReturnOK() {
         // Arrange
         Long vehicleId = 1L;
-        Vehicle existingVehicle = new Vehicle(vehicleId, "Carro 1", new Category(), new User());
-        Vehicle updatedVehicle = new Vehicle(vehicleId, "Carro Actualizado", new Category(), new User());
+        Vehicle existingVehicle = new Vehicle(vehicleId, "Carro 1", "SOAT1", "ABC123", new Category(), new User());
+        Vehicle updatedVehicle = new Vehicle(vehicleId, "Carro Actualizado", "SOAT2", "DEF456", new Category(), new User());
         when(vehicleService.updateVehicle(vehicleId, updatedVehicle)).thenReturn(updatedVehicle);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(existingVehicle));
 
@@ -118,7 +118,7 @@ public class VehicleControllerTests {
     void updateVehicle_whenVehicleNotExists_shouldReturnNotFound() {
         // Arrange
         Long vehicleId = 1L;
-        Vehicle updatedVehicle = new Vehicle(vehicleId, "Carro Actualizado", new Category(), new User());
+        Vehicle updatedVehicle = new Vehicle(vehicleId, "Carro Actualizado", "SOAT2", "DEF456", new Category(), new User());
         when(vehicleService.updateVehicle(vehicleId, updatedVehicle)).thenThrow(new RuntimeException("Vehículo no encontrado"));
 
         // Act
@@ -136,8 +136,8 @@ public class VehicleControllerTests {
         Category category = new Category();
         category.setId(categoryId);
         List<Vehicle> vehicles = Arrays.asList(
-                new Vehicle(1L, "Carro 1", category, new User()),
-                new Vehicle(2L, "Carro 2", category, new User())
+                new Vehicle(1L, "Carro 1", "SOAT1", "ABC123", category, new User()),
+                new Vehicle(2L, "Carro 2", "SOAT2", "DEF456", category, new User())
         );
         when(vehicleService.getAllVehicles()).thenReturn(vehicles);
 
@@ -156,8 +156,8 @@ public class VehicleControllerTests {
         User user = new User();
         user.setId(userId);
         List<Vehicle> vehicles = Arrays.asList(
-                new Vehicle(1L, "Carro 1", new Category(), user),
-                new Vehicle(2L, "Carro 2", new Category(), user)
+                new Vehicle(1L, "Carro 1", "SOAT1", "ABC123", new Category(), user),
+                new Vehicle(2L, "Carro 2", "SOAT2", "DEF456", new Category(), user)
         );
         when(vehicleService.getAllVehicles()).thenReturn(vehicles);
 
