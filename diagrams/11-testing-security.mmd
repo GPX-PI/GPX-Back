@@ -1,0 +1,88 @@
+graph TB
+    subgraph "🧪 Testing Architecture"
+        subgraph "Test Configuration"
+            TC1[MockitoExtension]
+            TC2[@Mock SecurityContext]
+            TC3[@Mock Authentication] 
+            TC4[@Mock HttpServletRequest]
+            TC5[ReflectionTestUtils]
+        end
+        
+        subgraph "Security Testing Patterns"
+            ST1[Admin User Mocking]
+            ST2[Regular User Mocking]
+            ST3[Static Method Handling]
+            ST4[Authentication Principal Setup]
+        end
+        
+        subgraph "Test Categories"
+            TT1[🔐 Authentication Tests]
+            TT2[🛡️ Authorization Tests]
+            TT3[📊 Business Logic Tests]
+            TT4[🚨 Error Handling Tests]
+        end
+    end
+    
+    subgraph "🔧 Mock Setup Process"
+        MS1[when\(authentication.getPrincipal\(\)\)]
+        MS2[thenReturn\(userWithAdminStatus\)]
+        MS3[SecurityContextHolder setup]
+        MS4[HttpServletRequest injection]
+    end
+    
+    subgraph "🎯 Test Scenarios"
+        TS1[Admin creates/updates/deletes]
+        TS2[Regular user access own resources]
+        TS3[Regular user blocked from admin actions]
+        TS4[OAuth2 user profile completion]
+        TS5[JWT token validation]
+    end
+    
+    subgraph "📋 Updated Test Files"
+        TF1[UserControllerTests ✅]
+        TF2[StageResultControllerTests ✅]
+        TF3[EventVehicleControllerTests ✅]
+        TF4[EventCategoryControllerTests ✅]
+        TF5[OAuth2ControllerTests ✅]
+        TF6[VehicleControllerTests ✅]
+    end
+    
+    subgraph "🐛 Fixed Issues"
+        FI1[Removed duplicate getGoogleLoginUrl test]
+        FI2[Fixed pom.xml versions compatibility]
+        FI3[Added missing @GetMapping annotations]
+        FI4[Consistent service method calls]
+    end
+    
+    TC1 --> ST1
+    TC2 --> MS1
+    TC3 --> MS2
+    TC4 --> MS4
+    TC5 --> MS4
+    
+    ST1 --> TS1
+    ST2 --> TS2
+    ST3 --> TS3
+    ST4 --> TS4
+    
+    MS1 --> TT2
+    MS2 --> TT1
+    MS3 --> TT3
+    MS4 --> TT4
+    
+    TT1 --> TF1
+    TT2 --> TF2
+    TT3 --> TF3
+    TT4 --> TF4
+    
+    FI1 --> TF5
+    FI2 --> TF6
+    FI3 --> TF4
+    FI4 --> TF2
+    
+    style TF1 fill:#90EE90
+    style TF2 fill:#90EE90
+    style TF3 fill:#90EE90
+    style TF4 fill:#90EE90
+    style TF5 fill:#90EE90
+    style TF6 fill:#90EE90 

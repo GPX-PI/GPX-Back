@@ -10,11 +10,13 @@ public class ClasificacionCompletaDTO {
     private String categoryName;
     private List<StageTimeCellDTO> stageTimes; // Cambiado a lista de DTOs
     private Integer totalTime; // Tiempo total acumulado
+    private String userPicture;
+    private String teamName;
 
     // Constructor
     public ClasificacionCompletaDTO(Long vehicleId, String vehicleName, String driverName,
             Long categoryId, String categoryName,
-            List<StageTimeCellDTO> stageTimes, Integer totalTime) {
+            List<StageTimeCellDTO> stageTimes, Integer totalTime, String userPicture, String teamName) {
         this.vehicleId = vehicleId;
         this.vehicleName = vehicleName;
         this.driverName = driverName;
@@ -22,6 +24,8 @@ public class ClasificacionCompletaDTO {
         this.categoryName = categoryName;
         this.stageTimes = stageTimes;
         this.totalTime = totalTime;
+        this.userPicture = userPicture;
+        this.teamName = teamName;
     }
 
     public Long getVehicleId() {
@@ -78,6 +82,22 @@ public class ClasificacionCompletaDTO {
 
     public void setTotalTime(Integer totalTime) {
         this.totalTime = totalTime;
+    }
+
+    public String getUserPicture() {
+        return userPicture;
+    }
+
+    public void setUserPicture(String userPicture) {
+        this.userPicture = userPicture;
+    }
+
+    public String getTeamName() {
+        return teamName;
+    }
+
+    public void setTeamName(String teamName) {
+        this.teamName = teamName;
     }
 
     // DTO para cada celda de tiempo de etapa

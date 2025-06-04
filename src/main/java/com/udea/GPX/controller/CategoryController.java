@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -18,6 +19,10 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
+    @SuppressWarnings("unused")
+    @Autowired
+    private HttpServletRequest request;
+
     @GetMapping
     public ResponseEntity<List<Category>> getAllCategories() {
         return ResponseEntity.ok(categoryService.getAllCategories());
@@ -26,8 +31,6 @@ public class CategoryController {
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
         Category category = categoryService.getCategoryById(id);
-        return category != null ?
-                ResponseEntity.ok(category) :
-                ResponseEntity.notFound().build();
+        return category != null ? ResponseEntity.ok(category) : ResponseEntity.notFound().build();
     }
 }

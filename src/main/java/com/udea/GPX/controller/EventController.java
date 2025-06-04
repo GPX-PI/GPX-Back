@@ -2,15 +2,15 @@ package com.udea.GPX.controller;
 
 import com.udea.GPX.model.Event;
 import com.udea.GPX.model.EventCategory;
+import com.udea.GPX.model.User;
 import com.udea.GPX.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
 import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/events")
@@ -18,6 +18,10 @@ public class EventController {
 
     @Autowired
     private EventService eventService;
+
+    @SuppressWarnings("unused")
+    @Autowired
+    private HttpServletRequest request;
 
     @GetMapping
     public ResponseEntity<List<Event>> getAllEvents() {
@@ -31,20 +35,32 @@ public class EventController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/bydate")
-    public ResponseEntity<List<Event>> getEventsByDate(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return ResponseEntity.ok(eventService.getEventsByDate(date));
+    @GetMapping("/current")
+    public ResponseEntity<List<Event>> getCurrentEvents() {
+        return ResponseEntity.ok(eventService.getCurrentEvents());
+    }
+
+    @GetMapping("/past")
+    public ResponseEntity<List<Event>> getPastEvents() {
+        return ResponseEntity.ok(eventService.getPastEvents());
     }
 
     @PostMapping
     public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+        User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!authUser.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(eventService.createEvent(event));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event event) {
+        User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!authUser.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         try {
             return ResponseEntity.ok(eventService.updateEvent(id, event));
         } catch (RuntimeException e) {
@@ -54,6 +70,10 @@ public class EventController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
+        User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!authUser.isAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
     }

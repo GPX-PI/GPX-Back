@@ -126,6 +126,8 @@ public class StageResultService {
                     String driverName = vehicle.getUser() != null
                             ? (vehicle.getUser().getFirstName() + " " + vehicle.getUser().getLastName())
                             : "";
+                    String userPicture = vehicle.getUser() != null ? vehicle.getUser().getPicture() : "";
+                    String teamName = vehicle.getUser() != null ? vehicle.getUser().getTeamName() : "";
                     // Crear lista de StageTimeCellDTO con penalizaciones y descuentos
                     List<ClasificacionCompletaDTO.StageTimeCellDTO> stageTimes = vehicleResults.stream()
                             .collect(Collectors.toMap(
@@ -152,7 +154,9 @@ public class StageResultService {
                             vehicle.getCategory().getId(),
                             vehicle.getCategory().getName(),
                             stageTimes,
-                            totalTime);
+                            totalTime,
+                            userPicture,
+                            teamName);
                 })
                 .sorted(Comparator.comparing(ClasificacionCompletaDTO::getTotalTime))
                 .collect(Collectors.toList());
@@ -165,6 +169,8 @@ public class StageResultService {
                     String driverName = vehicle.getUser() != null
                             ? (vehicle.getUser().getFirstName() + " " + vehicle.getUser().getLastName())
                             : "";
+                    String userPicture = vehicle.getUser() != null ? vehicle.getUser().getPicture() : "";
+                    String teamName = vehicle.getUser() != null ? vehicle.getUser().getTeamName() : "";
                     ClasificacionCompletaDTO.StageTimeCellDTO cell = new ClasificacionCompletaDTO.StageTimeCellDTO(
                             stageNumber,
                             r.getElapsedTimeSeconds() != null ? r.getElapsedTimeSeconds() : 0,
@@ -180,7 +186,9 @@ public class StageResultService {
                             vehicle.getCategory().getId(),
                             vehicle.getCategory().getName(),
                             stageTimes,
-                            cell.getAdjustedTimeSeconds());
+                            cell.getAdjustedTimeSeconds(),
+                            userPicture,
+                            teamName);
                 })
                 .sorted(Comparator.comparing(c -> c.getStageTimes().get(0).getAdjustedTimeSeconds()))
                 .collect(Collectors.toList());

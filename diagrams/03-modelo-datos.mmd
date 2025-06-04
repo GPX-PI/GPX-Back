@@ -1,0 +1,71 @@
+erDiagram
+    USER {
+        Long id PK
+        String name
+        String email
+        boolean isAdmin
+        String picture
+        String team
+    }
+    
+    VEHICLE {
+        Long id PK
+        String model
+        String brand
+        Long userId FK
+        Long categoryId FK
+    }
+    
+    EVENT {
+        Long id PK
+        String name
+        Date startDate
+        Date endDate
+        String location
+    }
+    
+    STAGE {
+        Long id PK
+        String name
+        Long eventId FK
+        Integer stageNumber
+        String description
+    }
+    
+    CATEGORY {
+        Long id PK
+        String name
+        String description
+    }
+    
+    EVENT_VEHICLE {
+        Long id PK
+        Long eventId FK
+        Long vehicleId FK
+        Date registrationDate
+    }
+    
+    EVENT_CATEGORY {
+        Long id PK
+        Long eventId FK
+        Long categoryId FK
+    }
+    
+    STAGE_RESULT {
+        Long id PK
+        Long stageId FK
+        Long vehicleId FK
+        Duration time
+        Duration penalty
+        Integer position
+    }
+    
+    USER ||--o{ VEHICLE : owns
+    VEHICLE }o--|| CATEGORY : belongs_to
+    EVENT ||--o{ STAGE : contains
+    EVENT ||--o{ EVENT_VEHICLE : has_participants
+    EVENT ||--o{ EVENT_CATEGORY : has_categories
+    VEHICLE ||--o{ EVENT_VEHICLE : participates_in
+    CATEGORY ||--o{ EVENT_CATEGORY : categorizes
+    STAGE ||--o{ STAGE_RESULT : has_results
+    VEHICLE ||--o{ STAGE_RESULT : achieves 

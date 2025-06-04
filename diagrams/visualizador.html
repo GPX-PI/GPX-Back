@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramas GPX - Sistema de Gestión de Carreras</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.7.0/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+        .diagram-section {
+            margin-bottom: 50px;
+            padding: 20px;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+        .diagram-title {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #3498db;
+        }
+        .diagram-description {
+            color: #555;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+        .mermaid {
+            text-align: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .nav-menu {
+            background-color: #34495e;
+            padding: 15px;
+            margin: -30px -30px 30px -30px;
+            border-radius: 10px 10px 0 0;
+        }
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .nav-menu a:hover {
+            background-color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-menu">
+            <a href="#arquitectura">🏗️ Arquitectura</a>
+            <a href="#autenticacion">🔐 Autenticación</a>
+            <a href="#oauth2">🌐 OAuth2 Google</a>
+            <a href="#modelo">📊 Modelo de Datos</a>
+            <a href="#flujo-carrera">🏁 Flujo de Carrera</a>
+            <a href="#permisos">🔒 Permisos</a>
+            <a href="#clasificaciones">📈 Clasificaciones</a>
+            <a href="#testing">🧪 Testing</a>
+        </div>
+
+        <h1>🏁 Sistema GPX - Gestión de Carreras</h1>
+        <p class="subtitle">Diagramas de Arquitectura y Funcionamiento</p>
+
+        <div id="arquitectura" class="diagram-section">
+            <h2 class="diagram-title">🏗️ 1. Arquitectura General del Sistema</h2>
+            <p class="diagram-description">
+                Muestra la estructura completa de la aplicación con las capas de seguridad, controladores, servicios y datos.
+            </p>
+            <div class="mermaid">
+graph TB
+    subgraph "Frontend"
+        UI[Usuario Frontend]
+    end
+    
+    subgraph "Security Layer"
+        JWT[JWT Authentication]
+        AUTH[Spring Security]
+    end
+    
+    subgraph "Controller Layer"
+        UC[UserController]
+        VC[VehicleController]
+        EC[EventController]
+        SC[StageController]
+        SRC[StageResultController]
+        EVC[EventVehicleController]
+        ECC[EventCategoryController]
+        CC[CategoryController]
+    end
+    
+    subgraph "Service Layer"
+        US[UserService]
+        VS[VehicleService]
+        ES[EventService]
+        SS[StageService]
+        SRS[StageResultService]
+        EVS[EventVehicleService]
+        ECS[EventCategoryService]
+        CS[CategoryService]
+    end
+    
+    subgraph "Data Layer"
+        DB[(Base de Datos)]
+    end
+    
+    UI --> JWT
+    JWT --> AUTH
+    AUTH --> UC
+    AUTH --> VC
+    AUTH --> EC
+    AUTH --> SC
+    AUTH --> SRC
+    AUTH --> EVC
+    AUTH --> ECC
+    AUTH --> CC
+    
+    UC --> US
+    VC --> VS
+    EC --> ES
+    SC --> SS
+    SRC --> SRS
+    EVC --> EVS
+    ECC --> ECS
+    CC --> CS
+    
+    US --> DB
+    VS --> DB
+    ES --> DB
+    SS --> DB
+    SRS --> DB
+    EVS --> DB
+    ECS --> DB
+    CS --> DB
+            </div>
+        </div>
+
+        <div id="autenticacion" class="diagram-section">
+            <h2 class="diagram-title">🔐 2. Flujo de Autenticación y Autorización</h2>
+            <p class="diagram-description">
+                Diagrama de secuencia que muestra cómo funciona la autenticación JWT y OAuth2, y la autorización en cada request.
+            </p>
+            <div class="mermaid">
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant B as Backend
+    participant JWT as JwtUtil
+    participant SC as SecurityContext
+    participant G as Google OAuth
+    participant DB as Base de Datos
+    
+    Note over U,DB: Login tradicional (email/password)
+    U->>F: Login (email, password)
+    F->>B: POST /api/users/login
+    B->>DB: Verificar credenciales
+    DB-->>B: Usuario válido
+    B->>JWT: Generar token
+    JWT-->>B: Token JWT
+    B-->>F: Token + info usuario
+    
+    Note over U,DB: Login con Google OAuth2
+    U->>F: Clic "Login con Google"
+    F->>B: GET /api/users/oauth2/login-url
+    B-->>F: URL de Google OAuth
+    F->>G: Redirige a Google
+    G-->>U: Pantalla de autorización
+    U->>G: Autoriza aplicación
+    G->>B: Callback con código
+    B->>G: Intercambiar código por token
+    G-->>B: User info de Google
+    B->>DB: Buscar/crear usuario
+    DB-->>B: Usuario OAuth2
+    B->>JWT: Generar token JWT
+    JWT-->>B: Token JWT
+    B->>F: Redirige con token
+    
+    Note over U,DB: Para solicitudes posteriores (ambos tipos):
+    U->>F: Solicitud + Token JWT
+    F->>B: Request con Authorization header
+    B->>JWT: Validar token
+    JWT->>SC: Establecer Authentication
+    SC->>B: User principal
+    B->>B: Verificar permisos (isAdmin/isOwner)
+    alt Autorizado
+        B->>DB: Ejecutar operación
+        DB-->>B: Resultado
+        B-->>F: Respuesta exitosa
+        F-->>U: Resultado
+    else No autorizado
+        B-->>F: 403 Forbidden
+        F-->>U: Error de permisos
+    end
+            </div>
+        </div>
+
+        <div id="oauth2" class="diagram-section">
+            <h2 class="diagram-title">🌐 3. Flujo OAuth2 con Google</h2>
+            <p class="diagram-description">
+                Diagrama detallado del flujo de autenticación OAuth2 con Google, desde el inicio hasta la generación del JWT.
+            </p>
+            <div class="mermaid">
+sequenceDiagram
+    participant U as Usuario
+    participant F as Frontend
+    participant B as Backend
+    participant G as Google OAuth2
+    participant DB as Base de Datos
+    participant JWT as JWT Service
+    
+    Note over U,DB: Inicio del flujo OAuth2
+    U->>F: Clic "Iniciar sesión con Google"
+    F->>B: GET /api/users/oauth2/login-url
+    B-->>F: {loginUrl: "/oauth2/authorization/google"}
+    
+    Note over U,DB: Redirección a Google
+    F->>B: Redirige a /oauth2/authorization/google
+    B->>G: Redirige con client_id y scopes
+    G-->>U: Muestra pantalla de consentimiento
+    
+    Note over U,DB: Autorización del usuario
+    U->>G: Concede permisos (email, profile)
+    G->>B: Callback: /login/oauth2/code/google?code=AUTH_CODE
+    
+    Note over U,DB: Intercambio de código por token
+    B->>G: POST /token (code, client_id, client_secret)
+    G-->>B: Access token + User info
+    
+    Note over U,DB: Procesamiento del usuario
+    B->>B: OAuth2Service.processOAuth2User()
+    B->>DB: Buscar usuario por email
+    
+    alt Usuario existente
+        DB-->>B: Usuario encontrado
+        B->>B: Actualizar googleId si es necesario
+        B->>DB: Guardar cambios
+    else Usuario nuevo
+        B->>B: Crear usuario desde info de Google
+        B->>DB: Guardar nuevo usuario
+        DB-->>B: Usuario creado
+    end
+    
+    Note over U,DB: Generación de JWT y redirección
+    B->>JWT: generateToken(userId, isAdmin)
+    JWT-->>B: JWT token
+    B->>F: Redirige a frontend con parámetros
+    Note right of B: URL: /oauth2/redirect?token=JWT&userId=123&admin=false&provider=google
+    
+    Note over U,DB: Manejo en frontend
+    F->>F: Extraer token de URL
+    F->>F: Guardar token en localStorage
+    F->>F: Establecer estado de autenticación
+    F-->>U: Usuario autenticado y redirigido
+    
+    Note over U,DB: Uso del token en requests posteriores
+    U->>F: Navegar a página protegida
+    F->>B: Request con Authorization: Bearer JWT
+    B->>B: JwtRequestFilter valida token
+    B->>DB: Buscar usuario por ID del token
+    DB-->>B: Usuario válido
+    B-->>F: Respuesta autorizada
+    F-->>U: Contenido mostrado
+            </div>
+        </div>
+
+        <div id="modelo" class="diagram-section">
+            <h2 class="diagram-title">📊 4. Modelo de Datos y Relaciones</h2>
+            <p class="diagram-description">
+                Diagrama ER que muestra todas las entidades del sistema y sus relaciones.
+            </p>
+            <div class="mermaid">
+erDiagram
+    USER {
+        Long id PK
+        String name
+        String email
+        boolean isAdmin
+        String picture
+        String team
+    }
+    
+    VEHICLE {
+        Long id PK
+        String model
+        String brand
+        Long userId FK
+        Long categoryId FK
+    }
+    
+    EVENT {
+        Long id PK
+        String name
+        Date startDate
+        Date endDate
+        String location
+    }
+    
+    STAGE {
+        Long id PK
+        String name
+        Long eventId FK
+        Integer stageNumber
+        String description
+    }
+    
+    CATEGORY {
+        Long id PK
+        String name
+        String description
+    }
+    
+    EVENT_VEHICLE {
+        Long id PK
+        Long eventId FK
+        Long vehicleId FK
+        Date registrationDate
+    }
+    
+    EVENT_CATEGORY {
+        Long id PK
+        Long eventId FK
+        Long categoryId FK
+    }
+    
+    STAGE_RESULT {
+        Long id PK
+        Long stageId FK
+        Long vehicleId FK
+        Duration time
+        Duration penalty
+        Integer position
+    }
+    
+    USER ||--o{ VEHICLE : owns
+    VEHICLE }o--|| CATEGORY : belongs_to
+    EVENT ||--o{ STAGE : contains
+    EVENT ||--o{ EVENT_VEHICLE : has_participants
+    EVENT ||--o{ EVENT_CATEGORY : has_categories
+    VEHICLE ||--o{ EVENT_VEHICLE : participates_in
+    CATEGORY ||--o{ EVENT_CATEGORY : categorizes
+    STAGE ||--o{ STAGE_RESULT : has_results
+    VEHICLE ||--o{ STAGE_RESULT : achieves
+            </div>
+        </div>
+
+        <div id="flujo-carrera" class="diagram-section">
+            <h2 class="diagram-title">🏁 5. Flujo Típico de una Carrera/Evento</h2>
+            <p class="diagram-description">
+                Flowchart que muestra el proceso completo desde la creación de un evento hasta la clasificación final.
+            </p>
+            <div class="mermaid">
+flowchart TD
+    A[Admin crea Evento] --> B[Admin define Etapas]
+    B --> C[Admin configura Categorías del Evento]
+    C --> D[Usuarios registran Vehículos]
+    D --> E[Vehículos se inscriben al Evento]
+    E --> F[Comienza la Carrera]
+    F --> G[Se registran Tiempos por Etapa]
+    G --> H{¿Hay penalizaciones?}
+    H -->|Sí| I[Admin aplica penalizaciones]
+    H -->|No| J[Calcular clasificaciones]
+    I --> J
+    J --> K[Generar clasificación completa]
+    K --> L{¿Más etapas?}
+    L -->|Sí| G
+    L -->|No| M[Evento finalizado]
+    M --> N[Clasificación final disponible]
+            </div>
+        </div>
+
+        <div id="permisos" class="diagram-section">
+            <h2 class="diagram-title">🔒 6. Sistema de Permisos por Endpoint (ACTUALIZADO)</h2>
+            <p class="diagram-description">
+                Muestra qué endpoints son públicos, cuáles requieren ser administrador y cuáles permiten acceso al propietario. Incluye nuevos endpoints OAuth2.
+            </p>
+            <div class="mermaid">
+graph LR
+    subgraph "Endpoints Públicos"
+        P1[GET /api/categories]
+        P2[POST /api/users/login]
+        P3[POST /api/users/simple-register]
+        P4[GET /api/events/current]
+        P5[GET /api/events/past]
+        P6[GET /api/users/oauth2/login-url]
+        P7[GET /oauth2/authorization/google]
+        P8[GET /api/users/check-email]
+        P9[GET /login/oauth2/code/google]
+    end
+    
+    subgraph "Solo Administradores"
+        A1[GET /api/users]
+        A2[GET /api/users/admins]
+        A3[GET /api/vehicles]
+        A4[POST/PUT/DELETE /api/events]
+        A5[POST/PUT/DELETE /api/stages]
+        A6[GET /api/event-vehicles]
+        A7[Aplicar penalizaciones]
+        A8[Gestión clasificaciones]
+    end
+    
+    subgraph "Usuario/Propietario Autenticado"
+        U1[GET /api/users/:id propio]
+        U2[PUT /api/users/:id propio]
+        U3[GET /api/vehicles/:id propios]
+        U4[POST /api/vehicles]
+        U5[PUT/DELETE /api/vehicles propios]
+        U6[Gestión EventVehicle propios]
+        U7[POST /api/users/:id/complete-profile]
+        U8[GET /api/oauth2/profile-status]
+    end
+    
+    subgraph "Mixtos Admin/Propietario"
+        M1[StageResults]
+        M2[EventVehicles específicos]
+        M3[Vehículos por usuario]
+    end
+    
+    subgraph "Callbacks OAuth2"
+        O1[GET /api/oauth2/success]
+        O2[Frontend redirect handling]
+    end
+            </div>
+        </div>
+
+        <div id="clasificaciones" class="diagram-section">
+            <h2 class="diagram-title">📈 7. Flujo de Generación de Clasificaciones</h2>
+            <p class="diagram-description">
+                Diagrama de secuencia que detalla cómo se generan las clasificaciones por etapa y general, incluyendo penalizaciones.
+            </p>
+            <div class="mermaid">
+sequenceDiagram
+    participant A as Admin
+    participant SRC as StageResultController
+    participant SRS as StageResultService
+    participant DB as Database
+    
+    Note over A,DB: Obtener clasificación por etapa
+    A->>SRC: GET /api/stage-results/clasificacion/stage/{id}
+    SRC->>SRS: getClasificacionPorStage(stageId)
+    SRS->>DB: Consultar resultados de etapa
+    DB-->>SRS: Lista de resultados
+    SRS-->>SRC: ClasificacionCompletaDTO[]
+    SRC-->>A: Clasificación de etapa
+    
+    Note over A,DB: Obtener clasificación general
+    A->>SRC: GET /api/stage-results/clasificacion/event/{id}
+    SRC->>SRS: getClasificacionGeneral(eventId)
+    SRS->>DB: Consultar todos los resultados
+    DB-->>SRS: Resultados completos
+    SRS->>SRS: Calcular tiempos totales
+    SRS-->>SRC: ClasificacionCompletaDTO[]
+    SRC-->>A: Clasificación general
+    
+    Note over A,DB: Aplicar penalización
+    A->>SRC: PUT /api/stage-results/{id}/penalty
+    SRC->>SRS: aplicarPenalizacion(id, penalty)
+    SRS->>DB: Actualizar resultado
+    DB-->>SRS: Confirmación
+    SRS-->>SRC: Resultado actualizado
+    SRC-->>A: 200 OK
+            </div>
+        </div>
+
+        <div id="testing" class="diagram-section">
+            <h2 class="diagram-title">🧪 8. Arquitectura de Testing con Spring Security (NUEVO)</h2>
+            <p class="diagram-description">
+                Muestra la arquitectura de testing implementada para validar la seguridad y autenticación en los controladores, incluyendo mocking de Spring Security.
+            </p>
+            <div class="mermaid">
+graph TB
+    subgraph "🧪 Testing Architecture"
+        subgraph "Test Configuration"
+            TC1[MockitoExtension]
+            TC2[@Mock SecurityContext]
+            TC3[@Mock Authentication] 
+            TC4[@Mock HttpServletRequest]
+            TC5[ReflectionTestUtils]
+        end
+        
+        subgraph "Security Testing Patterns"
+            ST1[Admin User Mocking]
+            ST2[Regular User Mocking]
+            ST3[Static Method Handling]
+            ST4[Authentication Principal Setup]
+        end
+        
+        subgraph "Test Categories"
+            TT1[🔐 Authentication Tests]
+            TT2[🛡️ Authorization Tests]
+            TT3[📊 Business Logic Tests]
+            TT4[🚨 Error Handling Tests]
+        end
+    end
+    
+    subgraph "🔧 Mock Setup Process"
+        MS1[when\(authentication.getPrincipal\(\)\)]
+        MS2[thenReturn\(userWithAdminStatus\)]
+        MS3[SecurityContextHolder setup]
+        MS4[HttpServletRequest injection]
+    end
+    
+    subgraph "🎯 Test Scenarios"
+        TS1[Admin creates/updates/deletes]
+        TS2[Regular user access own resources]
+        TS3[Regular user blocked from admin actions]
+        TS4[OAuth2 user profile completion]
+        TS5[JWT token validation]
+    end
+    
+    subgraph "📋 Updated Test Files"
+        TF1[UserControllerTests ✅]
+        TF2[StageResultControllerTests ✅]
+        TF3[EventVehicleControllerTests ✅]
+        TF4[EventCategoryControllerTests ✅]
+        TF5[OAuth2ControllerTests ✅]
+        TF6[VehicleControllerTests ✅]
+    end
+    
+    subgraph "🐛 Fixed Issues"
+        FI1[Removed duplicate getGoogleLoginUrl test]
+        FI2[Fixed pom.xml versions compatibility]
+        FI3[Added missing @GetMapping annotations]
+        FI4[Consistent service method calls]
+    end
+    
+    TC1 --> ST1
+    TC2 --> MS1
+    TC3 --> MS2
+    TC4 --> MS4
+    TC5 --> MS4
+    
+    ST1 --> TS1
+    ST2 --> TS2
+    ST3 --> TS3
+    ST4 --> TS4
+    
+    MS1 --> TT2
+    MS2 --> TT1
+    MS3 --> TT3
+    MS4 --> TT4
+    
+    TT1 --> TF1
+    TT2 --> TF2
+    TT3 --> TF3
+    TT4 --> TF4
+    
+    FI1 --> TF5
+    FI2 --> TF6
+    FI3 --> TF4
+    FI4 --> TF2
+    
+    style TF1 fill:#90EE90
+    style TF2 fill:#90EE90
+    style TF3 fill:#90EE90
+    style TF4 fill:#90EE90
+    style TF5 fill:#90EE90
+    style TF6 fill:#90EE90
+            </div>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3498db',
+                primaryTextColor: '#2c3e50',
+                primaryBorderColor: '#2980b9',
+                lineColor: '#34495e',
+                secondaryColor: '#ecf0f1',
+                tertiaryColor: '#f8f9fa'
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -23,10 +23,19 @@ categorías de vehículos y los resultados de cada etapa de la carrera.
 
 - `GET /api/users`: Obtiene todos los usuarios.
 - `GET /api/users/{id}`: Obtiene un usuario por ID.
-- `POST /api/users`: Crea un nuevo usuario.
-- `PUT /api/users/{id}`: Actualiza un usuario existente.
-- `DELETE /api/users/{id}`: Elimina un usuario.
+- `POST /api/users/simple-register`: Crea un nuevo usuario con registro simplificado.
+- `POST /api/users/login`: Autentica un usuario y devuelve JWT token.
+- `GET /api/users/check-email`: Verifica si un email ya está registrado.
+- `PUT /api/users/{id}`: Actualiza un usuario existente (con soporte para archivos).
+- `POST /api/users/{id}/complete-profile`: Completa el perfil básico del usuario.
 - `GET /api/users/admins`: Obtiene todos los usuarios administradores.
+- `GET /api/users/oauth2/login-url`: Obtiene la URL para iniciar login con Google.
+
+#### Autenticación OAuth2
+
+- `GET /oauth2/authorization/google`: Inicia el flujo de autenticación con Google.
+- `GET /api/oauth2/success`: Callback para procesar autenticación exitosa.
+- `GET /api/oauth2/profile-status`: Verifica el estado del perfil del usuario.
 
 ### Vehículos
 
@@ -107,3 +116,44 @@ siguiente comando de Maven:
 
 ```bash
 mvn test
+```
+
+## 🔐 Autenticación
+
+El sistema soporta dos métodos de autenticación con flujos unificados:
+
+### 1. Autenticación Tradicional (Simplificada)
+
+- **Registro**: Solo firstName, lastName, email y password
+- **Login**: Email y contraseña con verificación de perfil completo
+- **JWT**: Para mantener sesión
+
+### 2. Autenticación OAuth2 con Google
+
+- **Registro**: Login rápido con cuenta de Google (datos automáticos)
+- **Login**: Un clic para autenticarse
+- **JWT**: Mismo sistema de tokens que método tradicional
+
+#### 📋 Flujo Unificado para Ambos Métodos:
+
+1. **Registro/Login** → Usuario se autentica (cualquier método)
+2. **Token JWT** → Se genera inmediatamente
+3. **Verificación de perfil** → Se comprueba si tiene datos esenciales
+4. **Redirección inteligente**:
+   - Si perfil completo → Dashboard
+   - Si perfil incompleto → Completar datos (identification, phone, role)
+
+#### ✨ Beneficios del Sistema Unificado:
+
+- **Consistencia**: Misma experiencia sin importar el método de registro
+- **Simplicidad**: Solo datos esenciales al inicio
+- **Flexibilidad**: Usuarios pueden completar perfil cuando quieran
+- **Verificación**: Emails validados (especialmente con Google)
+
+#### 🔗 Endpoints Principales:
+
+- `POST /api/users/simple-register` - Registro tradicional simplificado
+- `POST /api/users/login` - Login tradicional con estado de perfil
+- `GET /api/users/check-email` - Verificar disponibilidad de email
+- `POST /api/users/{id}/complete-profile` - Completar datos esenciales
+- `GET /oauth2/authorization/google` - Iniciar flujo Google OAuth2

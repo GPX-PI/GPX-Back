@@ -29,12 +29,14 @@ public class EventService {
         return eventRepository.findById(id);
     }
 
-    public List<Event> getEventsByDate(LocalDate date) {
-        return eventRepository.findAll()
-                .stream()
-                .filter(event -> (date.equals(event.getStartDate()) || date.equals(event.getEndDate())
-                        || (date.isAfter(event.getStartDate()) && date.isBefore(event.getEndDate()))))
-                .collect(Collectors.toList());
+    public List<Event> getCurrentEvents() {
+        LocalDate today = LocalDate.now();
+        return eventRepository.findByEndDateAfterOrEndDateEquals(today, today);
+    }
+
+    public List<Event> getPastEvents() {
+        LocalDate today = LocalDate.now();
+        return eventRepository.findByEndDateBefore(today);
     }
 
     public Event createEvent(Event event) {
@@ -50,6 +52,7 @@ public class EventService {
         event.setDetails(eventDetails.getDetails());
         event.setStartDate(eventDetails.getStartDate());
         event.setEndDate(eventDetails.getEndDate());
+        event.setPicture(eventDetails.getPicture());
 
         return eventRepository.save(event);
     }

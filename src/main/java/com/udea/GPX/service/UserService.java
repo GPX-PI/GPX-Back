@@ -48,9 +48,18 @@ public class UserService {
         user.setTerrapirata(updatedUser.getTerrapirata());
         user.setInstagram(updatedUser.getInstagram());
         user.setFacebook(updatedUser.getFacebook());
+        user.setPicture(updatedUser.getPicture());
 
         return userRepository.save(user);
     }
 
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email).orElse(null);
+    }
+
+    public boolean checkPassword(User user, String rawPassword) {
+        // Aquí puedes usar un encoder, por ahora simple comparación
+        return user.getPassword().equals(rawPassword);
+    }
 
 }

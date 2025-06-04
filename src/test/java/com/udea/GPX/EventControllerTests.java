@@ -40,10 +40,11 @@ public class EventControllerTests {
     @Test
     void getAllEvents_shouldReturnOK() {
         // Arrange
-        List<Event> events = Arrays.asList(
-                new Event(1L, "Evento 1", "Ubicación 1", "Detalles 1", LocalDate.now(), LocalDate.now()),
-                new Event(2L, "Evento 2", "Ubicación 2", "Detalles 2", LocalDate.now(), LocalDate.now())
-        );
+        Event event1 = new Event(1L, "Evento 1", "Ubicación 1", "Detalles 1", LocalDate.now(), LocalDate.now());
+        event1.setPicture("ruta/imagen1.jpg");
+        Event event2 = new Event(2L, "Evento 2", "Ubicación 2", "Detalles 2", LocalDate.now(), LocalDate.now());
+        event2.setPicture("ruta/imagen2.jpg");
+        List<Event> events = Arrays.asList(event1, event2);
         when(eventService.getAllEvents()).thenReturn(events);
 
         // Act
@@ -52,6 +53,8 @@ public class EventControllerTests {
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals("ruta/imagen1.jpg", response.getBody().get(0).getPicture());
+        assertEquals("ruta/imagen2.jpg", response.getBody().get(1).getPicture());
     }
 
     @Test
@@ -59,6 +62,7 @@ public class EventControllerTests {
         // Arrange
         Long eventId = 1L;
         Event event = new Event(eventId, "Evento 1", "Ubicación 1", "Detalles 1", LocalDate.now(), LocalDate.now());
+        event.setPicture("ruta/imagen1.jpg");
         when(eventService.getEventById(eventId)).thenReturn(Optional.of(event));
 
         // Act
@@ -67,6 +71,7 @@ public class EventControllerTests {
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Evento 1", Objects.requireNonNull(response.getBody()).getName());
+        assertEquals("ruta/imagen1.jpg", response.getBody().getPicture());
     }
 
     @Test
@@ -84,21 +89,45 @@ public class EventControllerTests {
     }
 
     @Test
-    void getEventsByDate_shouldReturnOK() {
+    void getCurrentEvents_shouldReturnOK() {
         // Arrange
-        LocalDate date = LocalDate.now();
-        List<Event> events = Arrays.asList(
-                new Event(1L, "Evento 1", "Ubicación 1", "Detalles 1", date, date),
-                new Event(2L, "Evento 2", "Ubicación 2", "Detalles 2", date, date)
-        );
-        when(eventService.getEventsByDate(date)).thenReturn(events);
+        Event event1 = new Event(1L, "Evento Actual 1", "Ubicación 1", "Detalles 1", LocalDate.now(), LocalDate.now());
+        event1.setPicture("ruta/actual1.jpg");
+        Event event2 = new Event(2L, "Evento Actual 2", "Ubicación 2", "Detalles 2", LocalDate.now(), LocalDate.now());
+        event2.setPicture("ruta/actual2.jpg");
+        List<Event> events = Arrays.asList(event1, event2);
+        when(eventService.getCurrentEvents()).thenReturn(events);
 
         // Act
-        ResponseEntity<List<Event>> response = eventController.getEventsByDate(date);
+        ResponseEntity<List<Event>> response = eventController.getCurrentEvents();
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals("ruta/actual1.jpg", response.getBody().get(0).getPicture());
+        assertEquals("ruta/actual2.jpg", response.getBody().get(1).getPicture());
+    }
+
+    @Test
+    void getPastEvents_shouldReturnOK() {
+        // Arrange
+        Event event1 = new Event(1L, "Evento Pasado 1", "Ubicación 1", "Detalles 1", LocalDate.now().minusDays(10),
+                LocalDate.now().minusDays(5));
+        event1.setPicture("ruta/pasado1.jpg");
+        Event event2 = new Event(2L, "Evento Pasado 2", "Ubicación 2", "Detalles 2", LocalDate.now().minusDays(20),
+                LocalDate.now().minusDays(15));
+        event2.setPicture("ruta/pasado2.jpg");
+        List<Event> events = Arrays.asList(event1, event2);
+        when(eventService.getPastEvents()).thenReturn(events);
+
+        // Act
+        ResponseEntity<List<Event>> response = eventController.getPastEvents();
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals("ruta/pasado1.jpg", response.getBody().get(0).getPicture());
+        assertEquals("ruta/pasado2.jpg", response.getBody().get(1).getPicture());
     }
 
     @Test
@@ -107,8 +136,7 @@ public class EventControllerTests {
         Long eventId = 1L;
         List<EventCategory> categories = Arrays.asList(
                 new EventCategory(),
-                new EventCategory()
-        );
+                new EventCategory());
         when(eventService.getCategoriesByEventId(eventId)).thenReturn(categories);
 
         // Act

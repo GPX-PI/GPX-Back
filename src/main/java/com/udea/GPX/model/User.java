@@ -2,78 +2,93 @@ package com.udea.GPX.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "user")
+@Table(name = "app_user")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "first_name", nullable = false, length = 20)
+    @Column(name = "first_name", nullable = false, length = 50)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false, length = 20)
+    @Column(name = "last_name", nullable = true, length = 50)
     private String lastName;
 
-    @Column(nullable = false, length = 15)
+    @Column(nullable = true, length = 15)
     private String identification;
 
-    @Column(nullable = false, length = 15)
+    @Column(nullable = true, length = 15)
     private String phone;
 
     @Column(nullable = false)
     private boolean admin;
 
-    @Column(length = 100)
+    @Column(length = 100, nullable = true)
     private String email;
 
-    @Column(length = 20)
+    @Column(length = 20, nullable = true)
     private String role;
 
-    @Column(name = "birthdate")
+    @Column(name = "birthdate", nullable = true)
     private LocalDate birthdate;
 
-    @Column(name = "type_of_id", length = 20)
+    @Column(name = "type_of_id", length = 20, nullable = true)
     private String typeOfId;
 
-    @Column(name = "team_name", length = 50)
+    @Column(name = "team_name", length = 50, nullable = true)
     private String teamName;
 
-    @Column(length = 50)
+    @Column(length = 50, nullable = true)
     private String eps;
 
-    @Column(length = 5)
+    @Column(length = 5, nullable = true)
     private String rh;
 
-    @Column(name = "emergency_phone", length = 15)
+    @Column(name = "emergency_phone", length = 15, nullable = true)
     private String emergencyPhone;
 
-    @Column(length = 255)
+    @Column(length = 255, nullable = true)
     private String alergies;
 
-    @Column(length = 100)
+    @Column(length = 100, nullable = true)
     private String wikiloc;
 
-    @Column(length = 100)
+    @Column(length = 100, nullable = true)
     private String insurance;
 
-    @Column(length = 100)
+    @Column(length = 100, nullable = true)
     private String terrapirata;
 
-    @Column(length = 100)
+    @Column(length = 100, nullable = true)
     private String instagram;
 
-    @Column(length = 100)
+    @Column(length = 100, nullable = true)
     private String facebook;
+
+    @Column(name = "picture", length = 255, nullable = true)
+    private String picture = "";
+
+    @Column(nullable = true)
+    @JsonIgnore
+    private String password;
+
+    // Campos para OAuth2
+    @Column(name = "google_id", length = 255, nullable = true)
+    private String googleId;
+
+    @Column(name = "auth_provider", length = 50, nullable = true)
+    private String authProvider = "LOCAL"; // LOCAL, GOOGLE
 
     public User() {
     }
 
     public User(Long id, String firstName, String lastName, String identification, String phone, boolean admin,
-                String email, String role, LocalDate birthdate, String typeOfId, String teamName, String eps,
-                String rh, String emergencyPhone, String alergies, String wikiloc, String insurance,
-                String terrapirata, String instagram, String facebook) {
+            String email, String role, LocalDate birthdate, String typeOfId, String teamName, String eps,
+            String rh, String emergencyPhone, String alergies, String wikiloc, String insurance,
+            String terrapirata, String instagram, String facebook) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -94,6 +109,7 @@ public class User {
         this.terrapirata = terrapirata;
         this.instagram = instagram;
         this.facebook = facebook;
+        this.picture = "";
     }
 
     public Long getId() {
@@ -254,6 +270,38 @@ public class User {
 
     public void setFacebook(String facebook) {
         this.facebook = facebook;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
+    }
+
+    public String getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(String authProvider) {
+        this.authProvider = authProvider;
     }
 
 }

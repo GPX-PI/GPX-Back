@@ -34,4 +34,8 @@ public class EventCategoryService {
         return eventCategoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("EventCategory not found"));
     }
+
+    public List<EventCategory> getByEventId(Long eventId) {
+        return eventCategoryRepository.findByEventId(eventId);
+    }
 }

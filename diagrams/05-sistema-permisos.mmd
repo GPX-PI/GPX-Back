@@ -1,0 +1,45 @@
+graph LR
+    subgraph "Endpoints Públicos"
+        P1[GET /api/categories]
+        P2[POST /api/users/login]
+        P3[POST /api/users/simple-register]
+        P4[GET /api/events/current]
+        P5[GET /api/events/past]
+        P6[GET /api/users/oauth2/login-url]
+        P7[GET /oauth2/authorization/google]
+        P8[GET /api/users/check-email]
+        P9[GET /login/oauth2/code/google]
+    end
+    
+    subgraph "Solo Administradores"
+        A1[GET /api/users]
+        A2[GET /api/users/admins]
+        A3[GET /api/vehicles]
+        A4[POST/PUT/DELETE /api/events]
+        A5[POST/PUT/DELETE /api/stages]
+        A6[GET /api/event-vehicles]
+        A7[Aplicar penalizaciones]
+        A8[Gestión clasificaciones]
+    end
+    
+    subgraph "Usuario/Propietario Autenticado"
+        U1[GET /api/users/:id propio]
+        U2[PUT /api/users/:id propio]
+        U3[GET /api/vehicles/:id propios]
+        U4[POST /api/vehicles]
+        U5[PUT/DELETE /api/vehicles propios]
+        U6[Gestión EventVehicle propios]
+        U7[POST /api/users/:id/complete-profile]
+        U8[GET /api/oauth2/profile-status]
+    end
+    
+    subgraph "Mixtos Admin/Propietario"
+        M1[StageResults]
+        M2[EventVehicles específicos]
+        M3[Vehículos por usuario]
+    end
+    
+    subgraph "Callbacks OAuth2"
+        O1[GET /api/oauth2/success]
+        O2[Frontend redirect handling]
+    end 

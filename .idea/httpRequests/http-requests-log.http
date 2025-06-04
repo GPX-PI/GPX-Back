@@ -1,3 +1,237 @@
+GET http://localhost:8080/api/event-categories/byevent/1
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T144533.200.json
+
+###
+
+GET http://localhost:8080/api/event-categories/byevent/1
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T144235.200.json
+
+###
+
+GET http://localhost:8080/api/stageresults/clasificacionbystage?eventId=1&stageNumber=0
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T133212.200.json
+
+###
+
+GET http://localhost:8080/api/stageresults/clasificacionbystage?eventId=1&stageNumber=2
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T132228.200.json
+
+###
+
+GET http://localhost:8080/api/stageresults/clasificacionbystage?eventId=1&stageNumber=1
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T132024.200.json
+
+###
+
+GET http://localhost:8080/api/stageresults/clasificacionbystage?eventId=1&stageNumber=1
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T130925.200.json
+
+###
+
+GET http://localhost:8080/api/stageresults/clasificacionbystage?eventId=1&stageNumber=1
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T130829.200.json
+
+###
+
+GET http://localhost:8080/api/stageresults/bystagerange?eventId=1&stageStart=2&stageEnd=3
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T130450.200.json
+
+###
+
+GET http://localhost:8080/api/stageresults/clasificacion?eventId=1
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T125304.200.json
+
+###
+
+GET http://localhost:8080/api/stageresults/clasificacion?eventId=1
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-06-01T122657.200.json
+
+###
+
+GET http://localhost:8080/api/stages
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T114036.200.json
+
+###
+
+GET http://localhost:8080/api/users
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T112302.200.json
+
+###
+
+GET http://localhost:8080/api/events/past
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T111711.200.json
+
+###
+
+GET http://localhost:8080/api/events/current
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T111647.200.json
+
+###
+
+GET http://localhost:8080/api/events/current
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T104327.200.json
+
+###
+
+GET http://localhost:8080/api/events/current
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T094006.200.json
+
+###
+
+GET http://localhost:8080/api/events/past
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T092835.200.json
+
+###
+
+GET http://localhost:8080/api/events/past
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T091439.200.json
+
+###
+
+GET http://localhost:8080/api/events/current
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-30T091417.200.json
+
+###
+
+GET http://localhost:8080/api/categories
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-29T194942.200.json
+
+###
+
+GET http://localhost:8080/api/events/current
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-29T194658.200.json
+
+###
+
+GET http://localhost:8080/api/events/past
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-29T194622.200.json
+
+###
+
+GET http://localhost:8080/api/events/current
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-29T194602.200.json
+
+###
+
+GET http://localhost:8080/api/events/bydate?date=2025-08-02
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-29T190029.200.json
+
+###
+
+GET http://localhost:8080/api/events/bydate?date=2025-05-29
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-29T185751.200.json
+
+###
+
+GET http://localhost:8080/api/events/bydate?date=efxEVnxy
+User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2025.1.1.1
+Accept-Encoding: br, deflate, gzip, x-gzip
+Accept: */*
+
+<> 2025-05-29T185656.400.json
+
+###
+
 GET http://localhost:8080/api/categories
 User-Agent: IntelliJ HTTP Client/IntelliJ IDEA 2024.3.5
 Accept-Encoding: br, deflate, gzip, x-gzip

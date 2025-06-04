@@ -26,6 +26,9 @@ public class Event {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
+    @Column(name = "picture", length = 255)
+    private String picture = "";
+
     public Event() {
     }
 
@@ -36,6 +39,7 @@ public class Event {
         this.details = details;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.picture = "";
     }
 
     public Long getId() {
@@ -84,5 +88,13 @@ public class Event {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 }
