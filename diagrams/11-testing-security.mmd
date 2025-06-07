@@ -1,5 +1,5 @@
 graph TB
-    subgraph "🧪 Testing Architecture"
+    subgraph "Testing Architecture"
         subgraph "Test Configuration"
             TC1[MockitoExtension]
             TC2[@Mock SecurityContext]
@@ -14,23 +14,20 @@ graph TB
             ST3[Static Method Handling]
             ST4[Authentication Principal Setup]
         end
-        
-        subgraph "Test Categories"
-            TT1[🔐 Authentication Tests]
-            TT2[🛡️ Authorization Tests]
-            TT3[📊 Business Logic Tests]
-            TT4[🚨 Error Handling Tests]
+          subgraph "Test Categories"
+            TT1[Authentication Tests]
+            TT2[Authorization Tests]
+            TT3[Business Logic Tests]
+            TT4[Error Handling Tests]
         end
     end
-    
-    subgraph "🔧 Mock Setup Process"
-        MS1[when\(authentication.getPrincipal\(\)\)]
-        MS2[thenReturn\(userWithAdminStatus\)]
+      subgraph "Mock Setup Process"
+        MS1[when authentication.getPrincipal]
+        MS2[thenReturn userWithAdminStatus]
         MS3[SecurityContextHolder setup]
         MS4[HttpServletRequest injection]
     end
-    
-    subgraph "🎯 Test Scenarios"
+      subgraph "Test Scenarios"
         TS1[Admin creates/updates/deletes]
         TS2[Regular user access own resources]
         TS3[Regular user blocked from admin actions]
@@ -38,7 +35,7 @@ graph TB
         TS5[JWT token validation]
     end
     
-    subgraph "📋 Updated Test Files"
+    subgraph "Updated Test Files"
         TF1[UserControllerTests ✅]
         TF2[StageResultControllerTests ✅]
         TF3[EventVehicleControllerTests ✅]
@@ -47,7 +44,7 @@ graph TB
         TF6[VehicleControllerTests ✅]
     end
     
-    subgraph "🐛 Fixed Issues"
+    subgraph "Fixed Issues"
         FI1[Removed duplicate getGoogleLoginUrl test]
         FI2[Fixed pom.xml versions compatibility]
         FI3[Added missing @GetMapping annotations]

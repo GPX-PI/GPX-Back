@@ -2,12 +2,11 @@ package com.udea.GPX.controller;
 
 import com.udea.GPX.model.Event;
 import com.udea.GPX.model.EventCategory;
-import com.udea.GPX.model.User;
 import com.udea.GPX.service.EventService;
+import com.udea.GPX.util.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,6 +17,9 @@ public class EventController {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private AuthUtils authUtils;
 
     @SuppressWarnings("unused")
     @Autowired
@@ -47,8 +49,7 @@ public class EventController {
 
     @PostMapping
     public ResponseEntity<Event> createEvent(@RequestBody Event event) {
-        User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!authUser.isAdmin()) {
+        if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -57,8 +58,7 @@ public class EventController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event event) {
-        User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!authUser.isAdmin()) {
+        if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
@@ -70,8 +70,7 @@ public class EventController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!authUser.isAdmin()) {
+        if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         eventService.deleteEvent(id);

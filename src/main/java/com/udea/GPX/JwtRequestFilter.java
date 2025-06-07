@@ -5,6 +5,7 @@ import com.udea.GPX.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -28,7 +29,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private UserService userService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+            @NonNull FilterChain chain)
             throws ServletException, IOException {
 
         String requestPath = request.getRequestURI();
@@ -50,6 +52,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         // Procesamiento JWT normal para el resto de rutas
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+
         String jwt = null;
         Long userId = null;
 
@@ -59,6 +62,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         existingAuth.getPrincipal().equals("anonymousUser"))) {
 
             jwt = authHeader.substring(7);
+
             try {
                 userId = jwtUtil.extractUserId(jwt);
             } catch (ExpiredJwtException e) {
@@ -74,11 +78,16 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                         !SecurityContextHolder.getContext().getAuthentication().isAuthenticated())) {
 
             User user = userService.getUserById(userId).orElse(null);
-            if (user != null && jwtUtil.validateToken(jwt)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        user, null, Collections.emptyList());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            if (user != null) {
+                boolean isTokenValid = jwtUtil.validateToken(jwt);
+
+                if (isTokenValid) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            user, null, Collections.emptyList());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
         }
 

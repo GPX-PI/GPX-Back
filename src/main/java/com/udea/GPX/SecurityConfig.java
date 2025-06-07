@@ -2,16 +2,19 @@ package com.udea.GPX;
 
 import com.udea.GPX.model.User;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -23,13 +26,46 @@ public class SecurityConfig {
     private JwtRequestFilter jwtRequestFilter;
 
     @Bean
+    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return (HttpServletRequest request, HttpServletResponse response,
+                org.springframework.security.core.AuthenticationException authException) -> {
+
+            // Detectar si es una petición AJAX/API
+            String requestedWith = request.getHeader("X-Requested-With");
+            String contentType = request.getHeader("Content-Type");
+            String accept = request.getHeader("Accept");
+            boolean isAjaxRequest = "XMLHttpRequest".equals(requestedWith) ||
+                    (contentType != null && contentType.contains("application/json")) ||
+                    (accept != null && accept.contains("application/json")) ||
+                    request.getRequestURI().startsWith("/api/");
+
+            System.out.println("🔍 AuthenticationEntryPoint - URI: " + request.getRequestURI() +
+                    ", isAjax: " + isAjaxRequest + ", Accept: " + accept);
+
+            if (isAjaxRequest) {
+                // Para peticiones AJAX/API, devolver 401 JSON
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.setCharacterEncoding("UTF-8");
+                String jsonResponse = "{\"error\":\"Unauthorized\",\"message\":\"Token inválido o faltante\",\"status\":401}";
+                response.getWriter().write(jsonResponse);
+                System.out.println("✅ Devuelto 401 JSON para petición API");
+            } else {
+                // Para peticiones del navegador, redirigir a OAuth2
+                response.sendRedirect("/oauth2/authorization/google");
+                System.out.println("✅ Redirigido a OAuth2 para petición del navegador");
+            }
+        };
+    }
+
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors
                         .configurationSource(request -> {
                             CorsConfiguration corsConfig = new CorsConfiguration();
                             corsConfig.setAllowedOrigins(List.of("http://localhost:3000"));
-                            corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                            corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
                             corsConfig.setAllowedHeaders(List.of("*"));
                             corsConfig.setAllowCredentials(true);
                             return corsConfig;
@@ -37,9 +73,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-                        .maximumSessions(1)
-                        .and()
-                        .invalidSessionUrl("/login"))
+                        .invalidSessionUrl("/login")
+                        .sessionConcurrency(concurrency -> concurrency
+                                .maximumSessions(1)))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(customAuthenticationEntryPoint()))
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints públicos
                         .requestMatchers(HttpMethod.POST, "/api/users/login").permitAll()
@@ -52,6 +90,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/stageresults/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/event-categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/event-vehicles/participants/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/event-vehicles/byevent/**").permitAll()
+                        // Admin endpoints (requieren autenticación, pero validación de admin en
+                        // controlador)
+                        .requestMatchers(HttpMethod.PATCH, "/api/users/*/admin").authenticated()
                         // OAuth2 endpoints
                         .requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
                         .requestMatchers("/api/oauth2/login-url").permitAll()

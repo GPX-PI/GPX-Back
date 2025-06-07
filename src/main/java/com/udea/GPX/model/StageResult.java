@@ -16,10 +16,10 @@ public class StageResult {
     private LocalDateTime timestamp;
 
     @Column(nullable = false)
-    private int latitude;
+    private double latitude;
 
     @Column(nullable = false)
-    private int longitude;
+    private double longitude;
 
     @Column(name = "penalty_waypoint")
     private Duration penaltyWaypoint;
@@ -41,7 +41,7 @@ public class StageResult {
     @JoinColumn(name = "fk_vehicle_id", nullable = false)
     private Vehicle vehicle;
 
-    public StageResult(Long id, LocalDateTime timestamp, int latitude, int longitude, Duration penaltyWaypoint,
+    public StageResult(Long id, LocalDateTime timestamp, double latitude, double longitude, Duration penaltyWaypoint,
             Duration penaltySpeed, Duration discountClaim, Integer elapsedTimeSeconds, Stage stage, Vehicle vehicle) {
         this.id = id;
         this.timestamp = timestamp;
@@ -74,19 +74,19 @@ public class StageResult {
         this.timestamp = timestamp;
     }
 
-    public int getLatitude() {
+    public double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(int latitude) {
+    public void setLatitude(double latitude) {
         this.latitude = latitude;
     }
 
-    public int getLongitude() {
+    public double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(int longitude) {
+    public void setLongitude(double longitude) {
         this.longitude = longitude;
     }
 

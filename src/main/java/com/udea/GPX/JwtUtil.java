@@ -29,14 +29,32 @@ public class JwtUtil {
     }
 
     public Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token).getBody();
+        return Jwts.parserBuilder()
+                .setSigningKey(Keys.hmacShaKeyFor(SECRET_KEY.getBytes()))
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 
     public boolean validateToken(String token) {
         try {
+            System.out.println("🔍 JwtUtil.validateToken - Iniciando validación de token");
             Claims claims = extractAllClaims(token);
-            return claims.getExpiration().after(new Date());
+            System.out.println("🔍 JwtUtil.validateToken - Claims extraídos exitosamente");
+
+            Date expiration = claims.getExpiration();
+            Date now = new Date();
+            boolean isValid = expiration.after(now);
+
+            System.out.println("🔍 JwtUtil.validateToken - Expiración: " + expiration);
+            System.out.println("🔍 JwtUtil.validateToken - Ahora: " + now);
+            System.out.println("🔍 JwtUtil.validateToken - Es válido: " + isValid);
+
+            return isValid;
         } catch (Exception e) {
+            System.out.println(
+                    "❌ JwtUtil.validateToken - Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }

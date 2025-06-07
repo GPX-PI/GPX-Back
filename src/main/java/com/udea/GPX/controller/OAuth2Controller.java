@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
@@ -25,7 +24,7 @@ public class OAuth2Controller {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Value("${app.oauth2.frontend-redirect-url:http://localhost:3000/oauth2/redirect}")
+    @Value("${app.oauth2.frontend-redirect-url:http://localhost:3000/login/oauth2-redirect}")
     private String frontendRedirectUrl;
 
     @GetMapping("/success")
@@ -53,13 +52,17 @@ public class OAuth2Controller {
             // Limpiar parámetros para evitar caracteres inválidos
             firstName = firstName.replaceAll("[\\r\\n\\t]", "").trim();
 
+            // Obtener la foto de perfil (puede ser null)
+            String picture = (user.getPicture() != null ? user.getPicture() : "");
+
             String redirectUrl = frontendRedirectUrl +
                     "?token=" + token +
                     "&userId=" + user.getId() +
                     "&admin=" + user.isAdmin() +
                     "&provider=google" +
                     "&profileComplete=" + profileComplete +
-                    "&firstName=" + java.net.URLEncoder.encode(firstName, "UTF-8");
+                    "&firstName=" + java.net.URLEncoder.encode(firstName, "UTF-8") +
+                    "&picture=" + java.net.URLEncoder.encode(picture, "UTF-8");
 
             return new RedirectView(redirectUrl);
         } catch (Exception e) {

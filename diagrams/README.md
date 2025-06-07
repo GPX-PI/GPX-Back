@@ -1,124 +1,210 @@
-# 📊 Diagramas del Sistema GPX
+# 📊 Diagramas del Proyecto - GPX Rally Management
 
-Este directorio contiene todos los diagramas Mermaid que documentan la arquitectura y funcionamiento de tu sistema GPX de gestión de carreras.
+Este directorio contiene todos los diagramas Mermaid que documentan la arquitectura, flujos y funcionamiento completo del sistema de gestión de rallies.
 
-## 🗂️ Archivos Incluidos
+## 🏗️ Arquitectura del Sistema
 
-### Archivos Mermaid (.mmd)
+### [01-arquitectura-general.mmd](./01-arquitectura-general.mmd)
 
-- **01-arquitectura-general.mmd** - Arquitectura completa del sistema
-- **02-flujo-autenticacion.mmd** - Flujo de autenticación JWT + OAuth2
-- **03-modelo-datos.mmd** - Modelo de datos y relaciones
-- **04-flujo-carrera.mmd** - Proceso de una carrera completa
-- **05-sistema-permisos.mmd** - Permisos por endpoint (ACTUALIZADO ✅)
-- **06-flujo-clasificaciones.mmd** - Generación de clasificaciones
-- **07-flujo-oauth2.mmd** - Flujo detallado OAuth2 con Google
-- **08-flujo-oauth2-simplificado.mmd** - Versión simplificada OAuth2
-- **09-flujo-registro-unificado.mmd** - Registro tradicional + OAuth2
-- **10-arquitectura-endpoints-limpia.mmd** - Vista limpia de endpoints
-- **11-testing-security.mmd** - Arquitectura de testing con Spring Security (NUEVO ✅)
+**Arquitectura general del sistema completo**
 
-### Visualizador HTML
+- Frontend Next.js con páginas principales
+- Capa de seguridad con JWT y OAuth2
+- Sistema de autenticación con AuthUtils
+- Controladores, servicios y DTOs
+- Base de datos PostgreSQL
 
-- **visualizador.html** - Página web con todos los diagramas renderizados
+### [12-frontend-arquitectura.mmd](./12-frontend-arquitectura.mmd)
 
-## 🚀 Cómo Visualizar los Diagramas
+**Arquitectura específica del Frontend Next.js 14**
 
-### Opción 1: Navegador Web (RECOMENDADO)
+- App Router con todas las rutas
+- Componentes organizados en Atoms, Molecules y Organisms
+- Sistema de autenticación y gestión de estado
+- Servicios API y utilidades
+- Integración con shadcn/ui y Tailwind CSS
 
-1. Abre el archivo `visualizador.html` en cualquier navegador web
-2. Verás todos los diagramas renderizados con navegación
-3. Puedes hacer clic en los enlaces del menú para navegar
+## 🗄️ Modelo de Datos
 
-### Opción 2: Editores con Soporte Mermaid
+### [03-modelo-datos.mmd](./03-modelo-datos.mmd)
 
-Los siguientes editores pueden mostrar los archivos `.mmd` directamente:
+**Modelo de datos actualizado con todas las entidades**
 
-#### Visual Studio Code
+- Usuario con autenticación OAuth2 y local
+- Vehículos con categorías
+- Eventos con etapas y participantes
+- Resultados de etapas con coordenadas GPS y penalizaciones
+- Relaciones completas entre entidades
 
-1. Instala la extensión "Mermaid Markdown Syntax Highlighting"
-2. Instala la extensión "Mermaid Preview"
-3. Abre cualquier archivo `.mmd`
-4. Usa `Ctrl+Shift+P` → "Mermaid: Preview Diagram"
+## 🔐 Seguridad y Autenticación
 
-#### Otros Editores
+### [05-sistema-permisos.mmd](./05-sistema-permisos.mmd)
 
-- **IntelliJ IDEA**: Plugin "Mermaid"
-- **Obsidian**: Soporte nativo para Mermaid
-- **Notion**: Soporte nativo para bloques Mermaid
+**Sistema de permisos completo**
 
-### Opción 3: Herramientas Online
+- Endpoints públicos vs protegidos
+- Panel de administración con permisos específicos
+- Gestión de roles de usuario
+- Rutas del frontend con protección
 
-Copia el contenido de cualquier archivo `.mmd` en:
+### [14-frontend-autenticacion.mmd](./14-frontend-autenticacion.mmd)
 
-- [Mermaid Live Editor](https://mermaid.live/)
-- [GitHub Gist](https://gist.github.com/) (renderiza Mermaid automáticamente)
+**Sistema de autenticación del frontend**
 
-## 📋 Descripción de Cada Diagrama
+- Login local y OAuth2 con Google
+- Gestión de tokens JWT
+- Guards de protección de rutas
+- Interceptor HTTP para requests automáticos
+- Manejo de sesiones y logout automático
 
-### 🏗️ Arquitectura General
+## 🎨 Frontend - Componentes y Flujos
 
-Muestra las capas del sistema: Frontend → Security → Controllers → Services → Database
+### [15-frontend-componentes.mmd](./15-frontend-componentes.mmd)
 
-### 🔐 Autenticación
+**Arquitectura de componentes del frontend**
 
-Flujo completo desde login hasta autorización de requests con JWT + OAuth2
+- Páginas con App Router de Next.js
+- Atoms de shadcn/ui (Button, Input, Card, etc.)
+- Molecules reutilizables (Navbar, Sidebar, etc.)
+- Organisms complejos (AdminDashboard, gestión de entidades)
+- Hooks personalizados y servicios API
 
-### 📊 Modelo de Datos
+### [13-frontend-flujo-admin.mmd](./13-frontend-flujo-admin.mmd)
 
-Entidades y relaciones: User, Vehicle, Event, Stage, Category, etc.
+**Flujo completo del panel de administración**
 
-### 🏁 Flujo de Carrera
+- Verificación de permisos y autenticación
+- Dashboard con estadísticas del sistema
+- Gestión de eventos, usuarios, categorías
+- Gestión avanzada de resultados de etapas
+- Manejo de estados, validación y errores
 
-Proceso completo: Crear evento → Inscripciones → Carrera → Clasificaciones
+## 🏁 Gestión de Carreras
 
-### 🔒 Sistema de Permisos (ACTUALIZADO)
+### [16-stage-results-management.mmd](./16-stage-results-management.mmd)
 
-Qué endpoints son públicos, de admin, o mixtos - incluye nuevos endpoints OAuth2
+**Gestión completa de resultados de etapas**
 
-### 📈 Clasificaciones
+- Selección de eventos y carga de datos
+- Filtros por etapa y categoría
+- Creación y edición de resultados básicos
+- Gestión especializada de penalizaciones
+- Conversión de formatos de tiempo
+- Procesamiento backend con DTOs
 
-Cómo se calculan las clasificaciones por etapa y general
+### [04-flujo-carrera.mmd](./04-flujo-carrera.mmd)
 
-### 🔑 OAuth2 con Google
+**Flujo básico de una carrera**
 
-Flujo completo de autenticación con Google, intercambio de tokens y manejo de usuarios
+- Registro de participantes
+- Ejecución de etapas
+- Registro de tiempos y resultados
 
-### 🧪 Testing y Seguridad (NUEVO)
+### [06-flujo-clasificaciones.mmd](./06-flujo-clasificaciones.mmd)
 
-Arquitectura de testing con Spring Security, mocking de autenticación y patrones de prueba
+**Sistema de clasificaciones**
 
-## 🆕 Actualizaciones Recientes
+- Clasificación general y por categorías
+- Cálculo de tiempos y penalizaciones
+- Visualización de resultados
 
-### ✅ **05-sistema-permisos.mmd** - Actualizado
+## 🔧 Arquitectura Técnica
 
-- ➕ Nuevos endpoints OAuth2: `/api/users/oauth2/login-url`, `/oauth2/authorization/google`
-- ➕ Endpoints de completar perfil: `/api/users/:id/complete-profile`
-- ➕ Callbacks OAuth2: `/api/oauth2/success`
-- ✏️ Corrección en endpoint registro: `/api/users/simple-register`
+### [10-arquitectura-endpoints-limpia.mmd](./10-arquitectura-endpoints-limpia.mmd)
 
-### 🆕 **11-testing-security.mmd** - Nuevo Diagrama
+**Endpoints organizados por funcionalidad**
 
-- 🧪 Arquitectura de testing con Spring Security
-- 🔧 Patrones de mocking para Authentication y SecurityContext
-- 🎯 Escenarios de prueba para admin vs usuarios regulares
-- 📋 Estado actual de archivos de prueba
+- Autenticación y gestión de usuarios
+- CRUD completo de todas las entidades
+- Sistema de clasificaciones
+- Capa de seguridad y servicios
 
-## 💡 Consejos
+### [02-flujo-autenticacion.mmd](./02-flujo-autenticacion.mmd)
 
-- El archivo `visualizador.html` es la forma más fácil de ver todo
-- Los archivos `.mmd` son útiles para editarlos o incluirlos en documentación
-- Puedes modificar cualquier diagrama editando el archivo correspondiente
-- Los diagramas están optimizados para pantallas grandes
+**Flujo de autenticación backend**
 
-## 🔧 Personalización
+- Autenticación local vs OAuth2
+- Generación y validación de tokens JWT
+- Integración con Spring Security
 
-Para modificar los diagramas:
+## 🧪 Testing y Calidad
 
-1. Edita el archivo `.mmd` correspondiente
-2. Si modificas un `.mmd`, copia el contenido actualizado al `visualizador.html`
-3. Los colores y estilos se pueden cambiar en la sección `themeVariables` del HTML
+### [11-testing-security.mmd](./11-testing-security.mmd)
 
----
+**Estrategia de testing y seguridad**
 
-**¡Disfruta explorando la arquitectura de tu sistema GPX!** 🏆
+- Tests unitarios y de integración
+- Validación de seguridad
+- Tests de endpoints protegidos
+
+## 🔄 Flujos OAuth2
+
+### [07-flujo-oauth2.mmd](./07-flujo-oauth2.mmd)
+
+**Flujo OAuth2 detallado**
+
+- Integración con Google OAuth2
+- Redirects y callbacks
+- Manejo de tokens
+
+### [08-flujo-oauth2-simplificado.mmd](./08-flujo-oauth2-simplificado.mmd)
+
+**Versión simplificada del flujo OAuth2**
+
+### [09-flujo-registro-unificado.mmd](./09-flujo-registro-unificado.mmd)
+
+**Sistema de registro unificado**
+
+- Registro simple vs OAuth2
+- Completar perfil
+- Validaciones
+
+## 🔍 Cómo Visualizar los Diagramas
+
+### Opción 1: Visualizador Local
+
+Abrir [visualizador.html](./visualizador.html) en el navegador para ver todos los diagramas interactivamente.
+
+### Opción 2: VS Code + Mermaid Extension
+
+1. Instalar la extensión "Mermaid Preview" en VS Code
+2. Abrir cualquier archivo .mmd
+3. Presionar `Ctrl+Shift+P` → "Mermaid: Preview"
+
+### Opción 3: Mermaid Live Editor
+
+1. Ir a [mermaid.live](https://mermaid.live)
+2. Copiar el contenido de cualquier archivo .mmd
+3. Ver el diagrama renderizado
+
+## 📈 Estado Actual del Proyecto
+
+✅ **Completado:**
+
+- Sistema completo de autenticación (local + OAuth2)
+- Panel de administración funcional con CRUD completo
+- Gestión avanzada de resultados de etapas con penalizaciones
+- Sistema de permisos robusto
+- Frontend responsive con shadcn/ui
+- Arquitectura de componentes organizada
+
+🚀 **Funcionalidades Principales:**
+
+- **Dashboard Administrativo**: Estadísticas y gestión completa
+- **Gestión de Eventos**: CRUD completo con fechas y precios
+- **Gestión de Usuarios**: Lista, roles admin, protecciones
+- **Gestión de Categorías**: CRUD de categorías de vehículos
+- **Gestión de Resultados**: Creación, edición y penalizaciones avanzadas
+- **Sistema de Clasificaciones**: Cálculos automáticos con penalizaciones
+- **Autenticación Dual**: Local y Google OAuth2
+- **Protección de Rutas**: Frontend y backend coordinados
+
+## 🏗️ Arquitectura Destacada
+
+- **Backend**: Spring Boot con arquitectura limpia
+- **Frontend**: Next.js 14 con App Router
+- **Base de Datos**: PostgreSQL con relaciones optimizadas
+- **Autenticación**: JWT + Spring Security + OAuth2
+- **UI/UX**: shadcn/ui + Tailwind CSS
+- **Estado**: Gestión local optimizada
+- **Validación**: Frontend y backend coordinada

@@ -1,0 +1,170 @@
+graph TD
+    subgraph "Stage Results Management - Flujo Detallado"        START[Acceso a gestion de resultados]
+        
+        subgraph "Seleccion de Evento"
+            SELECT_EVENT[Seleccionar evento activo]
+            LOAD_STAGES[Cargar etapas del evento]
+            LOAD_VEHICLES[Cargar vehiculos participantes]
+            LOAD_CATEGORIES[Cargar categorias]
+        end
+          subgraph "Sistema de Filtros"
+            FILTER_STAGE[Filtro por etapa]
+            FILTER_CATEGORY[Filtro por categoria]
+            APPLY_FILTERS[Aplicar filtros combinados]
+            RESET_FILTERS[Resetear filtros]
+        end
+        
+        subgraph "Selector de Columnas"
+            COLUMN_TOGGLE[Toggle columnas visibles]
+            COLUMN_CONFIG[Configuracion columnas]
+            SAVE_PREFS[Guardar preferencias]
+            DEFAULT_COLS[Columnas por defecto]
+        end
+        
+        subgraph "Tabla de Resultados"
+            DISPLAY_TABLE[Mostrar tabla filtrada]
+            PARTICIPANT_INFO[Info participante + avatar]
+            VEHICLE_INFO[Info vehiculo]
+            CATEGORY_PLAIN[Categoria texto plano]
+            STAGE_PLAIN[Etapa texto plano]
+            TIMESTAMP_INFO[Timestamp resultado]
+            PENALTIES_INFO[Info penalizaciones]
+        end
+        
+        subgraph "Crear Resultado"
+            NEW_RESULT_BTN[Boton nuevo resultado]
+            NEW_RESULT_FORM[Formulario nuevo resultado]
+            SELECT_STAGE_NEW[Seleccionar etapa]
+            SELECT_VEHICLE_NEW[Seleccionar vehiculo]
+            INPUT_TIMESTAMP[Ingresar timestamp]
+            INPUT_COORDS[Ingresar coordenadas]
+            VALIDATE_NEW[Validar datos nuevos]
+            SAVE_NEW_RESULT[Guardar resultado]
+        end
+        
+        subgraph "Editar Resultado"
+            EDIT_RESULT_BTN[Boton editar]
+            EDIT_RESULT_FORM[Formulario edicion]
+            UPDATE_TIMESTAMP[Actualizar timestamp]
+            UPDATE_COORDS[Actualizar coordenadas]            VALIDATE_EDIT[Validar cambios]
+            SAVE_EDIT_RESULT[Guardar cambios]
+        end
+        
+        subgraph "Gestion de Penalizaciones"
+            PENALTY_BTN[Boton penalizaciones]
+            PENALTY_DIALOG[Dialogo penalizaciones]
+            PENALTY_WAYPOINT[Penalizacion waypoint]
+            PENALTY_SPEED[Penalizacion velocidad]
+            DISCOUNT_CLAIM[Reclamo descuento]
+            CALCULATE_PENALTY[Calcular penalizacion total]
+            SAVE_PENALTIES[Guardar penalizaciones]
+        end
+        
+        subgraph "Eliminar Resultado"
+            DELETE_BTN[Boton eliminar]
+            CONFIRM_DELETE[Confirmar eliminacion]
+            DELETE_RESULT[Eliminar resultado]
+        end
+        
+        subgraph "Responsive Design"
+            MOBILE_VIEW[Vista movil]
+            TABLET_VIEW[Vista tablet]
+            DESKTOP_VIEW[Vista escritorio]
+            OVERFLOW_SCROLL[Scroll horizontal]
+            MIN_WIDTH[Ancho minimo tabla]
+        end
+        
+        subgraph "Estado y Sincronizacion"
+            LOADING_STATE[Estado cargando]
+            ERROR_STATE[Manejo errores]
+            SUCCESS_TOAST[Notificacion exito]
+            ERROR_TOAST[Notificacion error]
+            REFRESH_DATA[Refrescar datos]
+        end
+    end
+    
+    %% Flujo principal
+    START --> SELECT_EVENT
+    SELECT_EVENT --> LOAD_STAGES
+    LOAD_STAGES --> LOAD_VEHICLES
+    LOAD_VEHICLES --> LOAD_CATEGORIES
+    LOAD_CATEGORIES --> DISPLAY_TABLE
+    
+    %% Sistema de filtros
+    DISPLAY_TABLE --> FILTER_STAGE
+    DISPLAY_TABLE --> FILTER_CATEGORY
+    FILTER_STAGE --> APPLY_FILTERS
+    FILTER_CATEGORY --> APPLY_FILTERS
+    APPLY_FILTERS --> DISPLAY_TABLE
+    RESET_FILTERS --> DISPLAY_TABLE
+    
+    %% Selector de columnas
+    DISPLAY_TABLE --> COLUMN_TOGGLE
+    COLUMN_TOGGLE --> COLUMN_CONFIG
+    COLUMN_CONFIG --> SAVE_PREFS
+    SAVE_PREFS --> DISPLAY_TABLE
+    
+    %% Crear resultado
+    DISPLAY_TABLE --> NEW_RESULT_BTN
+    NEW_RESULT_BTN --> NEW_RESULT_FORM
+    NEW_RESULT_FORM --> SELECT_STAGE_NEW
+    NEW_RESULT_FORM --> SELECT_VEHICLE_NEW
+    NEW_RESULT_FORM --> INPUT_TIMESTAMP
+    NEW_RESULT_FORM --> INPUT_COORDS
+    INPUT_COORDS --> VALIDATE_NEW
+    VALIDATE_NEW --> SAVE_NEW_RESULT
+    SAVE_NEW_RESULT --> SUCCESS_TOAST
+    SAVE_NEW_RESULT --> REFRESH_DATA
+    
+    %% Editar resultado
+    DISPLAY_TABLE --> EDIT_RESULT_BTN
+    EDIT_RESULT_BTN --> EDIT_RESULT_FORM
+    EDIT_RESULT_FORM --> UPDATE_TIMESTAMP
+    EDIT_RESULT_FORM --> UPDATE_COORDS
+    UPDATE_COORDS --> VALIDATE_EDIT
+    VALIDATE_EDIT --> SAVE_EDIT_RESULT
+    SAVE_EDIT_RESULT --> SUCCESS_TOAST
+    SAVE_EDIT_RESULT --> REFRESH_DATA
+    
+    %% Gestión de penalizaciones
+    DISPLAY_TABLE --> PENALTY_BTN
+    PENALTY_BTN --> PENALTY_DIALOG
+    PENALTY_DIALOG --> PENALTY_WAYPOINT
+    PENALTY_DIALOG --> PENALTY_SPEED
+    PENALTY_DIALOG --> DISCOUNT_CLAIM
+    DISCOUNT_CLAIM --> CALCULATE_PENALTY
+    CALCULATE_PENALTY --> SAVE_PENALTIES
+    SAVE_PENALTIES --> SUCCESS_TOAST
+    SAVE_PENALTIES --> REFRESH_DATA
+    
+    %% Eliminar resultado
+    DISPLAY_TABLE --> DELETE_BTN
+    DELETE_BTN --> CONFIRM_DELETE
+    CONFIRM_DELETE --> DELETE_RESULT
+    DELETE_RESULT --> SUCCESS_TOAST
+    DELETE_RESULT --> REFRESH_DATA
+    
+    %% Manejo de errores
+    VALIDATE_NEW -.->|Error| ERROR_TOAST
+    VALIDATE_EDIT -.->|Error| ERROR_TOAST
+    SAVE_NEW_RESULT -.->|Error| ERROR_TOAST
+    SAVE_EDIT_RESULT -.->|Error| ERROR_TOAST
+    SAVE_PENALTIES -.->|Error| ERROR_TOAST
+    DELETE_RESULT -.->|Error| ERROR_TOAST
+    
+    %% Estados
+    LOADING_STATE --> DISPLAY_TABLE
+    ERROR_STATE --> DISPLAY_TABLE
+    REFRESH_DATA --> LOADING_STATE
+
+    classDef primary fill:#3b82f6,stroke:#1e40af,color:white
+    classDef success fill:#10b981,stroke:#059669,color:white
+    classDef warning fill:#f59e0b,stroke:#d97706,color:white
+    classDef danger fill:#ef4444,stroke:#dc2626,color:white
+    classDef info fill:#6366f1,stroke:#4f46e5,color:white
+
+    class START,SELECT_EVENT,DISPLAY_TABLE primary
+    class SUCCESS_TOAST,SAVE_NEW_RESULT,SAVE_EDIT_RESULT,SAVE_PENALTIES success
+    class VALIDATE_NEW,VALIDATE_EDIT,CONFIRM_DELETE warning
+    class DELETE_RESULT,ERROR_TOAST,ERROR_STATE danger
+    class COLUMN_TOGGLE,FILTER_STAGE,FILTER_CATEGORY info

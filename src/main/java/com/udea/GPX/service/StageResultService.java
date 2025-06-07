@@ -1,6 +1,8 @@
 package com.udea.GPX.service;
 
 import com.udea.GPX.dto.ClasificacionCompletaDTO;
+import com.udea.GPX.dto.CreateStageResultDTO;
+import com.udea.GPX.dto.UpdateStageResultDTO;
 import com.udea.GPX.model.*;
 import com.udea.GPX.repository.IStageRepository;
 import com.udea.GPX.repository.IStageResultRepository;
@@ -30,6 +32,25 @@ public class StageResultService {
         return stageResultRepository.save(result);
     }
 
+    public StageResult createResult(CreateStageResultDTO createDTO) {
+        // Buscar entidades por ID
+        Stage stage = stageRepository.findById(createDTO.getStageId())
+                .orElseThrow(() -> new RuntimeException("Etapa no encontrada con ID: " + createDTO.getStageId()));
+
+        Vehicle vehicle = vehicleRepository.findById(createDTO.getVehicleId())
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado con ID: " + createDTO.getVehicleId()));
+
+        // Crear nueva entidad StageResult
+        StageResult result = new StageResult();
+        result.setStage(stage);
+        result.setVehicle(vehicle);
+        result.setTimestamp(createDTO.getTimestamp());
+        result.setLatitude(createDTO.getLatitude());
+        result.setLongitude(createDTO.getLongitude());
+
+        return stageResultRepository.save(result);
+    }
+
     public StageResult updateResult(Long id, StageResult updatedResult) {
         return stageResultRepository.findById(id).map(result -> {
             result.setTimestamp(updatedResult.getTimestamp());
@@ -38,6 +59,39 @@ public class StageResultService {
             result.setPenaltyWaypoint(updatedResult.getPenaltyWaypoint());
             result.setPenaltySpeed(updatedResult.getPenaltySpeed());
             result.setDiscountClaim(updatedResult.getDiscountClaim());
+            return stageResultRepository.save(result);
+        }).orElseThrow(() -> new RuntimeException("Resultado no encontrado"));
+    }
+
+    public StageResult updateResultFromDTO(Long id, UpdateStageResultDTO updateDTO) {
+        return stageResultRepository.findById(id).map(result -> {
+            // Actualizar stage si es diferente
+            if (updateDTO.getStageId() != null && !result.getStage().getId().equals(updateDTO.getStageId())) {
+                Stage stage = stageRepository.findById(updateDTO.getStageId())
+                        .orElseThrow(
+                                () -> new RuntimeException("Etapa no encontrada con ID: " + updateDTO.getStageId()));
+                result.setStage(stage);
+            }
+
+            // Actualizar vehicle si es diferente
+            if (updateDTO.getVehicleId() != null && !result.getVehicle().getId().equals(updateDTO.getVehicleId())) {
+                Vehicle vehicle = vehicleRepository.findById(updateDTO.getVehicleId())
+                        .orElseThrow(() -> new RuntimeException(
+                                "Vehículo no encontrado con ID: " + updateDTO.getVehicleId()));
+                result.setVehicle(vehicle);
+            }
+
+            // Actualizar campos básicos
+            if (updateDTO.getTimestamp() != null) {
+                result.setTimestamp(updateDTO.getTimestamp());
+            }
+            if (updateDTO.getLatitude() != null) {
+                result.setLatitude(updateDTO.getLatitude());
+            }
+            if (updateDTO.getLongitude() != null) {
+                result.setLongitude(updateDTO.getLongitude());
+            }
+
             return stageResultRepository.save(result);
         }).orElseThrow(() -> new RuntimeException("Resultado no encontrado"));
     }
@@ -104,12 +158,11 @@ public class StageResultService {
             Duration discountClaim) {
         return stageResultRepository.findById(id)
                 .map(result -> {
-                    if (penaltyWaypoint != null)
-                        result.setPenaltyWaypoint(penaltyWaypoint);
-                    if (penaltySpeed != null)
-                        result.setPenaltySpeed(penaltySpeed);
-                    if (discountClaim != null)
-                        result.setDiscountClaim(discountClaim);
+                    // Siempre asignar los valores, incluso PT0S (Duration.ZERO) para limpiar
+                    // penalizaciones
+                    result.setPenaltyWaypoint(penaltyWaypoint);
+                    result.setPenaltySpeed(penaltySpeed);
+                    result.setDiscountClaim(discountClaim);
                     return stageResultRepository.save(result);
                 })
                 .orElseThrow(() -> new RuntimeException("Resultado no encontrado"));
@@ -202,6 +255,14 @@ public class StageResultService {
                 .filter(r -> stagesInRange.contains(r.getStage()))
                 .filter(r -> !r.getStage().isNeutralized())
                 .sorted(Comparator.comparing(StageResult::getTimestamp))
+                .collect(Collectors.toList());
+    }
+
+    public List<StageResult> getResultsByEvent(Long eventId) {
+        return stageResultRepository.findAll().stream()
+                .filter(r -> r.getStage().getEvent().getId().equals(eventId))
+                .sorted(Comparator.comparing((StageResult r) -> r.getStage().getOrderNumber())
+                        .thenComparing(StageResult::getTimestamp))
                 .collect(Collectors.toList());
     }
 
