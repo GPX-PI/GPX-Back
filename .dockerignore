@@ -1,0 +1,49 @@
+# Archivos de Git
+.git
+.gitignore
+.gitattributes
+
+# Archivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de documentación
+README.md
+*.md
+HELP.md
+
+# Target de Maven (se construye en el contenedor)
+target/
+
+# Archivos de configuración local
+.env
+.env.dev
+.env.local
+
+# Logs
+*.log
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos de backup
+*.bak
+
+# Node modules (si los hay)
+node_modules/
+
+# Archivos de certificados locales
+*.p12
+*.jks
+
+# Archivos de configuración de Cursor/Qodo
+.cursor/
+.qodo/ 

@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: gpx-backend
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    region: ohio
+    plan: free
+    
+    # Variables de entorno necesarias (debes configurarlas en Render)
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # Debes configurar esto manualmente
+      - key: GOOGLE_CLIENT_ID
+        sync: false  # Debes configurar esto manualmente
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false  # Debes configurar esto manualmente
+      - key: JWT_SECRET
+        sync: false  # Debes configurar esto manualmente
+      - key: SERVER_URL
+        sync: false  # URL de tu servidor en Render
+      - key: FRONTEND_URL
+        sync: false  # URL de tu frontend
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+    
+    # Health check endpoint
+    healthCheckPath: /actuator/health
+    
+    # Configuración de auto-deploy desde GitHub
+    autoDeploy: true 
