@@ -6,80 +6,25 @@
   <component name="ChangeListManager">
     <list default="true" id="38f299dd-c9d1-4d1e-9267-2461cd39250c" name="Changes" comment="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/URLEncoderTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/01-arquitectura-general.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/02-flujo-autenticacion.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/03-modelo-datos.mmd" beforeDir="false" afterPath="$PROJECT_DIR$/diagrams/03-modelo-datos.mmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/04-flujo-carrera.mmd" beforeDir="false" afterPath="$PROJECT_DIR$/diagrams/04-flujo-carrera.mmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/05-sistema-permisos.mmd" beforeDir="false" afterPath="$PROJECT_DIR$/diagrams/05-sistema-permisos.mmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/08-flujo-oauth2-simplificado.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/10-arquitectura-endpoints-limpia.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/11-testing-security.mmd" beforeDir="false" afterPath="$PROJECT_DIR$/diagrams/11-testing-security.mmd" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/diagrams/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/visualizador.html" beforeDir="false" afterPath="$PROJECT_DIR$/diagrams/visualizador.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/GpxApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/GpxApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/JwtRequestFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/JwtRequestFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/JwtUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/CategoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/CategoryController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/01-arquitectura-sistema-unificada.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/02-sistema-autenticacion-completo.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/03-frontend-arquitectura-completa.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/03-modelo-datos.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/04-flujo-carrera.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/05-sistema-permisos.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/06-flujo-clasificaciones.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/07-flujo-oauth2.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/09-flujo-registro-unificado.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/11-testing-security.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/16-stage-results-management.mmd" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/visualizador.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagrams/visualizador_completo.html" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventVehicleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventVehicleController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/OAuth2Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/OAuth2Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/StageResultController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/StageResultController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/VehicleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/VehicleController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/StageResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/StageResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/CategoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/CategoryService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/StageResultService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/StageResultService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/Stage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/Stage.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/GpxApplication.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/GpxApplication.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/CategoryController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/CategoryController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/EventController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/EventController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/EventVehicleController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/EventVehicleController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/StageController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/StageController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/StageResultController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/StageResultController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/UserController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/UserController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/VehicleController.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/controller/VehicleController.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/dto/ClasificacionCompletaDTO$StageTimeCellDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/dto/ClasificacionCompletaDTO$StageTimeCellDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/dto/ClasificacionCompletaDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/dto/ClasificacionCompletaDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/dto/VehicleStageTimeDTO.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/dto/VehicleStageTimeDTO.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/Category.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/Category.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/Event.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/Event.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/EventCategory.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/EventCategory.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/EventVehicle.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/EventVehicle.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/Stage.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/Stage.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/StageResult.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/StageResult.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/User.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/User.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/Vehicle.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/model/Vehicle.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/ICategoryRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/ICategoryRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IEventCategoryRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IEventCategoryRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IEventRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IEventRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IEventVehicleRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IEventVehicleRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IStageRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IStageRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IStageResultRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IStageResultRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IUserRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IUserRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IVehicleRepository.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/repository/IVehicleRepository.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/CategoryService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/CategoryService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/EventCategoryService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/EventCategoryService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/EventService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/EventService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/EventVehicleService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/EventVehicleService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/StageResultService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/StageResultService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/StageService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/StageService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/UserService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/UserService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/VehicleService.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/udea/GPX/service/VehicleService.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/CategoryControllerTests.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/CategoryControllerTests.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/EventCategoryControllerTests.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/EventCategoryControllerTests.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/EventControllerTests.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/EventControllerTests.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/EventVehicleControllerTests.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/EventVehicleControllerTests.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/StageControllerTests.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/StageControllerTests.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/StageResultControllerTests.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/StageResultControllerTests.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/UserControllerTests.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/UserControllerTests.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/VehicleControllerTests.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/com/udea/GPX/VehicleControllerTests.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-fix.ps1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test-oauth2.ps1" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/uploads/1749159050421_lonelymachineai_A_minimalist_ink_drawing_of_ballerina_with_samu_1cd63e37-9778-472c-81d9-87b4c41f28ee.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -280,6 +225,10 @@
       <workItem from="1749124723891" duration="14158000" />
       <workItem from="1749220511179" duration="15124000" />
       <workItem from="1749257890402" duration="1279000" />
+      <workItem from="1749289952569" duration="617000" />
+      <workItem from="1749316873344" duration="1653000" />
+      <workItem from="1749319532296" duration="4225000" />
+      <workItem from="1749331055856" duration="838000" />
     </task>
     <task id="LOCAL-00001" summary="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <option name="closed" value="true" />

@@ -8,7 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
+import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -80,5 +83,71 @@ public class EventController {
     @GetMapping("/{id}/categories")
     public ResponseEntity<List<EventCategory>> getCategoriesByEventId(@PathVariable Long id) {
         return ResponseEntity.ok(eventService.getCategoriesByEventId(id));
+    }
+
+    // Endpoint para subir imagen de evento con archivo
+    @PutMapping("/{id}/picture")
+    public ResponseEntity<Event> updateEventPicture(
+            @PathVariable Long id,
+            @RequestParam(value = "eventPhoto", required = false) MultipartFile eventPhoto,
+            @RequestParam(value = "event", required = false) String eventJson) {
+
+        if (!authUtils.isCurrentUserAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            Event updatedEvent;
+            if (eventPhoto != null && !eventPhoto.isEmpty()) {
+                // Subir archivo
+                updatedEvent = eventService.updateEventPicture(id, eventPhoto);
+            } else {
+                // Este caso se maneja en el endpoint de JSON
+                return ResponseEntity.badRequest().build();
+            }
+            return ResponseEntity.ok(updatedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Endpoint para actualizar imagen de evento con URL
+    @PutMapping(value = "/{id}/picture", consumes = "application/json")
+    public ResponseEntity<Event> updateEventPictureUrl(
+            @PathVariable Long id,
+            @RequestBody JsonNode requestBody) {
+
+        if (!authUtils.isCurrentUserAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            String pictureUrl = requestBody.get("pictureUrl").asText();
+            Event updatedEvent = eventService.updateEventPictureUrl(id, pictureUrl);
+            return ResponseEntity.ok(updatedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // Endpoint para eliminar imagen de evento
+    @DeleteMapping("/{id}/picture")
+    public ResponseEntity<Event> removeEventPicture(@PathVariable Long id) {
+        if (!authUtils.isCurrentUserAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        try {
+            Event updatedEvent = eventService.removeEventPicture(id);
+            return ResponseEntity.ok(updatedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

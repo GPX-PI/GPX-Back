@@ -1,6 +1,7 @@
 package com.udea.GPX.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Table(name = "stage")
@@ -16,6 +17,7 @@ public class Stage {
     private int orderNumber;
 
     @Column(name = "is_neutralized", nullable = false)
+    @JsonProperty("isNeutralized")
     private boolean isNeutralized;
 
     @ManyToOne
