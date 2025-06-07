@@ -8,9 +8,13 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.io.File;
+import org.springframework.beans.factory.annotation.Value;
 
 @SpringBootApplication
 public class GpxApplication {
+
+    @Value("${cors.allowed-origins:http://localhost:3000}")
+    private static String allowedOrigins;
 
     public static void main(String[] args) {
         // Cargar variables de entorno desde archivos .env
@@ -45,17 +49,6 @@ public class GpxApplication {
         }
     }
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(@NonNull CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
-            }
-        };
-    }
+    // CORS configuration moved to CorsConfig.java
 
 }

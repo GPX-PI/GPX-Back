@@ -24,7 +24,7 @@ public class OAuth2Controller {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @Value("${app.oauth2.frontend-redirect-url:http://localhost:3000/login/oauth2-redirect}")
+    @Value("${app.oauth2.frontend-redirect-url:https://gpx-back.onrender.com/login/oauth2-redirect}")
     private String frontendRedirectUrl;
 
     @GetMapping("/success")
