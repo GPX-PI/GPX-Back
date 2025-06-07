@@ -6,25 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="38f299dd-c9d1-4d1e-9267-2461cd39250c" name="Changes" comment="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/01-arquitectura-sistema-unificada.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/02-sistema-autenticacion-completo.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/03-frontend-arquitectura-completa.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/03-modelo-datos.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/04-flujo-carrera.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/05-sistema-permisos.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/06-flujo-clasificaciones.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/07-flujo-oauth2.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/09-flujo-registro-unificado.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/11-testing-security.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/16-stage-results-management.mmd" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/README.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/visualizador.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagrams/visualizador_completo.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/Stage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/Stage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/uploads/1749159050421_lonelymachineai_A_minimalist_ink_drawing_of_ballerina_with_samu_1cd63e37-9778-472c-81d9-87b4c41f28ee.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -228,7 +210,7 @@
       <workItem from="1749289952569" duration="617000" />
       <workItem from="1749316873344" duration="1653000" />
       <workItem from="1749319532296" duration="4225000" />
-      <workItem from="1749331055856" duration="838000" />
+      <workItem from="1749331055856" duration="2208000" />
     </task>
     <task id="LOCAL-00001" summary="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <option name="closed" value="true" />
