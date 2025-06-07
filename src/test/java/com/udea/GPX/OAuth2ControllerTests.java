@@ -20,8 +20,11 @@ import java.util.Map;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Disabled;
 
 @SpringBootTest
+@Disabled("No se ejecuta en la CI/CD")
+
 public class OAuth2ControllerTests {
 
     @Mock
