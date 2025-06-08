@@ -17,13 +17,16 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import java.util.List;
 
 @Configuration
 public class SecurityConfig {
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
+
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public AuthenticationEntryPoint customAuthenticationEntryPoint() {
@@ -61,15 +64,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors
-                        .configurationSource(request -> {
-                            CorsConfiguration corsConfig = new CorsConfiguration();
-                            corsConfig.setAllowedOrigins(List.of("http://localhost:3000"));
-                            corsConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-                            corsConfig.setAllowedHeaders(List.of("*"));
-                            corsConfig.setAllowCredentials(true);
-                            return corsConfig;
-                        }))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
