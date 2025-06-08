@@ -31,7 +31,10 @@ public class EventService {
     private final String EVENT_UPLOAD_DIR = "uploads/events/";
 
     public List<Event> getAllEvents() {
-        return eventRepository.findAll();
+        return eventRepository.findAll()
+                .stream()
+                .sorted((e1, e2) -> e1.getStartDate().compareTo(e2.getStartDate()))
+                .collect(Collectors.toList());
     }
 
     public Optional<Event> getEventById(Long id) {
@@ -40,12 +43,19 @@ public class EventService {
 
     public List<Event> getCurrentEvents() {
         LocalDate today = LocalDate.now();
-        return eventRepository.findByEndDateAfterOrEndDateEquals(today, today);
+        return eventRepository.findByEndDateAfterOrEndDateEquals(today, today)
+                .stream()
+                .sorted((e1, e2) -> e1.getStartDate().compareTo(e2.getStartDate()))
+                .collect(Collectors.toList());
     }
 
     public List<Event> getPastEvents() {
         LocalDate today = LocalDate.now();
-        return eventRepository.findByEndDateBefore(today);
+        return eventRepository.findByEndDateBefore(today)
+                .stream()
+                .sorted((e1, e2) -> e2.getStartDate().compareTo(e1.getStartDate())) // Orden descendente para eventos
+                                                                                    // pasados
+                .collect(Collectors.toList());
     }
 
     public Event createEvent(Event event) {
