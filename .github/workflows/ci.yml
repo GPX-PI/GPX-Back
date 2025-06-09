@@ -1,0 +1,176 @@
+name: 🚀 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: 🧪 Tests & Quality Analysis
+    runs-on: ubuntu-latest
+    
+    services:
+      h2:
+        image: h2database/h2:latest
+        options: >-
+          --health-cmd="curl -f http://localhost:8080 || exit 1"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Necesario para SonarCloud
+
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 📦 Cache Maven dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
+
+    - name: 🔧 Verify Maven setup
+      run: ./mvnw --version
+
+    - name: 🧹 Clean and compile
+      run: ./mvnw clean compile
+
+    - name: 🧪 Run tests with coverage
+      run: ./mvnw clean test jacoco:report
+      env:
+        SPRING_PROFILES_ACTIVE: test
+
+    - name: 📊 Generate test report
+      run: ./mvnw surefire-report:report
+
+    - name: 📈 Upload coverage to Codecov
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: target/site/jacoco/jacoco.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+        verbose: true
+
+    - name: 🔍 SonarCloud Analysis
+      uses: SonarSource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    - name: 📈 Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: target/surefire-reports/
+
+    - name: 🏗️ Build application
+      run: ./mvnw package -DskipTests
+
+    - name: 📋 Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: jar-artifact
+        path: target/*.jar
+
+  # Comentado - la cobertura ahora se ejecuta en el job principal de test
+  # code-quality:
+  #   name: 🔍 Code Quality Analysis  
+  #   runs-on: ubuntu-latest
+  #   needs: test
+
+  security-scan:
+    name: 🛡️ Security Scan
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔒 Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: 📋 Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  dependency-check:
+    name: 🔍 Dependency Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 🔍 OWASP Dependency Check
+      run: |
+        ./mvnw org.owasp:dependency-check-maven:check
+      continue-on-error: true
+
+    - name: 📋 Upload dependency check results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: dependency-check-report
+        path: target/dependency-check-report.html
+
+  performance-test:
+    name: ⚡ Performance Tests
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: ☕ Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: 🏗️ Build application
+      run: ./mvnw package -DskipTests
+
+    - name: 🚀 Start application
+      run: |
+        java -jar target/*.jar &
+        sleep 30
+      env:
+        SPRING_PROFILES_ACTIVE: test
+
+    - name: ⚡ Run basic performance test
+      run: |
+        curl -f http://localhost:8080/actuator/health || exit 1
+        echo "✅ Application health check passed" 

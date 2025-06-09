@@ -66,4 +66,18 @@ public class AuthUtils {
     User user = getCurrentUser();
     return user != null ? user.getId() : null;
   }
+
+  /**
+   * Verifica si el usuario actual es el mismo que el userId dado o es admin
+   *
+   * @param userId ID del usuario a comparar
+   * @return true si es el mismo usuario o es admin
+   */
+  public boolean isCurrentUserOrAdmin(Long userId) {
+    if (isCurrentUserAdmin()) {
+      return true;
+    }
+    Long currentUserId = getCurrentUserId();
+    return currentUserId != null && currentUserId.equals(userId);
+  }
 }

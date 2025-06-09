@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!-- 
+    Archivo de supresión para OWASP Dependency Check
+    Documentar aquí los falsos positivos conocidos 
+    -->
+    
+    <!-- Ejemplo de supresión por CVE específico -->
+    <!--
+    <suppress>
+        <notes><![CDATA[
+        CVE falso positivo específico
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.example/.*@.*$</packageUrl>
+        <cve>CVE-2021-12345</cve>
+    </suppress>
+    -->
+    
+    <!-- Suprimir vulnerabilidades de H2 Database en entorno de test -->
+    <suppress>
+        <notes><![CDATA[
+        H2 Database solo se usa en tests y desarrollo
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.h2database/h2@.*$</packageUrl>
+        <vulnerabilityName regex="true">.*</vulnerabilityName>
+    </suppress>
+    
+</suppressions> 

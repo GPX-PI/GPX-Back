@@ -20,11 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import org.junit.jupiter.api.Disabled;
 
 @SpringBootTest
-@Disabled("No se ejecuta en la CI/CD")
-
 public class OAuth2ControllerTests {
 
     @Mock
@@ -90,7 +87,7 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
-        String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=false&provider=google&profileComplete=true&firstName=Juan";
+        String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=false&provider=google&profileComplete=true&firstName=Juan&picture=";
         assertEquals(expectedUrl, result.getUrl());
     }
 
@@ -110,7 +107,7 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
-        String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=false&provider=google&profileComplete=false&firstName=Juan";
+        String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=false&provider=google&profileComplete=false&firstName=Juan&picture=";
         assertEquals(expectedUrl, result.getUrl());
     }
 
@@ -133,7 +130,7 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
-        String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=true&provider=google&profileComplete=true&firstName=Admin";
+        String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=true&provider=google&profileComplete=true&firstName=Admin&picture=";
         assertEquals(expectedUrl, result.getUrl());
     }
 
@@ -355,5 +352,53 @@ public class OAuth2ControllerTests {
         // Verificar que NO contiene caracteres sin codificar
         assertFalse(redirectUrl.contains("firstName=José María"),
                 "La URL no debe contener caracteres especiales sin codificar en firstName");
+    }
+
+    // ========== TESTS PARA /user-info ==========
+
+    @Test
+    void getCurrentUserInfo_whenAuthenticated_shouldReturnUserInfo() {
+        OAuth2User oAuth2User = createMockOAuth2User("test@gmail.com", "Test", "User");
+        ResponseEntity<Map<String, Object>> response = oAuth2Controller.getCurrentUserInfo(oAuth2User);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+        assertEquals("Test User", body.get("name"));
+        assertEquals("test@gmail.com", body.get("email"));
+        assertEquals("https://avatar.google.com/test.jpg", body.get("picture"));
+        assertEquals("google-user-id-123", body.get("sub"));
+    }
+
+    @Test
+    void getCurrentUserInfo_whenUserNull_shouldReturnBadRequest() {
+        ResponseEntity<Map<String, Object>> response = oAuth2Controller.getCurrentUserInfo(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    // ========== TESTS PARA /profile-status ==========
+
+    @Test
+    void getProfileStatus_whenAuthenticated_shouldReturnProfileStatus() {
+        OAuth2User oAuth2User = createMockOAuth2User("test@gmail.com", "Test", "User");
+        User user = buildSimpleUser(1L, "Test", "User", "test@gmail.com");
+        when(oAuth2Service.processOAuth2User(oAuth2User)).thenReturn(user);
+        when(oAuth2Service.isProfileComplete(user)).thenReturn(true);
+        when(oAuth2Service.getMissingProfileFields(user)).thenReturn(new String[]{});
+        ResponseEntity<Map<String, Object>> response = oAuth2Controller.getProfileStatus(oAuth2User);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+        assertEquals(true, body.get("isComplete"));
+        assertEquals(1L, body.get("userId"));
+        assertEquals("Test", body.get("firstName"));
+        assertEquals("User", body.get("lastName"));
+        assertEquals("test@gmail.com", body.get("email"));
+        assertEquals("google-user-id-123", user.getGoogleId());
+    }
+
+    @Test
+    void getProfileStatus_whenUserNull_shouldReturnBadRequest() {
+        ResponseEntity<Map<String, Object>> response = oAuth2Controller.getProfileStatus(null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 }

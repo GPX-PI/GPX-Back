@@ -12,7 +12,12 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.junit.jupiter.api.Disabled;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import com.udea.GPX.model.User;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,11 +26,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@Disabled("No se ejecuta en la CI/CD")
-
 public class StageControllerTests {
 
     @Mock
@@ -34,9 +37,26 @@ public class StageControllerTests {
     @InjectMocks
     private StageController stageController;
 
+    @Mock
+    private SecurityContext securityContext;
+    @Mock
+    private Authentication authentication;
+    @Mock
+    private HttpServletRequest request;
+
+    private User buildUser(boolean admin) {
+        User user = new User();
+        user.setId(1L);
+        user.setAdmin(admin);
+        return user;
+    }
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        SecurityContextHolder.setContext(securityContext);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        ReflectionTestUtils.setField(stageController, "request", request);
     }
 
     @Test
@@ -99,6 +119,75 @@ public class StageControllerTests {
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+    }
+
+    @Test
+    void createStage_whenAdmin_shouldReturnCreated() {
+        User adminUser = buildUser(true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+        Stage stage = new Stage(null, "Stage X", 1, false, new Event());
+        Stage savedStage = new Stage(10L, "Stage X", 1, false, new Event());
+        when(stageService.createStage(stage)).thenReturn(savedStage);
+        ResponseEntity<Stage> response = stageController.createStage(stage);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(savedStage, response.getBody());
+    }
+
+    @Test
+    void createStage_whenNotAdmin_shouldReturnForbidden() {
+        User nonAdminUser = buildUser(false);
+        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+        Stage stage = new Stage(null, "Stage X", 1, false, new Event());
+        ResponseEntity<Stage> response = stageController.createStage(stage);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void updateStage_whenAdmin_shouldReturnOK() {
+        User adminUser = buildUser(true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+        Stage stage = new Stage(null, "Stage Y", 2, true, new Event());
+        Stage updatedStage = new Stage(2L, "Stage Y", 2, true, new Event());
+        when(stageService.updateStage(2L, stage)).thenReturn(updatedStage);
+        ResponseEntity<Stage> response = stageController.updateStage(2L, stage);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(updatedStage, response.getBody());
+    }
+
+    @Test
+    void updateStage_whenNotAdmin_shouldReturnForbidden() {
+        User nonAdminUser = buildUser(false);
+        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+        Stage stage = new Stage(null, "Stage Y", 2, true, new Event());
+        ResponseEntity<Stage> response = stageController.updateStage(2L, stage);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void updateStage_whenAdminAndNotFound_shouldReturnNotFound() {
+        User adminUser = buildUser(true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+        Stage stage = new Stage(null, "Stage Y", 2, true, new Event());
+        doThrow(new RuntimeException()).when(stageService).updateStage(99L, stage);
+        ResponseEntity<Stage> response = stageController.updateStage(99L, stage);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void deleteStage_whenAdmin_shouldReturnNoContent() {
+        User adminUser = buildUser(true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+        ResponseEntity<Void> response = stageController.deleteStage(1L);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(stageService).deleteStage(1L);
+    }
+
+    @Test
+    void deleteStage_whenNotAdmin_shouldReturnForbidden() {
+        User nonAdminUser = buildUser(false);
+        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+        ResponseEntity<Void> response = stageController.deleteStage(1L);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
 }

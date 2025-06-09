@@ -4,8 +4,8 @@ import com.udea.GPX.controller.EventController;
 import com.udea.GPX.model.Event;
 import com.udea.GPX.model.EventCategory;
 import com.udea.GPX.service.EventService;
+import com.udea.GPX.util.AuthUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -13,6 +13,9 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -22,15 +25,20 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@Disabled("No se ejecuta en la CI/CD")
-
 public class EventControllerTests {
 
     @Mock
     private EventService eventService;
+
+    @Mock
+    private AuthUtils authUtils;
+    @Mock
+    private MultipartFile multipartFile;
 
     @InjectMocks
     private EventController eventController;
@@ -148,5 +156,157 @@ public class EventControllerTests {
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+    }
+
+    @Test
+    void createEvent_whenAdmin_shouldReturnCreated() {
+        Event event = new Event();
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        when(eventService.createEvent(event)).thenReturn(event);
+        ResponseEntity<Event> response = eventController.createEvent(event);
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(event, response.getBody());
+    }
+
+    @Test
+    void createEvent_whenNotAdmin_shouldReturnForbidden() {
+        Event event = new Event();
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+        ResponseEntity<Event> response = eventController.createEvent(event);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void updateEvent_whenAdmin_shouldReturnOK() {
+        Event event = new Event();
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        when(eventService.updateEvent(1L, event)).thenReturn(event);
+        ResponseEntity<Event> response = eventController.updateEvent(1L, event);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(event, response.getBody());
+    }
+
+    @Test
+    void updateEvent_whenNotAdmin_shouldReturnForbidden() {
+        Event event = new Event();
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+        ResponseEntity<Event> response = eventController.updateEvent(1L, event);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void updateEvent_whenAdminAndNotFound_shouldReturnNotFound() {
+        Event event = new Event();
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        doThrow(new RuntimeException()).when(eventService).updateEvent(1L, event);
+        ResponseEntity<Event> response = eventController.updateEvent(1L, event);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void deleteEvent_whenAdmin_shouldReturnNoContent() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        ResponseEntity<Void> response = eventController.deleteEvent(1L);
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    }
+
+    @Test
+    void deleteEvent_whenNotAdmin_shouldReturnForbidden() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+        ResponseEntity<Void> response = eventController.deleteEvent(1L);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void updateEventPicture_whenAdminAndFile_shouldReturnOK() throws Exception {
+        Event event = new Event();
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        when(multipartFile.isEmpty()).thenReturn(false);
+        when(eventService.updateEventPicture(1L, multipartFile)).thenReturn(event);
+        ResponseEntity<Event> response = eventController.updateEventPicture(1L, multipartFile, null);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(event, response.getBody());
+    }
+
+    @Test
+    void updateEventPicture_whenNotAdmin_shouldReturnForbidden() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+        ResponseEntity<Event> response = eventController.updateEventPicture(1L, multipartFile, null);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void updateEventPicture_whenAdminAndFileNotFound_shouldReturnNotFound() throws Exception {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        when(multipartFile.isEmpty()).thenReturn(false);
+        doThrow(new RuntimeException()).when(eventService).updateEventPicture(1L, multipartFile);
+        ResponseEntity<Event> response = eventController.updateEventPicture(1L, multipartFile, null);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void updateEventPicture_whenAdminAndFileNull_shouldReturnBadRequest() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        ResponseEntity<Event> response = eventController.updateEventPicture(1L, null, null);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void updateEventPictureUrl_whenAdmin_shouldReturnOK() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode node = mapper.createObjectNode();
+        node.put("pictureUrl", "http://test.com/img.jpg");
+        Event event = new Event();
+        when(eventService.updateEventPictureUrl(1L, "http://test.com/img.jpg")).thenReturn(event);
+        ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, node);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(event, response.getBody());
+    }
+
+    @Test
+    void updateEventPictureUrl_whenNotAdmin_shouldReturnForbidden() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode node = mapper.createObjectNode();
+        node.put("pictureUrl", "http://test.com/img.jpg");
+        ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, node);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void updateEventPictureUrl_whenAdminAndNotFound_shouldReturnNotFound() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode node = mapper.createObjectNode();
+        node.put("pictureUrl", "http://test.com/img.jpg");
+        doThrow(new RuntimeException()).when(eventService).updateEventPictureUrl(1L, "http://test.com/img.jpg");
+        ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, node);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    void removeEventPicture_whenAdmin_shouldReturnOK() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        Event event = new Event();
+        when(eventService.removeEventPicture(1L)).thenReturn(event);
+        ResponseEntity<Event> response = eventController.removeEventPicture(1L);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(event, response.getBody());
+    }
+
+    @Test
+    void removeEventPicture_whenNotAdmin_shouldReturnForbidden() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+        ResponseEntity<Event> response = eventController.removeEventPicture(1L);
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void removeEventPicture_whenAdminAndNotFound_shouldReturnNotFound() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        doThrow(new RuntimeException()).when(eventService).removeEventPicture(1L);
+        ResponseEntity<Event> response = eventController.removeEventPicture(1L);
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 }

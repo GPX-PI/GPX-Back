@@ -6,8 +6,9 @@ import com.udea.GPX.model.EventVehicle;
 import com.udea.GPX.model.User;
 import com.udea.GPX.model.Vehicle;
 import com.udea.GPX.service.EventVehicleService;
+import com.udea.GPX.service.UserService;
+import com.udea.GPX.service.VehicleService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,19 +21,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@Disabled("No se ejecuta en la CI/CD")
-
 public class EventVehicleControllerTests {
 
     @Mock
@@ -47,6 +44,10 @@ public class EventVehicleControllerTests {
     @Mock
     private Authentication authentication;
 
+    @Mock
+    private UserService userService;
+    @Mock
+    private VehicleService vehicleService;
     @InjectMocks
     private EventVehicleController eventVehicleController;
 
@@ -205,5 +206,130 @@ public class EventVehicleControllerTests {
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+    }
+
+    @Test
+    void createEventVehicle_whenUserOwnsVehicleAndNotRegistered_shouldReturnCreated() {
+        // Arrange
+        User user = buildUser(1L, false);
+        Vehicle vehicle = buildVehicleWithUser(1L, false);
+        Event event = new Event();
+        event.setId(100L);
+        EventVehicle eventVehicle = new EventVehicle();
+        eventVehicle.setVehicleId(vehicle);
+        eventVehicle.setEvent(event);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(vehicleService.getVehicleById(vehicle.getId())).thenReturn(Optional.of(vehicle));
+        when(eventVehicleService.getVehiclesByEventId(event.getId())).thenReturn(List.of());
+        EventVehicle savedEventVehicle = new EventVehicle(10L, event, vehicle);
+        when(eventVehicleService.createEventVehicle(eventVehicle)).thenReturn(savedEventVehicle);
+
+        // Act
+        ResponseEntity<?> response = eventVehicleController.createEventVehicle(eventVehicle);
+
+        // Assert
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(savedEventVehicle, response.getBody());
+    }
+
+    @Test
+    void createEventVehicle_whenVehicleNotFound_shouldReturnNotFound() {
+        // Arrange
+        User user = buildUser(1L, false);
+        Vehicle vehicle = buildVehicleWithUser(1L, false);
+        Event event = new Event();
+        event.setId(100L);
+        EventVehicle eventVehicle = new EventVehicle();
+        eventVehicle.setVehicleId(vehicle);
+        eventVehicle.setEvent(event);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(vehicleService.getVehicleById(vehicle.getId())).thenReturn(Optional.empty());
+
+        // Act
+        ResponseEntity<?> response = eventVehicleController.createEventVehicle(eventVehicle);
+
+        // Assert
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Vehículo no encontrado", ((java.util.Map<?,?>)response.getBody()).get("error"));
+    }
+
+    @Test
+    void createEventVehicle_whenUserNotOwnerAndNotAdmin_shouldReturnForbidden() {
+        // Arrange
+        User user = buildUser(2L, false); // No es dueño
+        Vehicle vehicle = buildVehicleWithUser(1L, false); // Dueño es 1L
+        Event event = new Event();
+        event.setId(100L);
+        EventVehicle eventVehicle = new EventVehicle();
+        eventVehicle.setVehicleId(vehicle);
+        eventVehicle.setEvent(event);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(vehicleService.getVehicleById(vehicle.getId())).thenReturn(Optional.of(vehicle));
+
+        // Act
+        ResponseEntity<?> response = eventVehicleController.createEventVehicle(eventVehicle);
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertEquals("Sin permisos", ((java.util.Map<?,?>)response.getBody()).get("error"));
+    }
+
+    @Test
+    void createEventVehicle_whenUserAlreadyRegistered_shouldReturnConflict() {
+        // Arrange
+        User user = buildUser(1L, false);
+        Vehicle vehicle = buildVehicleWithUser(1L, false);
+        Event event = new Event();
+        event.setId(100L);
+        EventVehicle eventVehicle = new EventVehicle();
+        eventVehicle.setVehicleId(vehicle);
+        eventVehicle.setEvent(event);
+        EventVehicle existing = new EventVehicle(99L, event, vehicle);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(vehicleService.getVehicleById(vehicle.getId())).thenReturn(Optional.of(vehicle));
+        when(eventVehicleService.getVehiclesByEventId(event.getId())).thenReturn(List.of(existing));
+
+        // Act
+        ResponseEntity<?> response = eventVehicleController.createEventVehicle(eventVehicle);
+
+        // Assert
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("Usuario ya inscrito", ((java.util.Map<?,?>)response.getBody()).get("error"));
+    }
+
+    @Test
+    void createEventVehicle_whenUnexpectedError_shouldReturnInternalServerError() {
+        // Arrange
+        User user = buildUser(1L, false);
+        Vehicle vehicle = buildVehicleWithUser(1L, false);
+        Event event = new Event();
+        event.setId(100L);
+        EventVehicle eventVehicle = new EventVehicle();
+        eventVehicle.setVehicleId(vehicle);
+        eventVehicle.setEvent(event);
+
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(vehicleService.getVehicleById(vehicle.getId())).thenThrow(new RuntimeException("DB error"));
+
+        // Act
+        ResponseEntity<?> response = eventVehicleController.createEventVehicle(eventVehicle);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals("Error al procesar inscripción", ((java.util.Map<?,?>)response.getBody()).get("error"));
     }
 }

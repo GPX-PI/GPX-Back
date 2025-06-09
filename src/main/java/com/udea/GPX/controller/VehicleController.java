@@ -23,6 +23,7 @@ import java.util.HashMap;
 
 import java.util.List;
 import java.util.Optional;
+import com.udea.GPX.util.AuthUtils;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -46,6 +47,9 @@ public class VehicleController {
     @SuppressWarnings("unused")
     @Autowired
     private HttpServletRequest request;
+
+    @Autowired
+    private AuthUtils authUtils;
 
     /**
      * Obtiene el usuario autenticado, manejando tanto autenticación local como
@@ -76,8 +80,7 @@ public class VehicleController {
 
     @GetMapping
     public ResponseEntity<List<Vehicle>> getAllVehicles() {
-        User authUser = getAuthenticatedUser();
-        if (!authUser.isAdmin()) {
+        if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
         return ResponseEntity.ok(vehicleService.getAllVehicles());
@@ -95,13 +98,11 @@ public class VehicleController {
      *         not found
      */
     public ResponseEntity<Vehicle> getVehicleById(@PathVariable Long id) {
-        User authUser = getAuthenticatedUser();
         Optional<Vehicle> vehicle = vehicleService.getVehicleById(id);
         if (vehicle.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        if (!authUser.isAdmin()
-                && (vehicle.get().getUser() == null || !vehicle.get().getUser().getId().equals(authUser.getId()))) {
+        if (!authUtils.isCurrentUserOrAdmin(vehicle.get().getUser() != null ? vehicle.get().getUser().getId() : null)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(vehicle.get());
@@ -137,16 +138,13 @@ public class VehicleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Vehicle> updateVehicle(@PathVariable Long id, @RequestBody JsonNode vehicleData) {
-        User authUser = getAuthenticatedUser();
         Optional<Vehicle> existing = vehicleService.getVehicleById(id);
         if (existing.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        if (!authUser.isAdmin()
-                && (existing.get().getUser() == null || !existing.get().getUser().getId().equals(authUser.getId()))) {
+        if (!authUtils.isCurrentUserOrAdmin(existing.get().getUser() != null ? existing.get().getUser().getId() : null)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         try {
             Vehicle vehicle = existing.get();
             vehicle.setName(vehicleData.get("name").asText());
@@ -172,8 +170,7 @@ public class VehicleController {
 
     @GetMapping("/bycategory/{categoryId}")
     public ResponseEntity<List<Vehicle>> getVehiclesByCategory(@PathVariable Long categoryId) {
-        User authUser = getAuthenticatedUser();
-        if (!authUser.isAdmin()) {
+        if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         List<Vehicle> vehicles = vehicleService.getAllVehicles().stream()
@@ -184,8 +181,7 @@ public class VehicleController {
 
     @GetMapping("/byuser/{userId}")
     public ResponseEntity<List<Vehicle>> getVehiclesByUser(@PathVariable Long userId) {
-        User authUser = getAuthenticatedUser();
-        if (!authUser.isAdmin() && !authUser.getId().equals(userId)) {
+        if (!authUtils.isCurrentUserOrAdmin(userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
         List<Vehicle> vehicles = vehicleService.getAllVehicles().stream()
@@ -196,15 +192,12 @@ public class VehicleController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteVehicle(@PathVariable Long id) {
-        User authUser = getAuthenticatedUser();
         Optional<Vehicle> vehicleOpt = vehicleService.getVehicleById(id);
         if (vehicleOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-
         Vehicle vehicle = vehicleOpt.get();
-        if (!authUser.isAdmin()
-                && (vehicle.getUser() == null || !vehicle.getUser().getId().equals(authUser.getId()))) {
+        if (!authUtils.isCurrentUserOrAdmin(vehicle.getUser() != null ? vehicle.getUser().getId() : null)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 

@@ -3,6 +3,7 @@ package com.udea.GPX.controller;
 import com.udea.GPX.model.User;
 import com.udea.GPX.service.UserService;
 import com.udea.GPX.JwtUtil;
+import com.udea.GPX.util.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,9 @@ public class UserController {
     @Autowired
     private JwtUtil jwtUtil;
 
+    @Autowired
+    private AuthUtils authUtils;
+
     /**
      * Método auxiliar para obtener el usuario autenticado del contexto de seguridad
      * Maneja tanto autenticación JWT como OAuth2
@@ -71,8 +75,7 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || !authUser.isAdmin()) {
+        if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
         return ResponseEntity.ok(userService.getAllUsers());
@@ -80,8 +83,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || (!authUser.isAdmin() && !authUser.getId().equals(id))) {
+        if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         Optional<User> user = userService.getUserById(id);
@@ -180,8 +182,7 @@ public class UserController {
             @RequestPart("user") User user,
             @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto,
             @RequestPart(value = "insurance", required = false) MultipartFile insurance) {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || (!authUser.isAdmin() && !authUser.getId().equals(id))) {
+        if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
@@ -232,8 +233,7 @@ public class UserController {
     public ResponseEntity<?> updateUserProfile(
             @PathVariable Long id,
             @RequestBody User user) {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || (!authUser.isAdmin() && !authUser.getId().equals(id))) {
+        if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
@@ -266,11 +266,9 @@ public class UserController {
     public ResponseEntity<?> updateUserPicture(
             @PathVariable Long id,
             @RequestBody Map<String, String> pictureData) {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || (!authUser.isAdmin() && !authUser.getId().equals(id))) {
+        if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         try {
             Optional<User> userOpt = userService.getUserById(id);
             if (userOpt.isEmpty()) {
@@ -308,11 +306,9 @@ public class UserController {
 
     @DeleteMapping("/{id}/insurance")
     public ResponseEntity<?> removeInsurance(@PathVariable Long id) {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || (!authUser.isAdmin() && !authUser.getId().equals(id))) {
+        if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         try {
             Optional<User> userOpt = userService.getUserById(id);
             if (userOpt.isEmpty()) {
@@ -340,8 +336,7 @@ public class UserController {
 
     @GetMapping("/admins")
     public ResponseEntity<List<User>> getAdminUsers() {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || !authUser.isAdmin()) {
+        if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
         List<User> adminUsers = userService.getAllUsers().stream()
@@ -400,11 +395,9 @@ public class UserController {
 
     @PostMapping("/{id}/complete-profile")
     public ResponseEntity<?> completeProfile(@PathVariable Long id, @RequestBody Map<String, String> profileData) {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || (!authUser.isAdmin() && !authUser.getId().equals(id))) {
+        if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         try {
             Optional<User> userOpt = userService.getUserById(id);
             if (userOpt.isEmpty()) {
@@ -602,11 +595,9 @@ public class UserController {
     public ResponseEntity<?> changePassword(
             @PathVariable Long id,
             @RequestBody Map<String, String> passwordData) {
-        User authUser = getAuthenticatedUser();
-        if (authUser == null || (!authUser.isAdmin() && !authUser.getId().equals(id))) {
+        if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         try {
             String currentPassword = passwordData.get("currentPassword");
             String newPassword = passwordData.get("newPassword");
@@ -677,21 +668,17 @@ public class UserController {
     public ResponseEntity<?> toggleAdminRole(
             @PathVariable Long id,
             @RequestBody Map<String, Boolean> adminData) {
-        User authUser = getAuthenticatedUser();
-
-        // Solo administradores pueden cambiar roles
-        if (authUser == null || !authUser.isAdmin()) {
+        if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-
         // No permitir que un admin se quite sus propios permisos
-        if (authUser.getId().equals(id)) {
+        User authUser = getAuthenticatedUser();
+        if (authUser != null && authUser.getId().equals(id)) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "No puedes cambiar tu propio rol de administrador");
             errorResponse.put("type", "VALIDATION_ERROR");
             return ResponseEntity.badRequest().body(errorResponse);
         }
-
         try {
             Boolean isAdmin = adminData.get("admin");
             if (isAdmin == null) {
@@ -776,3 +763,4 @@ public class UserController {
         }
     }
 }
+

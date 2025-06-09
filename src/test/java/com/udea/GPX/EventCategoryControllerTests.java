@@ -7,7 +7,6 @@ import com.udea.GPX.model.EventCategory;
 import com.udea.GPX.model.User;
 import com.udea.GPX.service.EventCategoryService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,20 +19,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
-@Disabled("No se ejecuta en la CI/CD")
-
 public class EventCategoryControllerTests {
 
     @InjectMocks
@@ -51,9 +45,9 @@ public class EventCategoryControllerTests {
     @Mock
     private Authentication authentication;
 
-    private User buildUser(Long id, boolean admin) {
+    private User buildUser(boolean admin) {
         return new User(
-                id,
+                1L,
                 "TestUser",
                 "TestLastName",
                 "123456789",
@@ -86,7 +80,7 @@ public class EventCategoryControllerTests {
     @Test
     void getAllEventCategories_whenAdmin_shouldReturnOK() {
         // Arrange
-        User adminUser = buildUser(1L, true);
+        User adminUser = buildUser(true);
         when(authentication.getPrincipal()).thenReturn(adminUser);
         List<EventCategory> eventCategories = new ArrayList<>();
         EventCategory eventCategory1 = new EventCategory();
@@ -117,7 +111,7 @@ public class EventCategoryControllerTests {
     @Test
     void getAllEventCategories_whenNotAdmin_shouldReturnForbidden() {
         // Arrange
-        User nonAdminUser = buildUser(1L, false);
+        User nonAdminUser = buildUser(false);
         when(authentication.getPrincipal()).thenReturn(nonAdminUser);
 
         // Act
@@ -129,60 +123,115 @@ public class EventCategoryControllerTests {
     }
 
     @Test
-    void getEventCategoryById_whenCategoryExists_shouldReturnOK() {
+    void createEventCategory_whenAdmin_shouldReturnCreated() {
         // Arrange
-        Long categoryId = 1L;
-        User adminUser = buildUser(1L, true);
+        User adminUser = buildUser(true);
         when(authentication.getPrincipal()).thenReturn(adminUser);
-
         EventCategory eventCategory = new EventCategory();
-        Category category = new Category();
-        Event event = new Event();
-        category.setId(categoryId);
-        category.setName("Category 1");
-        eventCategory.setCategory(category);
-        eventCategory.setEvent(event);
-        eventCategory.setId(1L);
-
-        when(eventCategoryService.getById(categoryId)).thenReturn(eventCategory);
+        when(eventCategoryService.save(eventCategory)).thenReturn(eventCategory);
 
         // Act
-        ResponseEntity<EventCategory> response = eventCategoryController.getEventCategoryById(categoryId);
+        ResponseEntity<EventCategory> response = eventCategoryController.createEventCategory(eventCategory);
 
         // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Category 1", Objects.requireNonNull(response.getBody()).getCategory().getName());
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals(eventCategory, response.getBody());
     }
 
     @Test
-    void getEventCategoryById_whenCategoryNotExists_shouldReturnNotFound() {
+    void createEventCategory_whenNotAdmin_shouldReturnForbidden() {
         // Arrange
-        Long categoryId = 1L;
-        User adminUser = buildUser(1L, true);
-        when(authentication.getPrincipal()).thenReturn(adminUser);
-
-        when(eventCategoryService.getById(categoryId)).thenReturn(null);
+        User nonAdminUser = buildUser(false);
+        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+        EventCategory eventCategory = new EventCategory();
 
         // Act
-        ResponseEntity<EventCategory> response = eventCategoryController.getEventCategoryById(categoryId);
+        ResponseEntity<EventCategory> response = eventCategoryController.createEventCategory(eventCategory);
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void deleteEventCategory_whenAdmin_shouldReturnNoContent() {
+        // Arrange
+        User adminUser = buildUser(true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+
+        // Act
+        ResponseEntity<Void> response = eventCategoryController.deleteEventCategory(1L);
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    }
+
+    @Test
+    void deleteEventCategory_whenNotAdmin_shouldReturnForbidden() {
+        // Arrange
+        User nonAdminUser = buildUser(false);
+        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+
+        // Act
+        ResponseEntity<Void> response = eventCategoryController.deleteEventCategory(1L);
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+    }
+
+    @Test
+    void getEventCategoryById_whenAdminAndExists_shouldReturnOK() {
+        // Arrange
+        User adminUser = buildUser(true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+        EventCategory eventCategory = new EventCategory();
+        when(eventCategoryService.getById(1L)).thenReturn(eventCategory);
+
+        // Act
+        ResponseEntity<EventCategory> response = eventCategoryController.getEventCategoryById(1L);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(eventCategory, response.getBody());
+    }
+
+    @Test
+    void getEventCategoryById_whenAdminAndNotFound_shouldReturnNotFound() {
+        // Arrange
+        User adminUser = buildUser(true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+        when(eventCategoryService.getById(1L)).thenReturn(null);
+
+        // Act
+        ResponseEntity<EventCategory> response = eventCategoryController.getEventCategoryById(1L);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
     }
 
     @Test
     void getEventCategoryById_whenNotAdmin_shouldReturnForbidden() {
         // Arrange
-        Long categoryId = 1L;
-        User nonAdminUser = buildUser(1L, false);
+        User nonAdminUser = buildUser(false);
         when(authentication.getPrincipal()).thenReturn(nonAdminUser);
 
         // Act
-        ResponseEntity<EventCategory> response = eventCategoryController.getEventCategoryById(categoryId);
+        ResponseEntity<EventCategory> response = eventCategoryController.getEventCategoryById(1L);
 
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertNull(response.getBody());
+    }
+
+    @Test
+    void getCategoriesByEventId_shouldReturnOK() {
+        // Arrange
+        List<EventCategory> eventCategories = new ArrayList<>();
+        when(eventCategoryService.getByEventId(1L)).thenReturn(eventCategories);
+
+        // Act
+        ResponseEntity<List<EventCategory>> response = eventCategoryController.getCategoriesByEventId(1L);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(eventCategories, response.getBody());
     }
 }
