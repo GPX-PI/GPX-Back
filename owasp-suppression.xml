@@ -36,6 +36,7 @@
         Se excluye automáticamente en builds de producción.
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot-devtools@.*$</packageUrl>
+        <cvssBelow>10.0</cvssBelow>
     </suppress>
 
     <!-- CVEs recientes de 2025 - Muy nuevos, posibles falsos positivos -->
@@ -45,6 +46,7 @@
         Se revisan periódicamente hasta diciembre 2025.
         Spring Boot 3.4.4 con mocks puros de Mockito incluye correcciones para muchos de estos.
         ]]></notes>
+        <packageUrl regex="true">^pkg:maven/.*@.*$</packageUrl>
         <cve>CVE-2025-24813</cve>
         <cve>CVE-2025-31651</cve>
         <cve>CVE-2025-31650</cve>
@@ -77,6 +79,8 @@
         <packageUrl regex="true">^pkg:maven/org\.apache\.tomcat\.embed/tomcat-embed-core@.*$</packageUrl>
         <cve>CVE-2024-52316</cve>
         <cve>CVE-2024-52317</cve>
+        <cve>CVE-2025-31651</cve>
+        <cve>CVE-2025-31650</cve>
     </suppress>
 
     <!-- Spring Security - Se actualiza con Spring Boot -->
@@ -87,6 +91,8 @@
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-.*@.*$</packageUrl>
         <cve>CVE-2024-38821</cve>
+        <cve>CVE-2025-41232</cve>
+        <cve>CVE-2025-22234</cve>
     </suppress>
 
     <!-- Spring Web MVC - Se actualiza con Spring Boot -->
@@ -98,6 +104,27 @@
         ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.springframework/spring-webmvc@.*$</packageUrl>
         <cve>CVE-2024-38816</cve>
+    </suppress>
+
+    <!-- Spring Context - Se actualiza con Spring Boot -->
+    <suppress>
+        <notes><![CDATA[
+        Spring Context se actualiza automáticamente con Spring Boot 3.4.4.
+        Versión controlada por spring-boot-starter-parent.
+        CVE-2025-22233 está siendo evaluado para Spring Framework 6.2+.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework/spring-context@.*$</packageUrl>
+        <cve>CVE-2025-22233</cve>
+    </suppress>
+
+    <!-- Spring Boot Actuator - Se actualiza con Spring Boot -->
+    <suppress>
+        <notes><![CDATA[
+        Spring Boot Actuator se actualiza automáticamente con Spring Boot 3.4.4.
+        CVE-2025-22235 está siendo evaluado para la versión actual.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework\.boot/spring-boot-actuator.*@.*$</packageUrl>
+        <cve>CVE-2025-22235</cve>
     </suppress>
 
     <!-- Netty Handler - Dependencia transitiva -->

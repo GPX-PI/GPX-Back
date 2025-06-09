@@ -18,7 +18,7 @@
     <img src="https://img.shields.io/badge/java-17-blue.svg" alt="Java"/>
   </a>
   <a href="https://spring.io/projects/spring-boot">
-    <img src="https://img.shields.io/badge/Spring%20Boot-3.2.9-brightgreen.svg" alt="Spring Boot"/>
+    <img src="https://img.shields.io/badge/Spring%20Boot-3.4.4-brightgreen.svg" alt="Spring Boot"/>
   </a>
   <a href="LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"/>
@@ -55,7 +55,7 @@
 
 ## 📋 Descripción
 
-Sistema de gestión de eventos de carreras desarrollado con **Spring Boot 3.2.9** y **Java 17**. Permite administrar eventos, vehículos, usuarios, categorías y resultados de etapas de carreras. Incluye autenticación dual (tradicional y OAuth2), gestión de archivos y un completo sistema de roles y permisos.
+Sistema de gestión de eventos de carreras desarrollado con **Spring Boot 3.4.4** y **Java 17**. Permite administrar eventos, vehículos, usuarios, categorías y resultados de etapas de carreras. Incluye autenticación dual (tradicional y OAuth2), gestión de archivos y un completo sistema de roles y permisos.
 
 ## ✨ Características Principales
 
@@ -74,7 +74,7 @@ Sistema de gestión de eventos de carreras desarrollado con **Spring Boot 3.2.9*
 
 ### Backend Framework
 
-- **Spring Boot 3.2.9**
+- **Spring Boot 3.4.4**
 - **Java 17**
 - **Spring Security** (JWT + OAuth2)
 - **Spring Data JPA**
