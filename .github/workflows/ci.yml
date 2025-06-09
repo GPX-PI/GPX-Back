@@ -11,21 +11,15 @@ jobs:
   test:
     name: 🧪 Tests & Quality Analysis
     runs-on: ubuntu-latest
-    
-    services:
-      h2:
-        image: h2database/h2:latest
-        options: >-
-          --health-cmd="curl -f http://localhost:8080 || exit 1"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
 
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Necesario para SonarCloud
+
+    - name: 🔧 Make mvnw executable
+      run: chmod +x mvnw
 
     - name: ☕ Set up JDK 17
       uses: actions/setup-java@v4
@@ -121,6 +115,9 @@ jobs:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
 
+    - name: 🔧 Make mvnw executable
+      run: chmod +x mvnw
+
     - name: ☕ Set up JDK 17
       uses: actions/setup-java@v4
       with:
@@ -149,6 +146,9 @@ jobs:
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
+
+    - name: 🔧 Make mvnw executable
+      run: chmod +x mvnw
 
     - name: ☕ Set up JDK 17
       uses: actions/setup-java@v4
