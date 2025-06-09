@@ -28,7 +28,7 @@
     </scm>
     <properties>
         <java.version>17</java.version>
-        <sonar.organization>gpx-pi</sonar.organization>
+        <sonar.organization>gpxpi</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
     <dependencies>

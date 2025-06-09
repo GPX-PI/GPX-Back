@@ -29,7 +29,7 @@ jobs:
         cache: maven
 
     - name: 🧪 Run tests with coverage
-      run: ./mvnw clean verify
+      run: ./mvnw clean test jacoco:report
       env:
         SPRING_PROFILES_ACTIVE: test
         MAVEN_OPTS: "-XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage=false"
