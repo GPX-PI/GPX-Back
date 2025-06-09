@@ -1,39 +1,38 @@
 package com.udea.GPX;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 import com.udea.GPX.controller.VehicleController;
-import com.udea.GPX.model.Category;
-import com.udea.GPX.model.User;
 import com.udea.GPX.model.Vehicle;
+import com.udea.GPX.model.User;
+import com.udea.GPX.model.Category;
 import com.udea.GPX.service.VehicleService;
+import com.udea.GPX.util.AuthUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.Disabled;
-
+import org.mockito.MockitoAnnotations;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.*;
-
-@SpringBootTest
+@SuppressWarnings("unchecked")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class VehicleControllerTests {
 
     @Mock
@@ -49,12 +48,19 @@ public class VehicleControllerTests {
     private Authentication authentication;
 
     @Mock
-    private com.udea.GPX.util.AuthUtils authUtils;
+    private AuthUtils authUtils;
 
     @Mock
     private com.udea.GPX.repository.IEventVehicleRepository eventVehicleRepository;
+
     @Mock
     private com.udea.GPX.repository.IStageResultRepository stageResultRepository;
+
+    @Mock
+    private com.udea.GPX.service.UserService userService;
+
+    @Mock
+    private com.udea.GPX.service.CategoryService categoryService;
 
     @InjectMocks
     private VehicleController vehicleController;
@@ -93,8 +99,10 @@ public class VehicleControllerTests {
         when(securityContext.getAuthentication()).thenReturn(authentication);
         ReflectionTestUtils.setField(vehicleController, "request", request);
         ReflectionTestUtils.setField(vehicleController, "authUtils", authUtils);
-        ReflectionTestUtils.setField(vehicleController, "eventVehicleRepository", eventVehicleRepository);
-        ReflectionTestUtils.setField(vehicleController, "stageResultRepository", stageResultRepository);
+
+        // Mock repository responses to avoid NullPointerException
+        when(eventVehicleRepository.findAll()).thenReturn(java.util.Collections.emptyList());
+        when(stageResultRepository.findAll()).thenReturn(java.util.Collections.emptyList());
     }
 
     @Test
@@ -113,7 +121,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(2, response.getBody().size());
     }
 
     @Test
@@ -145,7 +153,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(vehicleId, Objects.requireNonNull(response.getBody()).getId());
+        assertEquals(vehicleId, response.getBody().getId());
     }
 
     @Test
@@ -163,7 +171,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(vehicleId, Objects.requireNonNull(response.getBody()).getId());
+        assertEquals(vehicleId, response.getBody().getId());
     }
 
     @Test
@@ -212,7 +220,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(vehicle.getId(), Objects.requireNonNull(response.getBody()).getId());
+        assertEquals(vehicle.getId(), response.getBody().getId());
     }
 
     @Test
@@ -233,7 +241,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(vehicleId, Objects.requireNonNull(response.getBody()).getId());
+        assertEquals(vehicleId, response.getBody().getId());
     }
 
     @Test
@@ -254,7 +262,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(vehicleId, Objects.requireNonNull(response.getBody()).getId());
+        assertEquals(vehicleId, response.getBody().getId());
     }
 
     @Test
@@ -312,7 +320,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(2, response.getBody().size());
     }
 
     @Test
@@ -347,7 +355,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(2, response.getBody().size());
     }
 
     @Test
@@ -367,7 +375,7 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(2, response.getBody().size());
     }
 
     @Test

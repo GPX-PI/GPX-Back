@@ -1,47 +1,59 @@
 package com.udea.GPX;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.udea.GPX.controller.EventController;
 import com.udea.GPX.model.Event;
 import com.udea.GPX.model.EventCategory;
 import com.udea.GPX.service.EventService;
 import com.udea.GPX.util.AuthUtils;
+import com.udea.GPX.config.TestConfig;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
-
-@SpringBootTest
+@SuppressWarnings("unchecked")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EventControllerTests {
+
+    @InjectMocks
+    private EventController eventController;
 
     @Mock
     private EventService eventService;
 
     @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
     private AuthUtils authUtils;
+
     @Mock
     private MultipartFile multipartFile;
-
-    @InjectMocks
-    private EventController eventController;
 
     @BeforeEach
     void setUp() {
@@ -63,7 +75,7 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(2, response.getBody().size());
         assertEquals("ruta/imagen1.jpg", response.getBody().get(0).getPicture());
         assertEquals("ruta/imagen2.jpg", response.getBody().get(1).getPicture());
     }
@@ -81,7 +93,7 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Evento 1", Objects.requireNonNull(response.getBody()).getName());
+        assertEquals("Evento 1", response.getBody().getName());
         assertEquals("ruta/imagen1.jpg", response.getBody().getPicture());
     }
 
@@ -114,7 +126,7 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(2, response.getBody().size());
         assertEquals("ruta/actual1.jpg", response.getBody().get(0).getPicture());
         assertEquals("ruta/actual2.jpg", response.getBody().get(1).getPicture());
     }
@@ -136,7 +148,7 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(2, response.getBody().size());
         assertEquals("ruta/pasado1.jpg", response.getBody().get(0).getPicture());
         assertEquals("ruta/pasado2.jpg", response.getBody().get(1).getPicture());
     }
@@ -155,7 +167,7 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals(2, response.getBody().size());
     }
 
     @Test

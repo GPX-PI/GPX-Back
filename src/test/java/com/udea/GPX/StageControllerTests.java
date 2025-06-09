@@ -3,13 +3,18 @@ package com.udea.GPX;
 import com.udea.GPX.controller.StageController;
 import com.udea.GPX.model.Event;
 import com.udea.GPX.model.Stage;
+import com.udea.GPX.model.User;
 import com.udea.GPX.service.StageService;
+import com.udea.GPX.util.AuthUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,32 +22,35 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import com.udea.GPX.model.User;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@SuppressWarnings("unchecked")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class StageControllerTests {
 
     @Mock
     private StageService stageService;
 
-    @InjectMocks
-    private StageController stageController;
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private AuthUtils authUtils;
 
     @Mock
     private SecurityContext securityContext;
-    @Mock
-    private Authentication authentication;
-    @Mock
-    private HttpServletRequest request;
+
+    @InjectMocks
+    private StageController stageController;
 
     private User buildUser(boolean admin) {
         User user = new User();

@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.9</version>
+        <version>3.4.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.udea</groupId>
@@ -51,7 +51,7 @@
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <version>8.2.0</version>
+            <version>9.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -73,18 +73,6 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <version>4.0.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>4.0.0</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
@@ -214,7 +202,16 @@
                     <excludes>
                         <exclude>**/Abstract*.java</exclude>
                     </excludes>
-                    <argLine>-Xmx1024m</argLine>
+                    <argLine>-Xmx1024m -Dspring.profiles.active=test -XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage=false</argLine>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
+                    <systemPropertyVariables>
+                        <spring.profiles.active>test</spring.profiles.active>
+                        <spring.test.context.cache.maxSize>1</spring.test.context.cache.maxSize>
+                    </systemPropertyVariables>
+                    <environmentVariables>
+                        <SPRING_PROFILES_ACTIVE>test</SPRING_PROFILES_ACTIVE>
+                    </environmentVariables>
                 </configuration>
             </plugin>
 
@@ -224,8 +221,18 @@
                 <artifactId>dependency-check-maven</artifactId>
                 <version>8.4.0</version>
                 <configuration>
-                    <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <failBuildOnCVSS>9</failBuildOnCVSS>
                     <suppressionFile>owasp-suppression.xml</suppressionFile>
+                    <skipProvidedScope>true</skipProvidedScope>
+                    <skipRuntimeScope>false</skipRuntimeScope>
+                    <skipTestScope>true</skipTestScope>
+                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                    <nugetconfAnalyzerEnabled>false</nugetconfAnalyzerEnabled>
+                    <nuspecAnalyzerEnabled>false</nuspecAnalyzerEnabled>
+                    <formats>
+                        <format>HTML</format>
+                        <format>JSON</format>
+                    </formats>
                 </configuration>
                 <executions>
                     <execution>

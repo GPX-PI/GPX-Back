@@ -1,35 +1,42 @@
 package com.udea.GPX;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.udea.GPX.controller.StageResultController;
-import com.udea.GPX.dto.ClasificacionCompletaDTO;
 import com.udea.GPX.dto.CreateStageResultDTO;
 import com.udea.GPX.dto.UpdateStageResultDTO;
+import com.udea.GPX.dto.ClasificacionCompletaDTO;
 import com.udea.GPX.model.StageResult;
 import com.udea.GPX.model.User;
-import com.udea.GPX.service.EventService;
 import com.udea.GPX.service.StageResultService;
+import com.udea.GPX.service.EventService;
 import com.udea.GPX.util.AuthUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
-import java.time.Duration;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-@SpringBootTest
+
+@SuppressWarnings("unchecked")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class StageResultControllerTests {
 
     @Mock

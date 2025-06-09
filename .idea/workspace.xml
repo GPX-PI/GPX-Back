@@ -6,9 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="38f299dd-c9d1-4d1e-9267-2461cd39250c" name="Changes" comment="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/VehicleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/VehicleController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/util/AuthUtils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/util/AuthUtils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/owasp-suppression.xml" beforeDir="false" afterPath="$PROJECT_DIR$/owasp-suppression.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/CategoryControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/CategoryControllerTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventCategoryControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventCategoryControllerTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventControllerTests.java" afterDir="false" />
@@ -18,6 +17,7 @@
       <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/StageResultControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/StageResultControllerTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/UserControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/UserControllerTests.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/VehicleControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/VehicleControllerTests.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/resources/application-test.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/resources/application-test.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -223,6 +223,7 @@
       <workItem from="1749319532296" duration="4225000" />
       <workItem from="1749331055856" duration="4797000" />
       <workItem from="1749477572863" duration="4837000" />
+      <workItem from="1749496654720" duration="1821000" />
     </task>
     <task id="LOCAL-00001" summary="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <option name="closed" value="true" />

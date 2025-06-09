@@ -1,22 +1,31 @@
 package com.udea.GPX;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.udea.GPX.controller.EventVehicleController;
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventVehicle;
 import com.udea.GPX.model.User;
 import com.udea.GPX.model.Vehicle;
+import com.udea.GPX.model.Event;
+import com.udea.GPX.model.EventVehicle;
 import com.udea.GPX.service.EventVehicleService;
-import com.udea.GPX.service.UserService;
 import com.udea.GPX.service.VehicleService;
+import com.udea.GPX.service.EventService;
+import com.udea.GPX.util.AuthUtils;
+import com.udea.GPX.config.TestConfig;
+
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,15 +34,23 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.when;
 
-@SpringBootTest
+@SuppressWarnings("unchecked")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EventVehicleControllerTests {
+
+    @InjectMocks
+    private EventVehicleController eventVehicleController;
 
     @Mock
     private EventVehicleService eventVehicleService;
+
+    @Mock
+    private EventService eventService;
+
+    @Mock
+    private VehicleService vehicleService;
 
     @Mock
     private HttpServletRequest request;
@@ -45,11 +62,7 @@ public class EventVehicleControllerTests {
     private Authentication authentication;
 
     @Mock
-    private UserService userService;
-    @Mock
-    private VehicleService vehicleService;
-    @InjectMocks
-    private EventVehicleController eventVehicleController;
+    private AuthUtils authUtils;
 
     private User buildUser(Long id, boolean admin) {
         User user = new User();
@@ -256,7 +269,7 @@ public class EventVehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Vehículo no encontrado", ((java.util.Map<?,?>)response.getBody()).get("error"));
+        assertEquals("Vehículo no encontrado", ((java.util.Map<?, ?>) response.getBody()).get("error"));
     }
 
     @Test
@@ -280,7 +293,7 @@ public class EventVehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertEquals("Sin permisos", ((java.util.Map<?,?>)response.getBody()).get("error"));
+        assertEquals("Sin permisos", ((java.util.Map<?, ?>) response.getBody()).get("error"));
     }
 
     @Test
@@ -306,7 +319,7 @@ public class EventVehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals("Usuario ya inscrito", ((java.util.Map<?,?>)response.getBody()).get("error"));
+        assertEquals("Usuario ya inscrito", ((java.util.Map<?, ?>) response.getBody()).get("error"));
     }
 
     @Test
@@ -330,6 +343,6 @@ public class EventVehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("Error al procesar inscripción", ((java.util.Map<?,?>)response.getBody()).get("error"));
+        assertEquals("Error al procesar inscripción", ((java.util.Map<?, ?>) response.getBody()).get("error"));
     }
 }

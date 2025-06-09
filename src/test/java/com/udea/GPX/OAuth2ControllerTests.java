@@ -5,10 +5,13 @@ import com.udea.GPX.model.User;
 import com.udea.GPX.service.OAuth2Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
@@ -21,14 +24,16 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@SpringBootTest
+@SuppressWarnings("unchecked")
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class OAuth2ControllerTests {
 
     @Mock
     private OAuth2Service oAuth2Service;
 
     @Mock
-    private JwtUtil jwtUtil;
+    private com.udea.GPX.JwtUtil jwtUtil;
 
     @InjectMocks
     private OAuth2Controller oAuth2Controller;
@@ -383,7 +388,7 @@ public class OAuth2ControllerTests {
         User user = buildSimpleUser(1L, "Test", "User", "test@gmail.com");
         when(oAuth2Service.processOAuth2User(oAuth2User)).thenReturn(user);
         when(oAuth2Service.isProfileComplete(user)).thenReturn(true);
-        when(oAuth2Service.getMissingProfileFields(user)).thenReturn(new String[]{});
+        when(oAuth2Service.getMissingProfileFields(user)).thenReturn(new String[] {});
         ResponseEntity<Map<String, Object>> response = oAuth2Controller.getProfileStatus(oAuth2User);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Object> body = response.getBody();

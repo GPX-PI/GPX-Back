@@ -42,6 +42,7 @@ jobs:
       run: ./mvnw clean test jacoco:report
       env:
         SPRING_PROFILES_ACTIVE: test
+        MAVEN_OPTS: "-XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage=false"
 
     - name: 📊 Generate test report
       run: ./mvnw surefire-report:report
