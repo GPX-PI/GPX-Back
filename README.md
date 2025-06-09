@@ -27,23 +27,23 @@
 
 <!-- Badges adicionales de monitoreo y estadísticas -->
 <p align="center">
-  <a href="https://stats.uptimerobot.com">
+  <a href="https://stats.uptimerobot.com/aUr2ZXPUXN">
     <img src="https://img.shields.io/uptimerobot/status/m800699593" alt="Uptime Robot status"/>
   </a>
-  <a href="https://stats.uptimerobot.com">
+  <a href="https://stats.uptimerobot.com/aUr2ZXPUXN">
     <img src="https://img.shields.io/uptimerobot/ratio/30/m800699593" alt="Uptime Robot ratio (30 days)"/>
   </a>
   <a href="https://project-gpx.vercel.app">
-    <img src="https://img.shields.io/website?url=https%3A//project-gpx.vercel.app" alt="Website"/>
+    <img src="https://img.shields.io/website?url=https%3A//project-gpx.vercel.app" alt="Website Status"/>
   </a>
-  <a href="https://github.com/GPX-PI/GPX-Back/releases">
-    <img src="https://img.shields.io/github/v/release/GPX-PI/GPX-Back" alt="GitHub release"/>
+  <a href="https://github.com/GPX-PI/GPX-Back/commits/main">
+    <img src="https://img.shields.io/github/commit-activity/m/GPX-PI/GPX-Back" alt="Commit Activity"/>
   </a>
   <a href="https://github.com/GPX-PI/GPX-Back/issues">
     <img src="https://img.shields.io/github/issues/GPX-PI/GPX-Back" alt="GitHub issues"/>
   </a>
-  <a href="https://github.com/GPX-PI/GPX-Back/graphs/contributors">
-    <img src="https://img.shields.io/github/contributors/GPX-PI/GPX-Back" alt="GitHub contributors"/>
+  <a href="https://github.com/GPX-PI/GPX-Back/stargazers">
+    <img src="https://img.shields.io/github/stars/GPX-PI/GPX-Back?style=social" alt="GitHub stars"/>
   </a>
 </p>
 

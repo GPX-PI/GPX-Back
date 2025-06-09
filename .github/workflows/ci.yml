@@ -44,9 +44,6 @@ jobs:
     - name: 🔧 Verify Maven setup
       run: ./mvnw --version
 
-    - name: 🧹 Clean and compile
-      run: ./mvnw clean compile
-
     - name: 🧪 Run tests with coverage
       run: ./mvnw clean test jacoco:report
       env:
