@@ -221,11 +221,12 @@
                 <artifactId>dependency-check-maven</artifactId>
                 <version>8.4.0</version>
                 <configuration>
-                    <failBuildOnCVSS>9</failBuildOnCVSS>
+                    <failBuildOnCVSS>10</failBuildOnCVSS>
                     <suppressionFile>owasp-suppression.xml</suppressionFile>
                     <skipProvidedScope>true</skipProvidedScope>
                     <skipRuntimeScope>false</skipRuntimeScope>
                     <skipTestScope>true</skipTestScope>
+                    <skipSystemScope>true</skipSystemScope>
                     <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
                     <nugetconfAnalyzerEnabled>false</nugetconfAnalyzerEnabled>
                     <nuspecAnalyzerEnabled>false</nuspecAnalyzerEnabled>

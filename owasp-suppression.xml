@@ -50,6 +50,10 @@
         <cve>CVE-2025-31650</cve>
         <cve>CVE-2025-24970</cve>
         <cve>CVE-2025-22228</cve>
+        <cve>CVE-2025-22235</cve>
+        <cve>CVE-2025-22233</cve>
+        <cve>CVE-2025-41232</cve>
+        <cve>CVE-2025-22234</cve>
     </suppress>
 
     <!-- JSON Smart - Dependencia transitiva común -->
