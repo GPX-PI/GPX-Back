@@ -1,8 +1,14 @@
 package com.udea.GPX.controller;
 
+import com.udea.GPX.dto.AuthResponseDTO;
+import com.udea.GPX.exception.FileOperationException;
 import com.udea.GPX.model.User;
+import com.udea.GPX.service.FileTransactionService;
 import com.udea.GPX.service.UserService;
+import com.udea.GPX.util.InputSanitizer;
 import com.udea.GPX.JwtUtil;
+import com.udea.GPX.service.TokenService;
+import com.udea.GPX.service.TokenService.TokenPair;
 import com.udea.GPX.util.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,10 +31,27 @@ import java.util.Optional;
 import java.util.HashMap;
 import java.util.Arrays;
 import org.springframework.security.core.Authentication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/users")
+@Tag(name = "Usuarios", description = "Gestión de usuarios, perfiles y autenticación")
 public class UserController {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserService userService;
@@ -41,7 +64,105 @@ public class UserController {
     private JwtUtil jwtUtil;
 
     @Autowired
+    private TokenService tokenService;
+
+    @Autowired
     private AuthUtils authUtils;
+
+    @Autowired
+    private FileTransactionService fileTransactionService;
+
+    /**
+     * 🛡️ HELPER PARA SANITIZACIÓN MANUAL DE MAPS
+     * Sanitiza campos de Map<String, String> según su tipo
+     */
+    private Map<String, String> sanitizeUserInputMap(Map<String, String> inputData) {
+        if (inputData == null)
+            return null;
+
+        Map<String, String> sanitized = new HashMap<>();
+
+        for (Map.Entry<String, String> entry : inputData.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            if (value == null) {
+                sanitized.put(key, null);
+                continue;
+            }
+
+            try {
+                // Sanitizar según el tipo de campo
+                switch (key.toLowerCase()) {
+                    case "email":
+                        // Solo sanitizar emails no vacíos
+                        if (!value.trim().isEmpty()) {
+                            sanitized.put(key, InputSanitizer.sanitizeEmail(value));
+                        } else {
+                            sanitized.put(key, value.trim());
+                        }
+                        break;
+                    case "firstname":
+                    case "lastname":
+                    case "teamname":
+                        // Solo sanitizar nombres no vacíos
+                        if (!value.trim().isEmpty()) {
+                            sanitized.put(key, InputSanitizer.sanitizeName(value));
+                        } else {
+                            sanitized.put(key, value.trim());
+                        }
+                        break;
+                    case "phone":
+                    case "emergencyphone":
+                        // Solo sanitizar teléfonos no vacíos
+                        if (!value.trim().isEmpty()) {
+                            sanitized.put(key, InputSanitizer.sanitizePhone(value));
+                        } else {
+                            sanitized.put(key, value.trim());
+                        }
+                        break;
+                    case "identification":
+                        // Solo sanitizar identificaciones no vacías
+                        if (!value.trim().isEmpty()) {
+                            sanitized.put(key, InputSanitizer.sanitizeIdentification(value));
+                        } else {
+                            sanitized.put(key, value.trim());
+                        }
+                        break;
+                    case "wikiloc":
+                    case "terrapirata":
+                    case "instagram":
+                    case "facebook":
+                    case "picture":
+                        // Solo sanitizar URLs no vacías
+                        if (!value.trim().isEmpty()) {
+                            sanitized.put(key, InputSanitizer.sanitizeUrl(value));
+                        } else {
+                            sanitized.put(key, value.trim());
+                        }
+                        break;
+                    case "password":
+                    case "currentpassword":
+                    case "newpassword":
+                        // Para passwords siempre aplicamos sanitización básica de texto
+                        sanitized.put(key, InputSanitizer.sanitizeText(value));
+                        break;
+                    default:
+                        // Para otros campos, sanitización general de texto
+                        sanitized.put(key, InputSanitizer.sanitizeText(value));
+                        break;
+                }
+            } catch (IllegalArgumentException e) {
+                // Log del intento de ataque y rechazar request
+                logger.warn("🚨 INTENTO DE ATAQUE DETECTADO - Campo: {}, Valor sospechoso detectado: {}",
+                        key, e.getMessage());
+                throw new IllegalArgumentException(
+                        "Campo '" + key + "' contiene contenido no válido: " + e.getMessage());
+            }
+        }
+
+        return sanitized;
+    }
 
     /**
      * Método auxiliar para obtener el usuario autenticado del contexto de seguridad
@@ -81,8 +202,33 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @GetMapping("/paginated")
+    public ResponseEntity<Page<User>> getAllUsersPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+
+        if (!authUtils.isCurrentUserAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        return ResponseEntity.ok(userService.getAllUsers(pageable));
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    @Operation(summary = "Obtener usuario por ID", description = "Obtiene los datos de un usuario específico. Solo accesible por el propio usuario o administradores")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Usuario encontrado", content = @Content(schema = @Schema(implementation = User.class))),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    public ResponseEntity<User> getUserById(
+            @Parameter(description = "ID del usuario", required = true, example = "1") @PathVariable Long id) {
         if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -92,22 +238,19 @@ public class UserController {
     }
 
     private void deleteOldFile(String oldFilePath) {
-        if (oldFilePath != null && !oldFilePath.trim().isEmpty()) {
-            // Solo eliminar si es un archivo local (no una URL externa)
-            if (!oldFilePath.startsWith("http://") && !oldFilePath.startsWith("https://")) {
-                try {
-                    File oldFile = new File(oldFilePath);
-                    if (oldFile.exists()) {
-                        boolean deleted = oldFile.delete();
-                        if (deleted) {
-                            System.out.println("Archivo anterior eliminado: " + oldFilePath);
-                        } else {
-                            System.err.println("No se pudo eliminar el archivo: " + oldFilePath);
-                        }
+        if (oldFilePath != null && !oldFilePath.trim().isEmpty() && !oldFilePath.startsWith("http")) {
+            try {
+                File oldFile = new File(oldFilePath);
+                if (oldFile.exists()) {
+                    boolean deleted = oldFile.delete();
+                    if (deleted) {
+                        logger.debug("Archivo anterior eliminado: {}", oldFilePath);
+                    } else {
+                        logger.warn("No se pudo eliminar el archivo: {}", oldFilePath);
                     }
-                } catch (Exception e) {
-                    System.err.println("Error al eliminar archivo anterior: " + e.getMessage());
                 }
+            } catch (Exception e) {
+                logger.error("Error al eliminar archivo anterior: {}", oldFilePath, e);
             }
         }
     }
@@ -182,50 +325,40 @@ public class UserController {
             @RequestPart("user") User user,
             @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto,
             @RequestPart(value = "insurance", required = false) MultipartFile insurance) {
+
         if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        try {
-            // Obtener el usuario actual para acceder a las rutas de archivos anteriores
-            Optional<User> currentUserOpt = userService.getUserById(id);
 
-            if (profilePhoto != null && !profilePhoto.isEmpty()) {
-                // Eliminar foto anterior si existe
-                if (currentUserOpt.isPresent()) {
-                    deleteOldFile(currentUserOpt.get().getPicture());
-                }
-                String profilePhotoPath = saveFile(profilePhoto, "picture");
-                user.setPicture(profilePhotoPath);
-            }
-            if (insurance != null && !insurance.isEmpty()) {
-                // Eliminar seguro anterior si existe
-                if (currentUserOpt.isPresent()) {
-                    deleteOldFile(currentUserOpt.get().getInsurance());
-                }
-                String insurancePath = saveFile(insurance, "insurance");
-                user.setInsurance(insurancePath);
-            }
-            User updatedUser = userService.updateUser(id, user);
-            return ResponseEntity.ok(updatedUser);
-        } catch (IllegalArgumentException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", e.getMessage());
-            errorResponse.put("type", "VALIDATION_ERROR");
-            return ResponseEntity.badRequest().body(errorResponse);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("Usuario no encontrado")) {
-                return ResponseEntity.notFound().build();
-            }
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", e.getMessage());
-            errorResponse.put("type", "RUNTIME_ERROR");
-            return ResponseEntity.badRequest().body(errorResponse);
-        } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error interno del servidor");
-            errorResponse.put("type", "INTERNAL_ERROR");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        // Obtener el usuario actual para acceder a las rutas de archivos anteriores
+        Optional<User> currentUserOpt = userService.getUserById(id);
+        if (currentUserOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
         }
+
+        User currentUser = currentUserOpt.get();
+
+        // Procesar archivos usando el servicio transaccional
+        if (profilePhoto != null && !profilePhoto.isEmpty()) {
+            String profilePhotoPath = fileTransactionService.updateFileTransactional(
+                    profilePhoto, currentUser.getPicture(), "picture", "uploads/profiles/");
+            user.setPicture(profilePhotoPath);
+        }
+
+        if (insurance != null && !insurance.isEmpty()) {
+            String insurancePath = fileTransactionService.updateFileTransactional(
+                    insurance, currentUser.getInsurance(), "insurance", "uploads/insurance/");
+            user.setInsurance(insurancePath);
+        }
+
+        // Actualizar usuario en base de datos
+        User updatedUser = userService.updateUser(id, user);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("message", "Usuario actualizado exitosamente");
+        response.put("user", updatedUser);
+
+        return ResponseEntity.ok(response);
     }
 
     // Endpoint para actualizar solo datos del usuario (sin archivos)
@@ -270,13 +403,16 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
+            // 🛡️ SANITIZACIÓN DE URL DE IMAGEN
+            Map<String, String> sanitizedData = sanitizeUserInputMap(pictureData);
+
             Optional<User> userOpt = userService.getUserById(id);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
 
             User user = userOpt.get();
-            String newPictureUrl = pictureData.get("pictureUrl");
+            String newPictureUrl = sanitizedData.get("pictureUrl");
 
             // Si se proporciona una URL nueva
             if (newPictureUrl != null) {
@@ -298,6 +434,10 @@ public class UserController {
             response.put("user", updatedUser);
 
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            // Error de sanitización - entrada maliciosa detectada
+            logger.warn("🚨 Intento de actualizar foto con URL maliciosa detectada: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("URL de imagen inválida: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al actualizar la foto de perfil: " + e.getMessage());
@@ -346,28 +486,56 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
-        String email = loginData.get("email");
-        String password = loginData.get("password");
-        User user = userService.findByEmail(email);
-        if (user == null || !userService.checkPassword(user, password)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales incorrectas");
+    @Operation(summary = "Iniciar sesión", description = "Autentica un usuario con email y contraseña, retorna tokens JWT", tags = {
+            "Autenticación" })
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Login exitoso", content = @Content(schema = @Schema(implementation = AuthResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Credenciales incorrectas"),
+            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
+    })
+    public ResponseEntity<?> login(
+            @Parameter(description = "Credenciales de login", required = true, schema = @Schema(example = "{\"email\":\"usuario@email.com\",\"password\":\"password123\"}")) @RequestBody Map<String, String> loginData) {
+        try {
+            // 🛡️ SANITIZACIÓN DE INPUTS DE LOGIN
+            Map<String, String> sanitizedData = sanitizeUserInputMap(loginData);
+            String email = sanitizedData.get("email");
+            String password = sanitizedData.get("password");
+
+            User user = userService.findByEmail(email);
+            if (user == null || !userService.checkPassword(user, password)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenciales incorrectas");
+            }
+            // Obtener información de la request para la sesión
+            String userAgent = request.getHeader("User-Agent");
+            String ipAddress = getClientIpAddress(request);
+
+            // Generar par de tokens (access + refresh) con información de sesión
+            TokenPair tokens = tokenService.generateTokenPairWithSession(user.getId(), user.isAdmin(), userAgent,
+                    ipAddress);
+
+            // Verificar si el perfil está completo (usando el mismo servicio OAuth2)
+            boolean profileComplete = isLocalProfileComplete(user);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("accessToken", tokens.getAccessToken());
+            response.put("refreshToken", tokens.getRefreshToken());
+            response.put("token", tokens.getAccessToken()); // Mantener compatibilidad
+            response.put("admin", user.isAdmin());
+            response.put("userId", user.getId());
+            response.put("authProvider", user.getAuthProvider());
+            response.put("profileComplete", profileComplete);
+            response.put("firstName", user.getFirstName());
+            response.put("picture", user.getPicture()); // Agregar foto de perfil
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            // Error de sanitización - entrada maliciosa detectada
+            logger.warn("🚨 Intento de login con datos maliciosos detectado: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Datos de entrada inválidos: " + e.getMessage());
+        } catch (Exception e) {
+            logger.error("Error durante el login: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error interno del servidor");
         }
-        String token = jwtUtil.generateToken(user.getId(), user.isAdmin());
-
-        // Verificar si el perfil está completo (usando el mismo servicio OAuth2)
-        boolean profileComplete = isLocalProfileComplete(user);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("admin", user.isAdmin());
-        response.put("userId", user.getId());
-        response.put("authProvider", user.getAuthProvider());
-        response.put("profileComplete", profileComplete);
-        response.put("firstName", user.getFirstName());
-        response.put("picture", user.getPicture()); // Agregar foto de perfil
-
-        return ResponseEntity.ok(response);
     }
 
     // Método auxiliar para verificar perfil completo (similar al OAuth2Service)
@@ -387,10 +555,19 @@ public class UserController {
 
     @GetMapping("/check-email")
     public ResponseEntity<Map<String, Boolean>> checkEmailExists(@RequestParam String email) {
-        boolean exists = userService.findByEmail(email.trim().toLowerCase()) != null;
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("exists", exists);
-        return ResponseEntity.ok(response);
+        try {
+            // 🛡️ SANITIZACIÓN DE EMAIL EN QUERY PARAM
+            String sanitizedEmail = InputSanitizer.sanitizeEmail(email);
+            boolean exists = userService.findByEmail(sanitizedEmail.trim().toLowerCase()) != null;
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("exists", exists);
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            logger.warn("🚨 Email malicioso detectado en check-email: {}", e.getMessage());
+            Map<String, Boolean> response = new HashMap<>();
+            response.put("exists", false);
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 
     @PostMapping("/{id}/complete-profile")
@@ -399,6 +576,9 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
+            // 🛡️ SANITIZACIÓN DE INPUTS DE PERFIL
+            Map<String, String> sanitizedData = sanitizeUserInputMap(profileData);
+
             Optional<User> userOpt = userService.getUserById(id);
             if (userOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
@@ -407,21 +587,21 @@ public class UserController {
             User user = userOpt.get();
 
             // Solo actualizar campos esenciales para completar el perfil
-            if (profileData.containsKey("identification")) {
-                user.setIdentification(profileData.get("identification"));
+            if (sanitizedData.containsKey("identification")) {
+                user.setIdentification(sanitizedData.get("identification"));
             }
-            if (profileData.containsKey("phone")) {
-                user.setPhone(profileData.get("phone"));
+            if (sanitizedData.containsKey("phone")) {
+                user.setPhone(sanitizedData.get("phone"));
             }
-            if (profileData.containsKey("role")) {
-                user.setRole(profileData.get("role"));
+            if (sanitizedData.containsKey("role")) {
+                user.setRole(sanitizedData.get("role"));
             }
 
             // Campos opcionales adicionales
-            if (profileData.containsKey("lastName")) {
-                user.setLastName(profileData.get("lastName"));
+            if (sanitizedData.containsKey("lastName")) {
+                user.setLastName(sanitizedData.get("lastName"));
             }
-            if (profileData.containsKey("birthdate")) {
+            if (sanitizedData.containsKey("birthdate")) {
                 // Aquí podrías agregar lógica para parsear la fecha
             }
 
@@ -432,6 +612,10 @@ public class UserController {
             response.put("message", "Perfil completado exitosamente");
 
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            // Error de sanitización - entrada maliciosa detectada
+            logger.warn("🚨 Intento de completar perfil con datos maliciosos detectado: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Datos de entrada inválidos: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al completar el perfil: " + e.getMessage());
@@ -439,13 +623,24 @@ public class UserController {
     }
 
     @PostMapping("/simple-register")
-    public ResponseEntity<?> simpleRegister(@RequestBody Map<String, String> userData) {
+    @Operation(summary = "Registro simple", description = "Registra un nuevo usuario con datos básicos", tags = {
+            "Autenticación" })
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Usuario registrado exitosamente", content = @Content(schema = @Schema(implementation = AuthResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o email ya registrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    public ResponseEntity<?> simpleRegister(
+            @Parameter(description = "Datos del nuevo usuario", required = true, schema = @Schema(example = "{\"firstName\":\"Juan\",\"lastName\":\"Pérez\",\"email\":\"juan@email.com\",\"password\":\"password123\"}")) @RequestBody Map<String, String> userData) {
         try {
+            // 🛡️ SANITIZACIÓN DE INPUTS DE REGISTRO
+            Map<String, String> sanitizedData = sanitizeUserInputMap(userData);
+
             // Validar datos requeridos
-            String firstName = userData.get("firstName");
-            String lastName = userData.get("lastName");
-            String email = userData.get("email");
-            String password = userData.get("password");
+            String firstName = sanitizedData.get("firstName");
+            String lastName = sanitizedData.get("lastName");
+            String email = sanitizedData.get("email");
+            String password = sanitizedData.get("password");
 
             if (firstName == null || firstName.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("El nombre es requerido");
@@ -474,12 +669,19 @@ public class UserController {
             // Los demás campos se dejan null - se completarán después
             User savedUser = userService.createUser(newUser);
 
-            // Generar token JWT
-            String token = jwtUtil.generateToken(savedUser.getId(), savedUser.isAdmin());
+            // Obtener información de la request para la sesión
+            String userAgent = request.getHeader("User-Agent");
+            String ipAddress = getClientIpAddress(request);
+
+            // Generar par de tokens (access + refresh) con información de sesión
+            TokenPair tokens = tokenService.generateTokenPairWithSession(savedUser.getId(), savedUser.isAdmin(),
+                    userAgent, ipAddress);
 
             // Respuesta similar al OAuth2
             Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
+            response.put("accessToken", tokens.getAccessToken());
+            response.put("refreshToken", tokens.getRefreshToken());
+            response.put("token", tokens.getAccessToken()); // Mantener compatibilidad
             response.put("userId", savedUser.getId());
             response.put("admin", savedUser.isAdmin());
             response.put("authProvider", savedUser.getAuthProvider());
@@ -489,6 +691,10 @@ public class UserController {
             response.put("message", "Usuario registrado exitosamente. Por favor completa tu perfil.");
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (IllegalArgumentException e) {
+            // Error de sanitización - entrada maliciosa detectada
+            logger.warn("🚨 Intento de registro con datos maliciosos detectado: {}", e.getMessage());
+            return ResponseEntity.badRequest().body("Datos de entrada inválidos: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error al registrar usuario: " + e.getMessage());
@@ -557,13 +763,13 @@ public class UserController {
      */
     private void performLogout(HttpServletRequest request, HttpServletResponse response, String authProvider) {
         try {
-            // 1. Limpiar el contexto de seguridad de Spring
-            SecurityContextHolder.clearContext();
-
-            // 2. Invalidar la sesión HTTP si existe (especialmente importante para OAuth2)
+            // 1. Invalidar la sesión HTTP si existe
             if (request.getSession(false) != null) {
-                request.getSession(false).invalidate();
+                request.getSession().invalidate();
             }
+
+            // 2. Limpiar contexto de seguridad
+            SecurityContextHolder.clearContext();
 
             // 3. Usar el handler de logout de Spring Security
             SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
@@ -573,8 +779,7 @@ public class UserController {
             logLogoutEvent(authProvider);
 
         } catch (Exception e) {
-            // Log del error pero no fallar el logout
-            System.err.println("Error durante logout: " + e.getMessage());
+            logger.error("Error durante logout con provider {}: {}", authProvider, e.getMessage(), e);
             // Asegurar que al menos el contexto se limpie
             SecurityContextHolder.clearContext();
         }
@@ -589,6 +794,24 @@ public class UserController {
     }
 
     /**
+     * Obtiene la dirección IP real del cliente, considerando proxies y load
+     * balancers
+     */
+    private String getClientIpAddress(HttpServletRequest request) {
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty() && !"unknown".equalsIgnoreCase(xForwardedFor)) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+
+        String xRealIp = request.getHeader("X-Real-IP");
+        if (xRealIp != null && !xRealIp.isEmpty() && !"unknown".equalsIgnoreCase(xRealIp)) {
+            return xRealIp;
+        }
+
+        return request.getRemoteAddr();
+    }
+
+    /**
      * Endpoint para cambiar contraseña
      */
     @PutMapping("/{id}/change-password")
@@ -599,8 +822,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
-            String currentPassword = passwordData.get("currentPassword");
-            String newPassword = passwordData.get("newPassword");
+            // 🛡️ SANITIZACIÓN DE PASSWORDS
+            Map<String, String> sanitizedData = sanitizeUserInputMap(passwordData);
+            String currentPassword = sanitizedData.get("currentPassword");
+            String newPassword = sanitizedData.get("newPassword");
 
             // Validar que se proporcionen ambas contraseñas
             if (currentPassword == null || currentPassword.trim().isEmpty()) {
@@ -763,4 +988,3 @@ public class UserController {
         }
     }
 }
-

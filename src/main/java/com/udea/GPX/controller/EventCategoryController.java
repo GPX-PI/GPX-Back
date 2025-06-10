@@ -3,12 +3,14 @@ package com.udea.GPX.controller;
 import com.udea.GPX.model.EventCategory;
 import com.udea.GPX.model.User;
 import com.udea.GPX.service.EventCategoryService;
+import com.udea.GPX.util.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -23,6 +25,9 @@ public class EventCategoryController {
     @Autowired
     private HttpServletRequest request;
 
+    @Autowired
+    private AuthUtils authUtils;
+
     @GetMapping
     public ResponseEntity<List<EventCategory>> getAllEventCategories() {
         User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -33,13 +38,12 @@ public class EventCategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<EventCategory> createEventCategory(@RequestBody EventCategory eventCategory) {
-        User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        if (!authUser.isAdmin()) {
-            return ResponseEntity.status(403).body(null);
+    public ResponseEntity<EventCategory> createEventCategory(@Valid @RequestBody EventCategory eventCategory) {
+        if (!authUtils.isCurrentUserAdmin()) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(eventCategoryService.save(eventCategory));
+        EventCategory savedEventCategory = eventCategoryService.save(eventCategory);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedEventCategory);
     }
 
     @DeleteMapping("/{id}")

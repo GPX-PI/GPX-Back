@@ -29,7 +29,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EventCategoryControllerTests {
@@ -42,6 +41,9 @@ public class EventCategoryControllerTests {
 
     @Mock
     private HttpServletRequest request;
+
+    @Mock
+    private com.udea.GPX.util.AuthUtils authUtils;
 
     @Mock
     private SecurityContext securityContext;
@@ -131,6 +133,7 @@ public class EventCategoryControllerTests {
         // Arrange
         User adminUser = buildUser(true);
         when(authentication.getPrincipal()).thenReturn(adminUser);
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
         EventCategory eventCategory = new EventCategory();
         when(eventCategoryService.save(eventCategory)).thenReturn(eventCategory);
 
@@ -147,6 +150,7 @@ public class EventCategoryControllerTests {
         // Arrange
         User nonAdminUser = buildUser(false);
         when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
         EventCategory eventCategory = new EventCategory();
 
         // Act

@@ -1,144 +1,162 @@
 package com.udea.GPX.util;
 
+import org.springframework.stereotype.Component;
 import java.util.regex.Pattern;
 
 /**
- * Utilidad para sanitizar inputs de usuario y prevenir ataques comunes
+ * Componente para sanitización de inputs básica sin dependencias externas
+ * para prevenir ataques XSS, SQL injection y otros.
  */
+@Component
 public class InputSanitizer {
 
-  // Patrones de regex para validaciones
-  private static final Pattern HTML_PATTERN = Pattern.compile("<[^>]+>");
-  private static final Pattern SCRIPT_PATTERN = Pattern.compile("(?i)<script[^>]*>.*?</script>");
-  private static final Pattern SQL_INJECTION_PATTERN = Pattern
-      .compile("(?i)(union|select|insert|update|delete|drop|exec|script)");
-  private static final Pattern XSS_PATTERN = Pattern.compile("(?i)(javascript:|vbscript:|onload|onerror|onclick)");
+  // Patrones para detectar posibles ataques
+  private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
+      "(?i).*(union|select|insert|update|delete|drop|create|alter|exec|execute|script|javascript|vbscript|onload|onerror|alert|prompt|confirm|eval|expression|<script|</script).*");
 
-  // Caracteres peligrosos básicos
-  private static final String[] DANGEROUS_CHARS = { "<", ">", "&", "\"", "'", "/", "\\" };
+  private static final Pattern XSS_PATTERN = Pattern.compile(
+      "(?i).*(javascript:|vbscript:|data:|on\\w+\\s*=|<script|</script|<iframe|<object|<embed|<link|<meta).*");
+
+  private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile(
+      ".*(\\.\\./|\\.\\.\\\\|\\.\\./|%2e%2e%2f|%2e%2e\\\\).*");
 
   /**
-   * Sanitiza texto básico removiendo caracteres peligrosos
+   * Sanitiza texto removiendo caracteres peligrosos
+   * 
+   * @param input texto de entrada
+   * @return texto sanitizado
    */
   public static String sanitizeText(String input) {
-    if (input == null || input.trim().isEmpty()) {
-      return input;
+    if (input == null) {
+      return null;
     }
 
-    String sanitized = input.trim();
+    String sanitized = input.trim()
+        .replaceAll("<script[^>]*>.*?</script>", "")
+        .replaceAll("<.*?>", "")
+        .replaceAll("javascript:", "")
+        .replaceAll("vbscript:", "")
+        .replaceAll("onload\\s*=", "")
+        .replaceAll("onerror\\s*=", "");
 
-    // Remover tags HTML
-    sanitized = HTML_PATTERN.matcher(sanitized).replaceAll("");
+    // Validaciones adicionales de seguridad
+    if (SQL_INJECTION_PATTERN.matcher(sanitized).matches()) {
+      throw new IllegalArgumentException("Input contiene patrones sospechosos de SQL injection");
+    }
 
-    // Remover scripts
-    sanitized = SCRIPT_PATTERN.matcher(sanitized).replaceAll("");
+    if (XSS_PATTERN.matcher(sanitized).matches()) {
+      throw new IllegalArgumentException("Input contiene patrones sospechosos de XSS");
+    }
 
-    // Escapar caracteres peligrosos básicos (opcional, puede ser demasiado
-    // estricto)
-    // for (String dangerous : DANGEROUS_CHARS) {
-    // sanitized = sanitized.replace(dangerous, "");
-    // }
+    if (PATH_TRAVERSAL_PATTERN.matcher(sanitized).matches()) {
+      throw new IllegalArgumentException("Input contiene patrones de path traversal");
+    }
 
     return sanitized;
   }
 
   /**
-   * Sanitiza nombres (nombres, apellidos)
+   * Valida y sanitiza email
+   * 
+   * @param email email de entrada
+   * @return email sanitizado
+   */
+  public static String sanitizeEmail(String email) {
+    if (email == null) {
+      return null;
+    }
+
+    String sanitized = sanitizeText(email.toLowerCase().trim());
+
+    // Validación básica de formato de email
+    if (!sanitized.matches("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$")) {
+      throw new IllegalArgumentException("Formato de email inválido");
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * Sanitiza nombres (solo letras, espacios y algunos caracteres especiales)
+   * 
+   * @param name nombre de entrada
+   * @return nombre sanitizado
    */
   public static String sanitizeName(String name) {
-    if (name == null || name.trim().isEmpty()) {
-      return name;
+    if (name == null) {
+      return null;
     }
 
     String sanitized = sanitizeText(name);
 
-    // Solo permitir letras, espacios, guiones y apostrofes para nombres
-    sanitized = sanitized.replaceAll("[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\\s'-]", "");
+    // Solo permitir letras, espacios, guiones y apostrofes
+    if (!sanitized.matches("^[A-Za-záéíóúÁÉÍÓÚñÑ\\s'-]+$")) {
+      throw new IllegalArgumentException("El nombre contiene caracteres no válidos");
+    }
 
-    return sanitized.trim();
+    return sanitized;
   }
 
   /**
-   * Sanitiza email básico
+   * Sanitiza URLs validando que sean seguras
+   * 
+   * @param url URL de entrada
+   * @return URL sanitizada
    */
-  public static String sanitizeEmail(String email) {
-    if (email == null || email.trim().isEmpty()) {
-      return email;
+  public static String sanitizeUrl(String url) {
+    if (url == null) {
+      return null;
     }
 
-    String sanitized = email.trim().toLowerCase();
+    String sanitized = sanitizeText(url);
 
-    // Remover cualquier cosa que no sea válida en emails
-    sanitized = sanitized.replaceAll("[^a-zA-Z0-9@._-]", "");
+    // Solo permitir HTTP y HTTPS
+    if (!sanitized.matches("^https?://[A-Za-z0-9.-]+(/[A-Za-z0-9./_-]*)?$")) {
+      throw new IllegalArgumentException("URL no válida o protocolo no permitido");
+    }
 
     return sanitized;
   }
 
   /**
    * Sanitiza números de teléfono
+   * 
+   * @param phone teléfono de entrada
+   * @return teléfono sanitizado
    */
   public static String sanitizePhone(String phone) {
-    if (phone == null || phone.trim().isEmpty()) {
-      return phone;
+    if (phone == null) {
+      return null;
     }
 
-    String sanitized = phone.trim();
+    String sanitized = sanitizeText(phone);
 
-    // Solo permitir números, espacios, guiones, paréntesis y símbolos +
-    sanitized = sanitized.replaceAll("[^0-9\\s()+-]", "");
+    // Solo permitir números, espacios, guiones, paréntesis y el símbolo +
+    if (!sanitized.matches("^[0-9\\s()+-]+$")) {
+      throw new IllegalArgumentException("El teléfono contiene caracteres no válidos");
+    }
 
-    return sanitized.trim();
+    return sanitized;
   }
 
   /**
-   * Sanitiza identificación (documento)
+   * Sanitiza identificaciones (solo números y letras)
+   * 
+   * @param identification identificación de entrada
+   * @return identificación sanitizada
    */
   public static String sanitizeIdentification(String identification) {
-    if (identification == null || identification.trim().isEmpty()) {
-      return identification;
+    if (identification == null) {
+      return null;
     }
 
-    String sanitized = identification.trim();
+    String sanitized = sanitizeText(identification);
 
-    // Solo permitir números y guiones para documentos
-    sanitized = sanitized.replaceAll("[^0-9-]", "");
-
-    return sanitized;
-  }
-
-  /**
-   * Sanitiza URLs/Links de redes sociales
-   */
-  public static String sanitizeUrl(String url) {
-    if (url == null || url.trim().isEmpty()) {
-      return url;
-    }
-
-    String sanitized = url.trim();
-
-    // Verificar que no contenga scripts maliciosos
-    if (XSS_PATTERN.matcher(sanitized).find()) {
-      return ""; // Retornar vacío si se detecta XSS
+    // Solo permitir números y letras
+    if (!sanitized.matches("^[A-Za-z0-9]+$")) {
+      throw new IllegalArgumentException("La identificación contiene caracteres no válidos");
     }
 
     return sanitized;
-  }
-
-  /**
-   * Validación adicional para detectar intentos de inyección SQL
-   */
-  public static boolean containsSqlInjection(String input) {
-    if (input == null)
-      return false;
-    return SQL_INJECTION_PATTERN.matcher(input).find();
-  }
-
-  /**
-   * Validación adicional para detectar XSS
-   */
-  public static boolean containsXss(String input) {
-    if (input == null)
-      return false;
-    return XSS_PATTERN.matcher(input).find() || HTML_PATTERN.matcher(input).find();
   }
 }

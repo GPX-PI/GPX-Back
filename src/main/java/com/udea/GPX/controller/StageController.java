@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +43,7 @@ public class StageController {
     }
 
     @PostMapping
-    public ResponseEntity<Stage> createStage(@RequestBody Stage stage) {
+    public ResponseEntity<Stage> createStage(@Valid @RequestBody Stage stage) {
         User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!authUser.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -52,7 +53,7 @@ public class StageController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Stage> updateStage(@PathVariable Long id, @RequestBody Stage stage) {
+    public ResponseEntity<Stage> updateStage(@PathVariable Long id, @Valid @RequestBody Stage stage) {
         User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!authUser.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();

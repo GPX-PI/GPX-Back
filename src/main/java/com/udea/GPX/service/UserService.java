@@ -4,13 +4,20 @@ import com.udea.GPX.model.User;
 import com.udea.GPX.repository.IUserRepository;
 import com.udea.GPX.util.InputSanitizer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class UserService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserService.class);
+
     @Autowired
     private IUserRepository userRepository;
 
@@ -19,6 +26,10 @@ public class UserService {
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
+    }
+
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
     }
 
     public Optional<User> getUserById(Long id) {
@@ -32,8 +43,7 @@ public class UserService {
                 try {
                     userRepository.save(user);
                 } catch (Exception e) {
-                    // Log del error pero no fallar la consulta
-                    System.err.println("Error al actualizar authProvider: " + e.getMessage());
+                    logger.warn("Error al actualizar authProvider para usuario {}: {}", id, e.getMessage());
                 }
             }
         }
@@ -246,8 +256,7 @@ public class UserService {
                 try {
                     userRepository.save(user);
                 } catch (Exception e) {
-                    // Log del error pero no fallar la consulta
-                    System.err.println("Error al actualizar authProvider: " + e.getMessage());
+                    logger.warn("Error al actualizar authProvider para email {}: {}", email, e.getMessage());
                 }
             }
             return user;
@@ -274,9 +283,10 @@ public class UserService {
                 try {
                     user.setPassword(passwordService.hashPassword(rawPassword));
                     userRepository.save(user);
+                    logger.debug("Contraseña actualizada a BCrypt para usuario: {}", user.getId());
                 } catch (Exception e) {
-                    // Log del error, pero no fallar la autenticación
-                    System.err.println("Error al actualizar hash de contraseña: " + e.getMessage());
+                    logger.error("Error al actualizar hash de contraseña para usuario {}: {}", user.getId(),
+                            e.getMessage(), e);
                 }
             }
 

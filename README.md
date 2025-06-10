@@ -27,12 +27,6 @@
 
 <!-- Badges adicionales de monitoreo y estadísticas -->
 <p align="center">
-  <a href="https://stats.uptimerobot.com/aUr2ZXPUXN">
-    <img src="https://img.shields.io/uptimerobot/status/m800699593" alt="Uptime Robot status"/>
-  </a>
-  <a href="https://stats.uptimerobot.com/aUr2ZXPUXN">
-    <img src="https://img.shields.io/uptimerobot/ratio/30/m800699593" alt="Uptime Robot ratio (30 days)"/>
-  </a>
   <a href="https://project-gpx.vercel.app">
     <img src="https://img.shields.io/website?url=https%3A//project-gpx.vercel.app" alt="Website Status"/>
   </a>
@@ -41,9 +35,6 @@
   </a>
   <a href="https://github.com/GPX-PI/GPX-Back/issues">
     <img src="https://img.shields.io/github/issues/GPX-PI/GPX-Back" alt="GitHub issues"/>
-  </a>
-  <a href="https://github.com/GPX-PI/GPX-Back/stargazers">
-    <img src="https://img.shields.io/github/stars/GPX-PI/GPX-Back?style=social" alt="GitHub stars"/>
   </a>
 </p>
 

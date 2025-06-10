@@ -111,8 +111,82 @@
             <version>3.0.0</version>
         </dependency>
         <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+            <version>20220608.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        
+        <!-- SpringDoc OpenAPI 3 para documentación de API -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.3.0</version>
+        </dependency>
+        
+        <!-- Resilience4j para Circuit Breaker simple -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        
+        <!-- Rate Limiting implementado con solución propia -->
+        
+        <!-- Spring Cache -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        
+        <!-- Testing avanzado con TestContainers -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>1.19.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>1.19.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- Test fixtures y builders -->
+        <dependency>
+            <groupId>com.github.javafaker</groupId>
+            <artifactId>javafaker</artifactId>
+            <version>1.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- WireMock para mocking de servicios externos -->
+        <dependency>
+            <groupId>com.github.tomakehurst</groupId>
+            <artifactId>wiremock-jre8</artifactId>
+            <version>2.35.0</version>
+            <scope>test</scope>
+        </dependency>
+        
+        <!-- AssertJ para assertions más legibles -->
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -193,7 +267,7 @@
                 </executions>
             </plugin>
 
-            <!-- Maven Surefire Plugin para reportes de tests -->
+            <!-- Maven Surefire Plugin para tests unitarios -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -205,6 +279,8 @@
                     </includes>
                     <excludes>
                         <exclude>**/Abstract*.java</exclude>
+                        <exclude>**/*IntegrationTest.java</exclude>
+                        <exclude>**/integration/**</exclude>
                     </excludes>
                     <argLine>@{argLine} -Xmx1024m -Dspring.profiles.active=test -XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage=false</argLine>
                     <forkCount>1</forkCount>
@@ -217,6 +293,35 @@
                         <SPRING_PROFILES_ACTIVE>test</SPRING_PROFILES_ACTIVE>
                     </environmentVariables>
                 </configuration>
+            </plugin>
+
+            <!-- Maven Failsafe Plugin para tests de integración -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <includes>
+                        <include>**/*IntegrationTest.java</include>
+                        <include>**/integration/**/*Test*.java</include>
+                    </includes>
+                    <argLine>@{argLine} -Xmx2048m -Dspring.profiles.active=integration-test -XX:+EnableDynamicAgentLoading</argLine>
+                    <systemPropertyVariables>
+                        <spring.profiles.active>integration-test</spring.profiles.active>
+                        <testcontainers.reuse.enable>true</testcontainers.reuse.enable>
+                    </systemPropertyVariables>
+                    <environmentVariables>
+                        <SPRING_PROFILES_ACTIVE>integration-test</SPRING_PROFILES_ACTIVE>
+                    </environmentVariables>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- OWASP Dependency Check Plugin -->

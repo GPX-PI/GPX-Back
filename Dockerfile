@@ -1,44 +1,79 @@
-# Usar una imagen base de OpenJDK 17 con Alpine para mejor rendimiento
-FROM openjdk:17-jdk-alpine
+# =========================================
+# DOCKERFILE OPTIMIZADO - GPX RACING API
+# =========================================
 
-# Instalar curl para health checks
-RUN apk add --no-cache curl
+# ========== STAGE 1: BUILD ==========
+FROM openjdk:21-jdk-slim AS build
 
-# Crear un usuario no root para seguridad
-RUN addgroup -g 1000 appgroup && adduser -D -u 1000 -G appgroup appuser
+# Metadata
+LABEL maintainer="GPX Racing Team"
+LABEL description="GPX Racing Event Management API"
+LABEL version="1.0.0"
 
-# Establecer el directorio de trabajo
+# Crear usuario no-root para build
+RUN addgroup --system spring && adduser --system spring --ingroup spring
+
+# Instalar dependencias necesarias para build
+RUN apt-get update && apt-get install -y \
+    maven \
+    && rm -rf /var/lib/apt/lists/*
+
+# Establecer directorio de trabajo
 WORKDIR /app
 
-# Copiar los archivos de Maven para aprovechar el cache de Docker
+# Copiar archivos de configuración Maven primero (para cache)
 COPY pom.xml .
+COPY .mvn/ .mvn/
 COPY mvnw .
-COPY .mvn .mvn
 
-# Dar permisos de ejecución al wrapper de Maven
-RUN chmod +x mvnw
+# Hacer ejecutable el wrapper de Maven
+RUN chmod +x ./mvnw
 
-# Descargar dependencias (esto se cachea si el pom.xml no cambia)
-RUN ./mvnw dependency:go-offline
+# Descargar dependencias (se cachea si pom.xml no cambia)
+RUN ./mvnw dependency:go-offline -B
 
-# Copiar el código fuente
-COPY src src
+# Copiar código fuente
+COPY src ./src
 
-# Construir la aplicación
+# Compilar aplicación (omitir tests para build más rápido)
 RUN ./mvnw clean package -DskipTests
 
-# Crear directorio para uploads
-RUN mkdir -p uploads && chown appuser:appgroup uploads
+# ========== STAGE 2: RUNTIME ==========
+FROM openjdk:21-jre-slim AS runtime
 
-# Cambiar al usuario no root
-USER appuser
+# Instalar herramientas útiles para debugging
+RUN apt-get update && apt-get install -y \
+    curl \
+    netcat-traditional \
+    && rm -rf /var/lib/apt/lists/*
 
-# Exponer el puerto (Render usa la variable PORT)
-EXPOSE $PORT
+# Crear usuario no-root para runtime
+RUN addgroup --system spring && adduser --system spring --ingroup spring
 
-# Variable de entorno para el perfil de Spring
-ENV SPRING_PROFILES_ACTIVE=render
+# Crear directorios necesarios
+RUN mkdir -p /app/uploads/profiles /app/uploads/events /app/uploads/insurance /app/logs
+RUN chown -R spring:spring /app
 
-# Comando para ejecutar la aplicación
-# Usar la variable PORT de Render para el servidor
-CMD ["sh", "-c", "java -Dserver.port=${PORT:-8080} -jar target/GPX-0.0.1-SNAPSHOT.jar"] 
+# Establecer directorio de trabajo
+WORKDIR /app
+
+# Cambiar a usuario no-root
+USER spring:spring
+
+# Copiar JAR desde stage de build
+COPY --from=build --chown=spring:spring /app/target/*.jar app.jar
+
+# Variables de entorno por defecto
+ENV SPRING_PROFILES_ACTIVE=prod
+ENV JAVA_OPTS="-Xmx512m -Xms256m"
+ENV SERVER_PORT=8080
+
+# Exponer puerto
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8080/actuator/health || exit 1
+
+# Comando de inicio
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Djava.security.egd=file:/dev/./urandom -jar app.jar"] 

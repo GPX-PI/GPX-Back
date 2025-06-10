@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,10 +15,12 @@ import java.util.Map;
 
 @Component
 public class JwtUtil {
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    @Value("${jwt.expiration:36000}")
+    @Value("${jwt.expiration-seconds:3600}")
     private long EXPIRATION_TIME;
 
     public String generateToken(Long userId, boolean isAdmin) {
@@ -43,23 +47,30 @@ public class JwtUtil {
 
     public boolean validateToken(String token) {
         try {
-            System.out.println("🔍 JwtUtil.validateToken - Iniciando validación de token");
+            logger.debug("🔍 JwtUtil.validateToken - Iniciando validación de token");
             Claims claims = extractAllClaims(token);
-            System.out.println("🔍 JwtUtil.validateToken - Claims extraídos exitosamente");
+            logger.debug("🔍 JwtUtil.validateToken - Claims extraídos exitosamente");
 
             Date expiration = claims.getExpiration();
             Date now = new Date();
             boolean isValid = expiration.after(now);
 
-            System.out.println("🔍 JwtUtil.validateToken - Expiración: " + expiration);
-            System.out.println("🔍 JwtUtil.validateToken - Ahora: " + now);
-            System.out.println("🔍 JwtUtil.validateToken - Es válido: " + isValid);
+            logger.debug("🔍 JwtUtil.validateToken - Expiración: {}, Ahora: {}, Es válido: {}",
+                    expiration, now, isValid);
 
             return isValid;
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            logger.warn("❌ JwtUtil.validateToken - Token expirado: {}", e.getMessage());
+            return false;
+        } catch (io.jsonwebtoken.security.SecurityException e) {
+            logger.warn("❌ JwtUtil.validateToken - Firma inválida: {}", e.getMessage());
+            return false;
+        } catch (io.jsonwebtoken.MalformedJwtException e) {
+            logger.warn("❌ JwtUtil.validateToken - Token malformado: {}", e.getMessage());
+            return false;
         } catch (Exception e) {
-            System.out.println(
-                    "❌ JwtUtil.validateToken - Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-            e.printStackTrace();
+            logger.warn("❌ JwtUtil.validateToken - Error inesperado: {} - {}",
+                    e.getClass().getSimpleName(), e.getMessage());
             return false;
         }
     }

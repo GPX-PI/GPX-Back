@@ -23,7 +23,6 @@ import org.springframework.security.core.context.SecurityContext;
 import java.util.Arrays;
 import java.util.List;
 
-@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class CategoryControllerTests {

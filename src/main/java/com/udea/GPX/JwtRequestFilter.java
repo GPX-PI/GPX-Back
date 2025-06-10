@@ -1,6 +1,7 @@
 package com.udea.GPX;
 
 import com.udea.GPX.model.User;
+import com.udea.GPX.service.TokenService;
 import com.udea.GPX.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
     @Autowired
     private UserService userService;
+    @Autowired
+    private TokenService tokenService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
@@ -81,12 +84,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
             if (user != null) {
                 boolean isTokenValid = jwtUtil.validateToken(jwt);
+                boolean isTokenBlacklisted = tokenService.isTokenBlacklisted(jwt);
 
-                if (isTokenValid) {
+                if (isTokenValid && !isTokenBlacklisted) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             user, null, Collections.emptyList());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else if (isTokenBlacklisted) {
+                    // Token está en blacklist, enviar unauthorized
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
                 }
             }
         }

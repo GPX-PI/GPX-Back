@@ -4,7 +4,13 @@ import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
-@Table(name = "stage")
+@Table(name = "stage", indexes = {
+        @Index(name = "idx_stage_event_id", columnList = "fk_event_id"),
+        @Index(name = "idx_stage_order_number", columnList = "order_number"),
+        @Index(name = "idx_stage_event_order", columnList = "fk_event_id, order_number"),
+        @Index(name = "idx_stage_neutralized", columnList = "is_neutralized"),
+        @Index(name = "idx_stage_event_neutralized", columnList = "fk_event_id, is_neutralized")
+})
 public class Stage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

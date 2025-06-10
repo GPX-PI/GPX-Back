@@ -6,7 +6,10 @@ import static org.mockito.Mockito.*;
 import com.udea.GPX.controller.UserController;
 import com.udea.GPX.model.User;
 import com.udea.GPX.service.UserService;
+import com.udea.GPX.service.TokenService;
+import com.udea.GPX.service.TokenService.TokenPair;
 import com.udea.GPX.util.AuthUtils;
+import com.udea.GPX.util.TestDataBuilder;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +31,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 import java.util.*;
 
-@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class UserControllerTests {
@@ -38,6 +40,9 @@ public class UserControllerTests {
 
     @Mock
     private com.udea.GPX.JwtUtil jwtUtil;
+
+    @Mock
+    private TokenService tokenService;
 
     @Mock
     private HttpServletRequest request;
@@ -54,41 +59,8 @@ public class UserControllerTests {
     @InjectMocks
     private UserController userController;
 
-    private User buildUser(Long id, String firstName, boolean admin) {
-        return new User(
-                id,
-                firstName,
-                "Apellido",
-                "123456789",
-                "3101234567",
-                admin,
-                "correo@ejemplo.com",
-                "piloto",
-                LocalDate.of(1990, 1, 1),
-                "CC",
-                "EquipoX",
-                "EPSX",
-                "O+",
-                "3000000000",
-                "Ninguna",
-                "wikilocUser",
-                "SeguroX",
-                "terrapirataUser",
-                "instaUser",
-                "fbUser");
-    }
-
-    // Crear un usuario mínimo para registro simple
-    private User buildSimpleUser(Long id, String firstName, String lastName, String email) {
-        User user = new User();
-        user.setId(id);
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-        user.setEmail(email);
-        user.setAuthProvider("LOCAL");
-        user.setAdmin(false);
-        return user;
-    }
+    // 🏗️ USANDO TestDataBuilder ESTANDARIZADO
+    // Ya no necesitamos métodos buildUser locales
 
     @BeforeEach
     void setUp() {
@@ -102,12 +74,12 @@ public class UserControllerTests {
     @Test
     void getAllUsers_whenAdmin_shouldReturnOK() {
         // Arrange
-        User adminUser = buildUser(1L, "Admin", true);
+        User adminUser = TestDataBuilder.buildUser(1L, "Admin", true);
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
         List<User> users = Arrays.asList(
-                buildUser(1L, "Juan", false),
-                buildUser(2L, "María", true));
+                TestDataBuilder.buildUser(1L, "Juan", false),
+                TestDataBuilder.buildUser(2L, "María", true));
         when(userService.getAllUsers()).thenReturn(users);
 
         // Act
@@ -121,7 +93,7 @@ public class UserControllerTests {
     @Test
     void getAllUsers_whenNotAdmin_shouldReturnForbidden() {
         // Arrange
-        User nonAdminUser = buildUser(1L, "Usuario", false);
+        User nonAdminUser = TestDataBuilder.buildUser(1L, "Usuario", false);
         when(authentication.getPrincipal()).thenReturn(nonAdminUser);
         when(authUtils.isCurrentUserAdmin()).thenReturn(false);
 
@@ -137,8 +109,8 @@ public class UserControllerTests {
     void getUserById_whenAdmin_shouldReturnOK() {
         // Arrange
         Long userId = 1L;
-        User user = buildUser(userId, "Juan", false);
-        User adminUser = buildUser(2L, "Admin", true);
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        User adminUser = TestDataBuilder.buildUser(2L, "Admin", true);
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.getUserById(userId)).thenReturn(Optional.of(user));
@@ -155,7 +127,7 @@ public class UserControllerTests {
     void getUserById_whenSameUser_shouldReturnOK() {
         // Arrange
         Long userId = 1L;
-        User user = buildUser(userId, "Juan", false);
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
         when(authentication.getPrincipal()).thenReturn(user);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.getUserById(userId)).thenReturn(Optional.of(user));
@@ -172,8 +144,8 @@ public class UserControllerTests {
     void getUserById_whenDifferentUser_shouldReturnForbidden() {
         // Arrange
         Long userId = 1L;
-        User user = buildUser(userId, "Juan", false);
-        User otherUser = buildUser(2L, "Otro", false);
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        User otherUser = TestDataBuilder.buildUser(2L, "Otro", false);
         when(authentication.getPrincipal()).thenReturn(otherUser);
 
         // Act
@@ -189,11 +161,16 @@ public class UserControllerTests {
         Map<String, String> loginData = new HashMap<>();
         loginData.put("email", "correo@ejemplo.com");
         loginData.put("password", "password123");
-        User user = buildUser(1L, "Juan", false);
+        User user = TestDataBuilder.buildUser(1L, "Juan", false);
         user.setAuthProvider("LOCAL");
         when(userService.findByEmail("correo@ejemplo.com")).thenReturn(user);
         when(userService.checkPassword(user, "password123")).thenReturn(true);
         when(jwtUtil.generateToken(user.getId(), user.isAdmin())).thenReturn("jwt-token");
+        TokenPair mockTokenPair = new TokenPair("jwt-token", "refresh-token-12345");
+        when(tokenService.generateTokenPairWithSession(eq(user.getId()), eq(user.isAdmin()), any(String.class),
+                any(String.class))).thenReturn(mockTokenPair);
+        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(request.getHeader("User-Agent")).thenReturn("Test-Agent");
 
         // Act
         ResponseEntity<?> response = userController.login(loginData);
@@ -207,7 +184,7 @@ public class UserControllerTests {
         assertEquals(1L, responseBody.get("userId"));
         assertEquals("LOCAL", responseBody.get("authProvider"));
         assertEquals("Juan", responseBody.get("firstName"));
-        assertTrue((Boolean) responseBody.get("profileComplete")); // Usuario completo en test buildUser
+        assertTrue((Boolean) responseBody.get("profileComplete")); // Usuario completo en test TestDataBuilder
     }
 
     @Test
@@ -216,7 +193,9 @@ public class UserControllerTests {
         Map<String, String> loginData = new HashMap<>();
         loginData.put("email", "correo@ejemplo.com");
         loginData.put("password", "password123");
-        User user = buildSimpleUser(1L, "Juan", "Pérez", "correo@ejemplo.com");
+        User user = TestDataBuilder.buildUser(1L, "Juan", false);
+        user.setLastName("Pérez");
+        user.setEmail("correo@ejemplo.com");
         user.setPassword("password123");
         // Campos esenciales vacíos para perfil incompleto
         user.setIdentification(null);
@@ -226,6 +205,11 @@ public class UserControllerTests {
         when(userService.findByEmail("correo@ejemplo.com")).thenReturn(user);
         when(userService.checkPassword(user, "password123")).thenReturn(true);
         when(jwtUtil.generateToken(user.getId(), user.isAdmin())).thenReturn("jwt-token");
+        TokenPair mockTokenPair = new TokenPair("jwt-token", "refresh-token-12345");
+        when(tokenService.generateTokenPairWithSession(eq(user.getId()), eq(user.isAdmin()), any(String.class),
+                any(String.class))).thenReturn(mockTokenPair);
+        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(request.getHeader("User-Agent")).thenReturn("Test-Agent");
 
         // Act
         ResponseEntity<?> response = userController.login(loginData);
@@ -248,7 +232,7 @@ public class UserControllerTests {
         Map<String, String> loginData = new HashMap<>();
         loginData.put("email", "correo@ejemplo.com");
         loginData.put("password", "wrongpassword");
-        User user = buildUser(1L, "Juan", false);
+        User user = TestDataBuilder.buildUser(1L, "Juan", false);
         when(userService.findByEmail("correo@ejemplo.com")).thenReturn(user);
         when(userService.checkPassword(user, "wrongpassword")).thenReturn(false);
 
@@ -285,12 +269,19 @@ public class UserControllerTests {
         userData.put("email", "juan@ejemplo.com");
         userData.put("password", "password123");
 
-        User newUser = buildSimpleUser(1L, "Juan", "Pérez", "juan@ejemplo.com");
+        User newUser = TestDataBuilder.buildUser(1L, "Juan", false);
+        newUser.setLastName("Pérez");
+        newUser.setEmail("juan@ejemplo.com");
         newUser.setPassword("password123");
 
         when(userService.findByEmail("juan@ejemplo.com")).thenReturn(null); // Email no existe
         when(userService.createUser(any(User.class))).thenReturn(newUser);
         when(jwtUtil.generateToken(newUser.getId(), newUser.isAdmin())).thenReturn("jwt-token");
+        TokenPair mockTokenPair = new TokenPair("jwt-token", "refresh-token-12345");
+        when(tokenService.generateTokenPairWithSession(eq(newUser.getId()), eq(newUser.isAdmin()), any(String.class),
+                any(String.class))).thenReturn(mockTokenPair);
+        when(request.getRemoteAddr()).thenReturn("127.0.0.1");
+        when(request.getHeader("User-Agent")).thenReturn("Test-Agent");
 
         // Act
         ResponseEntity<?> response = userController.simpleRegister(userData);
@@ -316,7 +307,9 @@ public class UserControllerTests {
         userData.put("email", "existe@ejemplo.com");
         userData.put("password", "password123");
 
-        User existingUser = buildSimpleUser(1L, "Otro", "Usuario", "existe@ejemplo.com");
+        User existingUser = TestDataBuilder.buildUser(1L, "Otro", false);
+        existingUser.setLastName("Usuario");
+        existingUser.setEmail("existe@ejemplo.com");
         when(userService.findByEmail("existe@ejemplo.com")).thenReturn(existingUser);
 
         // Act
@@ -381,7 +374,9 @@ public class UserControllerTests {
     void checkEmailExists_whenEmailExists_shouldReturnTrue() {
         // Arrange
         String email = "existe@ejemplo.com";
-        User existingUser = buildSimpleUser(1L, "Juan", "Pérez", email);
+        User existingUser = TestDataBuilder.buildUser(1L, "Juan", false);
+        existingUser.setLastName("Pérez");
+        existingUser.setEmail(email);
         when(userService.findByEmail(email.toLowerCase())).thenReturn(existingUser);
 
         // Act
@@ -414,7 +409,9 @@ public class UserControllerTests {
     void checkEmailExists_withSpacesAndUppercase_shouldNormalizeEmail() {
         // Arrange
         String email = "  EXISTE@EJEMPLO.COM  ";
-        User existingUser = buildSimpleUser(1L, "Juan", "Pérez", "existe@ejemplo.com");
+        User existingUser = TestDataBuilder.buildUser(1L, "Juan", false);
+        existingUser.setLastName("Pérez");
+        existingUser.setEmail("existe@ejemplo.com");
         when(userService.findByEmail("existe@ejemplo.com")).thenReturn(existingUser);
 
         // Act
@@ -436,7 +433,9 @@ public class UserControllerTests {
     void completeProfile_whenSameUser_shouldCompleteSuccessfully() {
         // Arrange
         Long userId = 1L;
-        User user = buildSimpleUser(userId, "Juan", "Pérez", "juan@ejemplo.com");
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        user.setLastName("Pérez");
+        user.setEmail("juan@ejemplo.com");
 
         Map<String, String> profileData = new HashMap<>();
         profileData.put("identification", "12345678");
@@ -447,7 +446,9 @@ public class UserControllerTests {
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.getUserById(userId)).thenReturn(Optional.of(user));
 
-        User updatedUser = buildSimpleUser(userId, "Juan", "Pérez", "juan@ejemplo.com");
+        User updatedUser = TestDataBuilder.buildUser(userId, "Juan", false);
+        updatedUser.setLastName("Pérez");
+        updatedUser.setEmail("juan@ejemplo.com");
         updatedUser.setIdentification("12345678");
         updatedUser.setPhone("3001234567");
         updatedUser.setRole("piloto");
@@ -468,8 +469,10 @@ public class UserControllerTests {
     void completeProfile_whenAdmin_shouldCompleteSuccessfully() {
         // Arrange
         Long userId = 1L;
-        User user = buildSimpleUser(userId, "Juan", "Pérez", "juan@ejemplo.com");
-        User adminUser = buildUser(2L, "Admin", true);
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        user.setLastName("Pérez");
+        user.setEmail("juan@ejemplo.com");
+        User adminUser = TestDataBuilder.buildUser(2L, "Admin", true);
 
         Map<String, String> profileData = new HashMap<>();
         profileData.put("identification", "12345678");
@@ -480,7 +483,9 @@ public class UserControllerTests {
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.getUserById(userId)).thenReturn(Optional.of(user));
 
-        User updatedUser = buildSimpleUser(userId, "Juan", "Pérez", "juan@ejemplo.com");
+        User updatedUser = TestDataBuilder.buildUser(userId, "Juan", false);
+        updatedUser.setLastName("Pérez");
+        updatedUser.setEmail("juan@ejemplo.com");
         updatedUser.setIdentification("12345678");
         updatedUser.setPhone("3001234567");
         updatedUser.setRole("piloto");
@@ -500,8 +505,12 @@ public class UserControllerTests {
     void completeProfile_whenDifferentUser_shouldReturnForbidden() {
         // Arrange
         Long userId = 1L;
-        User user = buildSimpleUser(userId, "Juan", "Pérez", "juan@ejemplo.com");
-        User otherUser = buildSimpleUser(2L, "Otro", "Usuario", "otro@ejemplo.com");
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        user.setLastName("Pérez");
+        user.setEmail("juan@ejemplo.com");
+        User otherUser = TestDataBuilder.buildUser(2L, "Otro", false);
+        otherUser.setLastName("Usuario");
+        otherUser.setEmail("otro@ejemplo.com");
 
         Map<String, String> profileData = new HashMap<>();
         profileData.put("identification", "12345678");
@@ -519,7 +528,9 @@ public class UserControllerTests {
     void completeProfile_whenUserNotFound_shouldReturnNotFound() {
         // Arrange
         Long userId = 1L; // Usar el mismo ID del usuario autenticado
-        User user = buildSimpleUser(userId, "Juan", "Pérez", "juan@ejemplo.com");
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        user.setLastName("Pérez");
+        user.setEmail("juan@ejemplo.com");
 
         Map<String, String> profileData = new HashMap<>();
         profileData.put("identification", "12345678");
@@ -539,9 +550,9 @@ public class UserControllerTests {
     void updateUser_whenAdmin_shouldUpdateSuccessfully() throws Exception {
         // Arrange
         Long userId = 1L;
-        User existingUser = buildUser(userId, "Juan", false);
-        User updatedUser = buildUser(userId, "JuanUpdated", false);
-        User adminUser = buildUser(2L, "Admin", true);
+        User existingUser = TestDataBuilder.buildUser(userId, "Juan", false);
+        User updatedUser = TestDataBuilder.buildUser(userId, "JuanUpdated", false);
+        User adminUser = TestDataBuilder.buildUser(2L, "Admin", true);
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.getUserById(userId)).thenReturn(Optional.of(existingUser));
@@ -549,9 +560,12 @@ public class UserControllerTests {
 
         // Act
         ResponseEntity<?> response = userController.updateUserWithFiles(userId, updatedUser, null, null);
-        User responseUser = (User) response.getBody();
+
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
+        User responseUser = (User) responseBody.get("user");
         assertEquals("JuanUpdated", Objects.requireNonNull(responseUser).getFirstName());
     }
 
@@ -559,8 +573,8 @@ public class UserControllerTests {
     void updateUser_whenSameUser_shouldUpdateSuccessfully() throws Exception {
         // Arrange
         Long userId = 1L;
-        User existingUser = buildUser(userId, "Juan", false);
-        User updatedUser = buildUser(userId, "JuanUpdated", false);
+        User existingUser = TestDataBuilder.buildUser(userId, "Juan", false);
+        User updatedUser = TestDataBuilder.buildUser(userId, "JuanUpdated", false);
         when(authentication.getPrincipal()).thenReturn(existingUser);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.getUserById(userId)).thenReturn(Optional.of(existingUser));
@@ -568,9 +582,12 @@ public class UserControllerTests {
 
         // Act
         ResponseEntity<?> response = userController.updateUserWithFiles(userId, updatedUser, null, null);
-        User responseUser = (User) response.getBody();
+
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
+        User responseUser = (User) responseBody.get("user");
         assertEquals("JuanUpdated", Objects.requireNonNull(responseUser).getFirstName());
     }
 
@@ -578,9 +595,9 @@ public class UserControllerTests {
     void updateUser_whenDifferentUser_shouldReturnForbidden() throws Exception {
         // Arrange
         Long userId = 1L;
-        User existingUser = buildUser(userId, "Juan", false);
-        User updatedUser = buildUser(userId, "JuanUpdated", false);
-        User otherUser = buildUser(2L, "Otro", false);
+        User existingUser = TestDataBuilder.buildUser(userId, "Juan", false);
+        User updatedUser = TestDataBuilder.buildUser(userId, "JuanUpdated", false);
+        User otherUser = TestDataBuilder.buildUser(2L, "Otro", false);
         when(authentication.getPrincipal()).thenReturn(otherUser);
 
         // Act

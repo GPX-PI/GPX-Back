@@ -6,7 +6,14 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "stage_result")
+@Table(name = "stage_result", indexes = {
+        @Index(name = "idx_stage_result_stage_id", columnList = "fk_stage_id"),
+        @Index(name = "idx_stage_result_vehicle_id", columnList = "fk_vehicle_id"),
+        @Index(name = "idx_stage_result_timestamp", columnList = "timestamp"),
+        @Index(name = "idx_stage_result_stage_vehicle", columnList = "fk_stage_id, fk_vehicle_id"),
+        @Index(name = "idx_stage_result_vehicle_stage_order", columnList = "fk_vehicle_id, fk_stage_id"),
+        @Index(name = "idx_stage_result_elapsed_time", columnList = "elapsed_time_seconds")
+})
 public class StageResult {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

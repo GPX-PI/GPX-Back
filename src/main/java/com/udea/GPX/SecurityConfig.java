@@ -3,6 +3,8 @@ package com.udea.GPX;
 import com.udea.GPX.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,10 +20,11 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
-import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+
     @Autowired
     private JwtRequestFilter jwtRequestFilter;
 
@@ -42,8 +45,8 @@ public class SecurityConfig {
                     (accept != null && accept.contains("application/json")) ||
                     request.getRequestURI().startsWith("/api/");
 
-            System.out.println("🔍 AuthenticationEntryPoint - URI: " + request.getRequestURI() +
-                    ", isAjax: " + isAjaxRequest + ", Accept: " + accept);
+            logger.debug("🔍 AuthenticationEntryPoint - URI: {}, isAjax: {}, Accept: {}",
+                    request.getRequestURI(), isAjaxRequest, accept);
 
             if (isAjaxRequest) {
                 // Para peticiones AJAX/API, devolver 401 JSON
@@ -52,11 +55,11 @@ public class SecurityConfig {
                 response.setCharacterEncoding("UTF-8");
                 String jsonResponse = "{\"error\":\"Unauthorized\",\"message\":\"Token inválido o faltante\",\"status\":401}";
                 response.getWriter().write(jsonResponse);
-                System.out.println("✅ Devuelto 401 JSON para petición API");
+                logger.debug("✅ Devuelto 401 JSON para petición API");
             } else {
                 // Para peticiones del navegador, redirigir a OAuth2
                 response.sendRedirect("/oauth2/authorization/google");
-                System.out.println("✅ Redirigido a OAuth2 para petición del navegador");
+                logger.debug("✅ Redirigido a OAuth2 para petición del navegador");
             }
         };
     }

@@ -4,10 +4,16 @@ import com.udea.GPX.model.Event;
 import com.udea.GPX.model.EventCategory;
 import com.udea.GPX.repository.IEventCategoryRepository;
 import com.udea.GPX.repository.IEventRepository;
+import com.udea.GPX.util.BusinessRuleValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,15 +27,21 @@ import java.util.stream.Collectors;
 @Service
 public class EventService {
 
+    private static final Logger logger = LoggerFactory.getLogger(EventService.class);
+
     @Autowired
     private IEventRepository eventRepository;
 
     @Autowired
     private IEventCategoryRepository eventCategoryRepository;
 
+    @Autowired
+    private BusinessRuleValidator businessRuleValidator;
+
     // Directorio para almacenar imágenes de eventos
     private final String EVENT_UPLOAD_DIR = "uploads/events/";
 
+    @Cacheable("events")
     public List<Event> getAllEvents() {
         return eventRepository.findAll()
                 .stream()
@@ -37,10 +49,15 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    public Page<Event> getAllEvents(Pageable pageable) {
+        return eventRepository.findAll(pageable);
+    }
+
     public Optional<Event> getEventById(Long id) {
         return eventRepository.findById(id);
     }
 
+    @Cacheable("currentEvents")
     public List<Event> getCurrentEvents() {
         LocalDate today = LocalDate.now();
         return eventRepository.findByEndDateAfterOrEndDateEquals(today, today)
@@ -49,6 +66,7 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable("pastEvents")
     public List<Event> getPastEvents() {
         LocalDate today = LocalDate.now();
         return eventRepository.findByEndDateBefore(today)
@@ -58,10 +76,14 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = { "events", "currentEvents", "pastEvents" }, allEntries = true)
     public Event createEvent(Event event) {
+        // Validar reglas de negocio completas
+        businessRuleValidator.validateCompleteEvent(event);
         return eventRepository.save(event);
     }
 
+    @CacheEvict(value = { "events", "currentEvents", "pastEvents" }, allEntries = true)
     public Event updateEvent(Long id, Event eventDetails) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
@@ -75,9 +97,13 @@ public class EventService {
             event.setPicture(eventDetails.getPicture());
         }
 
+        // Validar reglas de negocio completas antes de guardar
+        businessRuleValidator.validateCompleteEvent(event);
+
         return eventRepository.save(event);
     }
 
+    @CacheEvict(value = { "events", "currentEvents", "pastEvents", "eventCategories" }, allEntries = true)
     public void deleteEvent(Long id) {
         // Antes de eliminar, eliminar la imagen si existe
         Optional<Event> eventOpt = eventRepository.findById(id);
@@ -88,6 +114,7 @@ public class EventService {
         eventRepository.deleteById(id);
     }
 
+    @Cacheable(value = "eventCategories", key = "#eventId")
     public List<EventCategory> getCategoriesByEventId(Long eventId) {
         return eventCategoryRepository.findAll()
                 .stream()
@@ -146,8 +173,9 @@ public class EventService {
             try {
                 Path path = Paths.get(oldFilePath);
                 Files.deleteIfExists(path);
+                logger.debug("Archivo anterior eliminado: {}", oldFilePath);
             } catch (Exception e) {
-                System.err.println("Error al eliminar archivo anterior: " + e.getMessage());
+                logger.error("Error al eliminar archivo anterior: {}", oldFilePath, e);
                 // No lanzar excepción para no interrumpir el flujo principal
             }
         }

@@ -9,6 +9,9 @@ import com.udea.GPX.model.EventCategory;
 import com.udea.GPX.service.EventService;
 import com.udea.GPX.util.AuthUtils;
 import com.udea.GPX.config.TestConfig;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,13 +29,14 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EventControllerTests {
@@ -55,9 +59,14 @@ public class EventControllerTests {
     @Mock
     private MultipartFile multipartFile;
 
+    @Mock
+    private com.udea.GPX.service.FileTransactionService fileTransactionService;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        // Inyectar el mock de FileTransactionService usando reflection
+        ReflectionTestUtils.setField(eventController, "fileTransactionService", fileTransactionService);
     }
 
     @Test
@@ -68,16 +77,19 @@ public class EventControllerTests {
         Event event2 = new Event(2L, "Evento 2", "Ubicación 2", "Detalles 2", LocalDate.now(), LocalDate.now());
         event2.setPicture("ruta/imagen2.jpg");
         List<Event> events = Arrays.asList(event1, event2);
-        when(eventService.getAllEvents()).thenReturn(events);
+
+        // Mock para paginación
+        Page<Event> page = new PageImpl<>(events);
+        when(eventService.getAllEvents(any(Pageable.class))).thenReturn(page);
 
         // Act
-        ResponseEntity<List<Event>> response = eventController.getAllEvents();
+        ResponseEntity<Page<Event>> response = eventController.getAllEvents(0, 10, "id", "asc");
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
-        assertEquals("ruta/imagen1.jpg", response.getBody().get(0).getPicture());
-        assertEquals("ruta/imagen2.jpg", response.getBody().get(1).getPicture());
+        assertEquals(2, response.getBody().getContent().size());
+        assertEquals("ruta/imagen1.jpg", response.getBody().getContent().get(0).getPicture());
+        assertEquals("ruta/imagen2.jpg", response.getBody().getContent().get(1).getPicture());
     }
 
     @Test
@@ -231,35 +243,61 @@ public class EventControllerTests {
 
     @Test
     void updateEventPicture_whenAdminAndFile_shouldReturnOK() throws Exception {
-        Event event = new Event();
+        // Arrange
+        Long eventId = 1L;
+        Event existingEvent = new Event(eventId, "Evento Test", "Ubicación", "Detalles", LocalDate.now(),
+                LocalDate.now());
+        existingEvent.setPicture("old-picture.jpg");
+
+        Event updatedEvent = new Event(eventId, "Evento Test", "Ubicación", "Detalles", LocalDate.now(),
+                LocalDate.now());
+        updatedEvent.setPicture("new-picture.jpg");
+
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
         when(multipartFile.isEmpty()).thenReturn(false);
-        when(eventService.updateEventPicture(1L, multipartFile)).thenReturn(event);
-        ResponseEntity<Event> response = eventController.updateEventPicture(1L, multipartFile, null);
+        when(eventService.getEventById(eventId)).thenReturn(Optional.of(existingEvent));
+        when(fileTransactionService.updateFileTransactional(
+                eq(multipartFile), eq("old-picture.jpg"), eq("image"), eq("uploads/events/")))
+                .thenReturn("new-picture.jpg");
+        when(eventService.updateEventPictureUrl(eventId, "new-picture.jpg")).thenReturn(updatedEvent);
+
+        // Act
+        ResponseEntity<?> response = eventController.updateEventPicture(eventId, multipartFile, null);
+
+        // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(event, response.getBody());
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Imagen de evento actualizada exitosamente", responseBody.get("message"));
+        assertEquals(updatedEvent, responseBody.get("event"));
     }
 
     @Test
     void updateEventPicture_whenNotAdmin_shouldReturnForbidden() {
         when(authUtils.isCurrentUserAdmin()).thenReturn(false);
-        ResponseEntity<Event> response = eventController.updateEventPicture(1L, multipartFile, null);
+        ResponseEntity<?> response = eventController.updateEventPicture(1L, multipartFile, null);
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
     @Test
     void updateEventPicture_whenAdminAndFileNotFound_shouldReturnNotFound() throws Exception {
+        // Arrange
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
         when(multipartFile.isEmpty()).thenReturn(false);
-        doThrow(new RuntimeException()).when(eventService).updateEventPicture(1L, multipartFile);
-        ResponseEntity<Event> response = eventController.updateEventPicture(1L, multipartFile, null);
+        when(eventService.getEventById(1L)).thenReturn(Optional.empty()); // Evento no encontrado
+
+        // Act
+        ResponseEntity<?> response = eventController.updateEventPicture(1L, multipartFile, null);
+
+        // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
     @Test
     void updateEventPicture_whenAdminAndFileNull_shouldReturnBadRequest() {
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        ResponseEntity<Event> response = eventController.updateEventPicture(1L, null, null);
+        ResponseEntity<?> response = eventController.updateEventPicture(1L, null, null);
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 

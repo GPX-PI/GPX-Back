@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import com.udea.GPX.util.AuthUtils;
+import com.udea.GPX.dto.VehicleRequestDTO;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -109,25 +111,22 @@ public class VehicleController {
     }
 
     @PostMapping
-    public ResponseEntity<Vehicle> createVehicle(@RequestBody JsonNode vehicleData) {
+    public ResponseEntity<Vehicle> createVehicle(@Valid @RequestBody VehicleRequestDTO vehicleData) {
         User authUser = getAuthenticatedUser();
 
         try {
             Vehicle vehicle = new Vehicle();
-            vehicle.setName(vehicleData.get("name").asText());
-            vehicle.setSoat(vehicleData.get("soat").asText());
-            vehicle.setPlates(vehicleData.get("plates").asText());
+            vehicle.setName(vehicleData.getName());
+            vehicle.setSoat(vehicleData.getSoat());
+            vehicle.setPlates(vehicleData.getPlates());
             vehicle.setUser(authUser);
 
             // Manejar categoryId
-            if (vehicleData.has("categoryId") && !vehicleData.get("categoryId").isNull()) {
-                Long categoryId = vehicleData.get("categoryId").asLong();
-                Category category = categoryService.getCategoryById(categoryId);
-                if (category == null) {
-                    return ResponseEntity.badRequest().build();
-                }
-                vehicle.setCategory(category);
+            Category category = categoryService.getCategoryById(vehicleData.getCategoryId());
+            if (category == null) {
+                return ResponseEntity.badRequest().build();
             }
+            vehicle.setCategory(category);
 
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(vehicleService.createVehicle(vehicle));
@@ -137,29 +136,28 @@ public class VehicleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Vehicle> updateVehicle(@PathVariable Long id, @RequestBody JsonNode vehicleData) {
+    public ResponseEntity<Vehicle> updateVehicle(@PathVariable Long id,
+            @Valid @RequestBody VehicleRequestDTO vehicleData) {
         Optional<Vehicle> existing = vehicleService.getVehicleById(id);
         if (existing.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        if (!authUtils.isCurrentUserOrAdmin(existing.get().getUser() != null ? existing.get().getUser().getId() : null)) {
+        if (!authUtils
+                .isCurrentUserOrAdmin(existing.get().getUser() != null ? existing.get().getUser().getId() : null)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
             Vehicle vehicle = existing.get();
-            vehicle.setName(vehicleData.get("name").asText());
-            vehicle.setSoat(vehicleData.get("soat").asText());
-            vehicle.setPlates(vehicleData.get("plates").asText());
+            vehicle.setName(vehicleData.getName());
+            vehicle.setSoat(vehicleData.getSoat());
+            vehicle.setPlates(vehicleData.getPlates());
 
             // Manejar categoryId
-            if (vehicleData.has("categoryId") && !vehicleData.get("categoryId").isNull()) {
-                Long categoryId = vehicleData.get("categoryId").asLong();
-                Category category = categoryService.getCategoryById(categoryId);
-                if (category == null) {
-                    return ResponseEntity.badRequest().build();
-                }
-                vehicle.setCategory(category);
+            Category category = categoryService.getCategoryById(vehicleData.getCategoryId());
+            if (category == null) {
+                return ResponseEntity.badRequest().build();
             }
+            vehicle.setCategory(category);
 
             Vehicle updatedVehicle = vehicleService.updateVehicle(id, vehicle);
             return ResponseEntity.ok(updatedVehicle);

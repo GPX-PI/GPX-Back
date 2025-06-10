@@ -8,6 +8,7 @@ import com.udea.GPX.model.User;
 import com.udea.GPX.model.Category;
 import com.udea.GPX.service.VehicleService;
 import com.udea.GPX.util.AuthUtils;
+import com.udea.GPX.dto.VehicleRequestDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +31,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class VehicleControllerTests {
@@ -78,6 +78,15 @@ public class VehicleControllerTests {
         User user = buildUser(userId, admin);
         vehicle.setUser(user);
         return vehicle;
+    }
+
+    private VehicleRequestDTO buildVehicleRequestDTO(Long categoryId) {
+        VehicleRequestDTO dto = new VehicleRequestDTO();
+        dto.setName("Vehículo Test");
+        dto.setSoat("SOAT123");
+        dto.setPlates("ABC123");
+        dto.setCategoryId(categoryId);
+        return dto;
     }
 
     private ObjectMapper objectMapper = new ObjectMapper();
@@ -211,12 +220,15 @@ public class VehicleControllerTests {
         // Arrange
         User ownerUser = buildUser(10L, false);
         Vehicle vehicle = buildVehicle(1L, 10L, false);
-        ObjectNode vehicleJson = buildVehicleJson(1L, 10L, false);
+        VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
+        Category category = new Category();
+        category.setId(1L);
         when(authentication.getPrincipal()).thenReturn(ownerUser);
+        when(categoryService.getCategoryById(1L)).thenReturn(category);
         when(vehicleService.createVehicle(any(Vehicle.class))).thenReturn(vehicle);
 
         // Act
-        ResponseEntity<Vehicle> response = vehicleController.createVehicle(vehicleJson);
+        ResponseEntity<Vehicle> response = vehicleController.createVehicle(vehicleDTO);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -230,14 +242,17 @@ public class VehicleControllerTests {
         User adminUser = buildUser(99L, true);
         Vehicle existingVehicle = buildVehicle(vehicleId, 10L, false);
         Vehicle updatedVehicle = buildVehicle(vehicleId, 10L, false);
-        ObjectNode updatedVehicleJson = buildVehicleJson(vehicleId, 10L, false);
+        VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
+        Category category = new Category();
+        category.setId(1L);
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(existingVehicle));
+        when(categoryService.getCategoryById(1L)).thenReturn(category);
         when(vehicleService.updateVehicle(vehicleId, existingVehicle)).thenReturn(updatedVehicle);
         when(authUtils.isCurrentUserOrAdmin(anyLong())).thenReturn(true);
 
         // Act
-        ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, updatedVehicleJson);
+        ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, vehicleDTO);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -251,14 +266,17 @@ public class VehicleControllerTests {
         User ownerUser = buildUser(10L, false);
         Vehicle existingVehicle = buildVehicle(vehicleId, 10L, false);
         Vehicle updatedVehicle = buildVehicle(vehicleId, 10L, false);
-        ObjectNode updatedVehicleJson = buildVehicleJson(vehicleId, 10L, false);
+        VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
+        Category category = new Category();
+        category.setId(1L);
         when(authentication.getPrincipal()).thenReturn(ownerUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(existingVehicle));
+        when(categoryService.getCategoryById(1L)).thenReturn(category);
         when(vehicleService.updateVehicle(vehicleId, existingVehicle)).thenReturn(updatedVehicle);
         when(authUtils.isCurrentUserOrAdmin(anyLong())).thenReturn(true);
 
         // Act
-        ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, updatedVehicleJson);
+        ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, vehicleDTO);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -271,12 +289,12 @@ public class VehicleControllerTests {
         Long vehicleId = 1L;
         User otherUser = buildUser(20L, false);
         Vehicle existingVehicle = buildVehicle(vehicleId, 10L, false);
-        ObjectNode updatedVehicleJson = buildVehicleJson(vehicleId, 10L, false);
+        VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
         when(authentication.getPrincipal()).thenReturn(otherUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(existingVehicle));
 
         // Act
-        ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, updatedVehicleJson);
+        ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, vehicleDTO);
 
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
@@ -287,12 +305,12 @@ public class VehicleControllerTests {
         // Arrange
         Long vehicleId = 1L;
         User adminUser = buildUser(99L, true);
-        ObjectNode updatedVehicleJson = buildVehicleJson(vehicleId, 10L, false);
+        VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.empty());
 
         // Act
-        ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, updatedVehicleJson);
+        ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, vehicleDTO);
 
         // Assert
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());

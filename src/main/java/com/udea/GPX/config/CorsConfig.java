@@ -1,11 +1,13 @@
 package com.udea.GPX.config;
 
+import com.udea.GPX.constants.AppConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,52 +15,92 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${cors.allowed-origins:http://localhost:3000}")
-    private String allowedOrigins;
+    private static final Logger logger = LoggerFactory.getLogger(CorsConfig.class);
+
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
+    @Value("${cors.allowed-origins:}")
+    private List<String> customAllowedOrigins;
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
 
-        // Configurar orígenes permitidos - limpiar espacios y caracteres especiales
-        String cleanedOrigins = allowedOrigins.replaceAll("@", "").trim();
-        System.out.println("🌐 CORS - Orígenes configurados: " + cleanedOrigins);
+                boolean isProduction = "prod".equals(activeProfile);
+                boolean isTest = "test".equals(activeProfile);
 
-        if (cleanedOrigins.equals("*")) {
-            configuration.setAllowedOriginPatterns(List.of("*"));
-        } else {
-            List<String> origins = Arrays.asList(cleanedOrigins.split(","));
-            // Limpiar cada origen individualmente
-            List<String> cleanOrigins = origins.stream()
-                    .map(String::trim)
-                    .map(origin -> origin.replaceAll("@", ""))
-                    .toList();
-            configuration.setAllowedOrigins(cleanOrigins);
-            System.out.println("🌐 CORS - Orígenes limpiados: " + cleanOrigins);
+                String[] allowedOrigins = determineAllowedOrigins(isProduction, isTest);
+                String[] allowedHeaders = determineAllowedHeaders(isProduction);
+                long maxAge = determineMaxAge(isProduction);
+
+                logger.info("🔧 Configurando CORS para perfil: {} (¿Es producción? {})", activeProfile, isProduction);
+
+                registry.addMapping("/**")
+                        .allowedOrigins(allowedOrigins)
+                        .allowedMethods(AppConstants.Security.ALLOWED_METHODS)
+                        .allowedHeaders(allowedHeaders)
+                        .exposedHeaders(AppConstants.Security.EXPOSED_HEADERS)
+                        .allowCredentials(true)
+                        .maxAge(maxAge);
+
+                logger.info("✅ CORS configurado con {} orígenes permitidos para perfil {}",
+                        allowedOrigins.length, activeProfile);
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Orígenes CORS permitidos: {}", Arrays.toString(allowedOrigins));
+                }
+            }
+        };
+    }
+
+    /**
+     * Determina los orígenes permitidos según el ambiente
+     */
+    private String[] determineAllowedOrigins(boolean isProduction, boolean isTest) {
+        if (isTest) {
+            // Para tests: permitir localhost en varios puertos
+            return new String[] {
+                    "http://localhost:3000",
+                    "http://localhost:8080",
+                    "http://127.0.0.1:3000",
+                    "http://127.0.0.1:8080"
+            };
         }
 
-        // Métodos HTTP permitidos
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD", "PATCH"));
+        if (isProduction) {
+            // Usar orígenes custom si están definidos, sino usar por defecto
+            if (customAllowedOrigins != null && !customAllowedOrigins.isEmpty()) {
+                logger.info("🔒 Usando orígenes CORS personalizados para producción");
+                return customAllowedOrigins.toArray(new String[0]);
+            }
+            return AppConstants.Security.PRODUCTION_ORIGINS;
+        } else {
+            // Desarrollo: más permisivo
+            return AppConstants.Security.DEVELOPMENT_ORIGINS;
+        }
+    }
 
-        // Headers permitidos
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization", "Content-Type", "X-Requested-With", "accept",
-                "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+    /**
+     * Determina los headers permitidos según el ambiente
+     */
+    private String[] determineAllowedHeaders(boolean isProduction) {
+        if (isProduction) {
+            // Producción: headers específicos por seguridad
+            return AppConstants.Security.ALLOWED_HEADERS;
+        } else {
+            // Desarrollo: permitir todos los headers
+            return new String[] { "*" };
+        }
+    }
 
-        // Headers expuestos
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization", "Content-Type"));
-
-        // Permitir credenciales
-        configuration.setAllowCredentials(true);
-
-        // Tiempo de cache para preflight
-        configuration.setMaxAge(3600L);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-
-        return source;
+    /**
+     * Determina el tiempo de cache según el ambiente
+     */
+    private long determineMaxAge(boolean isProduction) {
+        return isProduction ? AppConstants.Security.CORS_MAX_AGE_PRODUCTION
+                : AppConstants.Security.CORS_MAX_AGE_DEVELOPMENT;
     }
 }

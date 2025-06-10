@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +30,7 @@ public class StageResultController {
     private HttpServletRequest request;
 
     @PostMapping
-    public ResponseEntity<StageResult> createResult(@RequestBody CreateStageResultDTO createDTO) {
+    public ResponseEntity<StageResult> createResult(@Valid @RequestBody CreateStageResultDTO createDTO) {
         if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -43,7 +44,7 @@ public class StageResultController {
 
     @PutMapping("/{id}")
     public ResponseEntity<StageResult> updateResult(@PathVariable Long id,
-            @RequestBody UpdateStageResultDTO updateDTO) {
+            @Valid @RequestBody UpdateStageResultDTO updateDTO) {
         if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }

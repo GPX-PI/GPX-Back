@@ -34,7 +34,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class StageResultControllerTests {
