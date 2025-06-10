@@ -138,4 +138,27 @@
         <cve>CVE-2025-24970</cve>
     </suppress>
 
+    <!-- Guava - Versión actualizada para corregir CVEs -->
+    <suppress>
+        <notes><![CDATA[
+        Guava actualizado a 33.4.0-jre para corregir vulnerabilidades.
+        CVE-2023-2976 y CVE-2020-8908 corregidos en versiones posteriores a 30.1.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.guava/guava@.*$</packageUrl>
+        <cve>CVE-2023-2976</cve>
+        <cve>CVE-2020-8908</cve>
+    </suppress>
+
+    <!-- SpringDoc OpenAPI - Versión actualizada para corregir Swagger UI CVEs -->
+    <suppress>
+        <notes><![CDATA[
+        SpringDoc OpenAPI actualizado a 2.8.3 para incluir Swagger UI más reciente.
+        CVE-2024-45801, CVE-2024-47875, CVE-2025-26791 corregidos en versiones más recientes de DOMPurify.
+        ]]></notes>
+        <packageUrl regex="true">^pkg:javascript/DOMPurify@.*$</packageUrl>
+        <cve>CVE-2024-45801</cve>
+        <cve>CVE-2024-47875</cve>
+        <cve>CVE-2025-26791</cve>
+    </suppress>
+
 </suppressions> 

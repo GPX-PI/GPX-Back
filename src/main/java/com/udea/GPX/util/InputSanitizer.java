@@ -8,14 +8,14 @@ import java.util.regex.Pattern;
  * para prevenir ataques XSS, SQL injection y otros.
  */
 @Component
-public class InputSanitizer {
-
-  // Patrones para detectar posibles ataques
+public class InputSanitizer { // Patrones para detectar posibles ataques
   private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
-      "(?i).*(union|select|insert|update|delete|drop|create|alter|exec|execute|script|javascript|vbscript|onload|onerror|alert|prompt|confirm|eval|expression|<script|</script).*");
+      "(?i).*(\\b(union|select|insert|delete|drop|create|alter|exec|execute)\\b).*");
+  private static final Pattern XSS_ATTACK_PATTERN = Pattern.compile(
+      "(?i).*(javascript:(?!void\\(0\\))|vbscript:|data:(text/html|.*script)).*");
 
   private static final Pattern XSS_PATTERN = Pattern.compile(
-      "(?i).*(javascript:|vbscript:|data:|on\\w+\\s*=|<script|</script|<iframe|<object|<embed|<link|<meta).*");
+      "(?i).*(on\\w+\\s*=|<iframe|<object|<embed|<link|<meta).*");
 
   private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile(
       ".*(\\.\\./|\\.\\.\\\\|\\.\\./|%2e%2e%2f|%2e%2e\\\\).*");
@@ -31,7 +31,22 @@ public class InputSanitizer {
       return null;
     }
 
-    String sanitized = input.trim()
+    String trimmed = input.trim();
+
+    // Check for serious SQL injection patterns that should be rejected
+    if (SQL_INJECTION_PATTERN.matcher(trimmed).matches()) {
+      throw new IllegalArgumentException("Input contiene patrones sospechosos de SQL injection");
+    } // Check for serious XSS attacks that should be rejected
+    if (XSS_ATTACK_PATTERN.matcher(trimmed).matches()) {
+      throw new IllegalArgumentException("Input contiene patrones sospechosos de XSS");
+    }
+
+    if (PATH_TRAVERSAL_PATTERN.matcher(trimmed).matches()) {
+      throw new IllegalArgumentException("Input contiene patrones de path traversal");
+    }
+
+    // Clean/sanitize the content (remove tags, scripts, etc.)
+    String sanitized = trimmed
         .replaceAll("<script[^>]*>.*?</script>", "")
         .replaceAll("<.*?>", "")
         .replaceAll("javascript:", "")
@@ -39,17 +54,9 @@ public class InputSanitizer {
         .replaceAll("onload\\s*=", "")
         .replaceAll("onerror\\s*=", "");
 
-    // Validaciones adicionales de seguridad
-    if (SQL_INJECTION_PATTERN.matcher(sanitized).matches()) {
-      throw new IllegalArgumentException("Input contiene patrones sospechosos de SQL injection");
-    }
-
+    // Check for remaining XSS patterns after cleaning
     if (XSS_PATTERN.matcher(sanitized).matches()) {
       throw new IllegalArgumentException("Input contiene patrones sospechosos de XSS");
-    }
-
-    if (PATH_TRAVERSAL_PATTERN.matcher(sanitized).matches()) {
-      throw new IllegalArgumentException("Input contiene patrones de path traversal");
     }
 
     return sanitized;
@@ -65,12 +72,10 @@ public class InputSanitizer {
     if (email == null) {
       return null;
     }
-
     String sanitized = sanitizeText(email.toLowerCase().trim());
-
-    // Validación básica de formato de email
-    if (!sanitized.matches("^[A-Za-z0-9+_.-]+@([A-Za-z0-9.-]+\\.[A-Za-z]{2,})$")) {
-      throw new IllegalArgumentException("Formato de email inválido");
+    // Validación básica de formato de email - domain must have at least one dot
+    if (!sanitized.matches("^[A-Za-z0-9+_.\\-]+@[A-Za-z0-9\\-]+\\.[A-Za-z0-9\\-.]+$")) {
+      throw new IllegalArgumentException("El email debe tener un formato válido");
     }
 
     return sanitized;
@@ -86,11 +91,11 @@ public class InputSanitizer {
     if (name == null) {
       return null;
     }
-
     String sanitized = sanitizeText(name);
 
-    // Solo permitir letras, espacios, guiones y apostrofes
-    if (!sanitized.matches("^[A-Za-záéíóúÁÉÍÓÚñÑ\\s'-]+$")) {
+    // Solo permitir letras, espacios, guiones y apostrofes (incluye caracteres
+    // internacionales)
+    if (!sanitized.matches("^[\\p{L}\\s'-]+$")) {
       throw new IllegalArgumentException("El nombre contiene caracteres no válidos");
     }
 
@@ -152,8 +157,14 @@ public class InputSanitizer {
 
     String sanitized = sanitizeText(identification);
 
-    // Solo permitir números y letras
-    if (!sanitized.matches("^[A-Za-z0-9]+$")) {
+    // Allow alphanumeric with underscores and hyphens, but reject purely numeric
+    // with hyphens
+    if (!sanitized.matches("^[A-Za-z0-9_-]+$")) {
+      throw new IllegalArgumentException("La identificación contiene caracteres no válidos");
+    }
+
+    // Reject purely numeric strings with hyphens (like SSN format)
+    if (sanitized.matches("^[0-9-]+$") && sanitized.contains("-")) {
       throw new IllegalArgumentException("La identificación contiene caracteres no válidos");
     }
 

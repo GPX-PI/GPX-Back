@@ -102,7 +102,7 @@ public class PasswordService {
    * Verifica si un hash de contraseña está usando el algoritmo BCrypt
    */
   public boolean isBCryptHash(String password) {
-    return password != null && password.startsWith("$2a$") || password.startsWith("$2b$")
-        || password.startsWith("$2y$");
+    return password != null && (password.startsWith("$2a$") || password.startsWith("$2b$")
+        || password.startsWith("$2y$"));
   }
 }

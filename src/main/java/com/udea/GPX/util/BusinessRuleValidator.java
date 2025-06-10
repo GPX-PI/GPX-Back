@@ -67,12 +67,14 @@ public class BusinessRuleValidator {
    */
   public void validateVehicleRegistration(Event event, Long vehicleId) {
     logger.debug(
-        "🔍 BusinessRuleValidator.validateVehicleRegistration - Validando registro del vehículo {} en evento {}",
-        vehicleId, event.getId());
+        "🔍 BusinessRuleValidator.validateVehicleRegistration - Validando registro del vehículo {}",
+        vehicleId);
 
     if (event == null) {
       throw new IllegalArgumentException("El evento no existe");
     }
+
+    logger.debug("🔍 BusinessRuleValidator.validateVehicleRegistration - Validando evento {}", event.getId());
 
     // No permitir registro en eventos pasados
     if (event.getEndDate().isBefore(LocalDate.now())) {
@@ -166,8 +168,8 @@ public class BusinessRuleValidator {
    */
   public void validateUserEventRegistration(Long userId, Event event) {
     logger.debug(
-        "🔍 BusinessRuleValidator.validateUserEventRegistration - Validando registro de usuario {} en evento {}",
-        userId, event.getId());
+        "🔍 BusinessRuleValidator.validateUserEventRegistration - Validando registro de usuario {}",
+        userId);
 
     if (userId == null || userId <= 0) {
       throw new IllegalArgumentException("ID de usuario inválido");

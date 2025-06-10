@@ -14,8 +14,14 @@ public class SanitizedValidator implements ConstraintValidator<Sanitized, String
 
   @Override
   public void initialize(Sanitized constraintAnnotation) {
-    this.sanitizationType = constraintAnnotation.value();
-    this.allowNull = constraintAnnotation.allowNull();
+    if (constraintAnnotation == null) {
+      // Default values if annotation is null
+      this.sanitizationType = Sanitized.SanitizationType.TEXT;
+      this.allowNull = false;
+    } else {
+      this.sanitizationType = constraintAnnotation.value();
+      this.allowNull = constraintAnnotation.allowNull();
+    }
   }
 
   @Override
@@ -47,13 +53,17 @@ public class SanitizedValidator implements ConstraintValidator<Sanitized, String
         default:
           InputSanitizer.sanitizeText(value);
           break;
-      }
-
-      // Si la sanitización no lanza excepción, el valor es válido
+      } // Si la sanitización no lanza excepción, el valor es válido
       return true;
 
     } catch (IllegalArgumentException e) {
       // Personalizar el mensaje de error
+      context.disableDefaultConstraintViolation();
+      context.buildConstraintViolationWithTemplate(e.getMessage())
+          .addConstraintViolation();
+      return false;
+    } catch (Exception e) {
+      // Manejar cualquier otra excepción inesperada
       context.disableDefaultConstraintViolation();
       context.buildConstraintViolationWithTemplate(e.getMessage())
           .addConstraintViolation();

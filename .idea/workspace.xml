@@ -6,52 +6,27 @@
   <component name="ChangeListManager">
     <list default="true" id="38f299dd-c9d1-4d1e-9267-2461cd39250c" name="Changes" comment="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SECURITY_FIXES_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/owasp-suppression.xml" beforeDir="false" afterPath="$PROJECT_DIR$/owasp-suppression.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/GpxApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/GpxApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/JwtRequestFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/JwtRequestFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/JwtUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/JwtUtil.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/SecurityConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/config/CorsConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/config/CorsConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/CategoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/CategoryController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventCategoryController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventCategoryController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/StageController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/StageController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/StageResultController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/StageResultController.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/VehicleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/VehicleController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/CreateStageResultDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/CreateStageResultDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/ParticipantDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/ParticipantDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/UpdateStageResultDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/UpdateStageResultDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/VehicleStageTimeDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/VehicleStageTimeDTO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/Stage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/Stage.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/StageResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/model/StageResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/repository/IStageResultRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/repository/IStageResultRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventVehicleService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventVehicleService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/StageResultService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/StageResultService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/SimpleRegisterDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/SimpleRegisterDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/VehicleRequestDTO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/dto/VehicleRequestDTO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/AsyncFileService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/AsyncFileService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/PasswordService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/PasswordService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/TokenService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/TokenService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/util/BusinessRuleValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/util/BusinessRuleValidator.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/util/InputSanitizer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/util/InputSanitizer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application-dev.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application-dev.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/CategoryControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/CategoryControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventCategoryControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventCategoryControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventVehicleControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventVehicleControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/OAuth2ControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/OAuth2ControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/StageControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/StageControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/StageResultControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/StageResultControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/UserControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/UserControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/VehicleControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/VehicleControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/config/TestConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/config/TestConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/resources/application-test.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/validation/SanitizedValidator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/validation/SanitizedValidator.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExportToHTMLSettings">
+    <option name="OPEN_IN_BROWSER" value="true" />
+    <option name="OUTPUT_DIRECTORY" value="C:\Users\user\Desktop\Nueva carpeta" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -110,59 +85,60 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;HTTP Request.generated-requests | #1.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #2.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #3.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #4.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #5.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #6.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #7.executor&quot;: &quot;Run&quot;,
-    &quot;HTTP Request.generated-requests | #9.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.CategoryControllerTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.EventCategoryControllerTests.executor&quot;: &quot;Debug&quot;,
-    &quot;JUnit.EventCategoryControllerTests.getEventCategoryById_whenCategoryExists_shouldReturnOK.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.EventControllerTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.EventVehicleControllerTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.GPX Tests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.GPX in vueloudea.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.GpxApplicationTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.StageControllerTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.StageResultControllerTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.UserControllerTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.VehicleControllerTests.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.com.udea.GPX in vueloudea.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.config in vueloudea.executor&quot;: &quot;Coverage&quot;,
-    &quot;Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;Database connection parameters found&quot;,
-    &quot;Notification.DoNotAsk-DatabaseConfigFileWatcher.found&quot;: &quot;true&quot;,
-    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
-    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
-    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
-    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;Spring Boot.GpxApplication (1).executor&quot;: &quot;Run&quot;,
-    &quot;Spring Boot.GpxApplication.executor&quot;: &quot;Run&quot;,
-    &quot;deletionFromPopupRequiresConfirmation&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/user/Downloads/Proyecto Integrador/Back&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "HTTP Request.generated-requests | #1.executor": "Run",
+    "HTTP Request.generated-requests | #2.executor": "Run",
+    "HTTP Request.generated-requests | #3.executor": "Run",
+    "HTTP Request.generated-requests | #4.executor": "Run",
+    "HTTP Request.generated-requests | #5.executor": "Run",
+    "HTTP Request.generated-requests | #6.executor": "Run",
+    "HTTP Request.generated-requests | #7.executor": "Run",
+    "HTTP Request.generated-requests | #9.executor": "Run",
+    "JUnit.CategoryControllerTests.executor": "Run",
+    "JUnit.EventCategoryControllerTests.executor": "Debug",
+    "JUnit.EventCategoryControllerTests.getEventCategoryById_whenCategoryExists_shouldReturnOK.executor": "Run",
+    "JUnit.EventControllerTests.executor": "Run",
+    "JUnit.EventVehicleControllerTests.executor": "Run",
+    "JUnit.FileValidatorTest.executor": "Run",
+    "JUnit.GPX Tests.executor": "Run",
+    "JUnit.GPX in vueloudea.executor": "Coverage",
+    "JUnit.GpxApplicationTests.executor": "Run",
+    "JUnit.StageControllerTests.executor": "Run",
+    "JUnit.StageResultControllerTests.executor": "Run",
+    "JUnit.UserControllerTests.executor": "Run",
+    "JUnit.VehicleControllerTests.executor": "Run",
+    "JUnit.com.udea.GPX in vueloudea.executor": "Coverage",
+    "JUnit.config in vueloudea.executor": "Coverage",
+    "Notification.DisplayName-DoNotAsk-DatabaseConfigFileWatcher.found": "Database connection parameters found",
+    "Notification.DoNotAsk-DatabaseConfigFileWatcher.found": "true",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "Spring Boot.GpxApplication (1).executor": "Run",
+    "Spring Boot.GpxApplication.executor": "Run",
+    "deletionFromPopupRequiresConfirmation": "false",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/user/Downloads/Proyecto Integrador/Back",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "preferences.keymap",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="ReactorSettings">
     <option name="notificationShown" value="true" />
   </component>
@@ -172,6 +148,22 @@
     </key>
   </component>
   <component name="RunManager" selected="JUnit.GPX in vueloudea">
+    <configuration name="FileValidatorTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="vueloudea" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.udea.GPX.util.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.udea.GPX.util" />
+      <option name="MAIN_CLASS_NAME" value="com.udea.GPX.util.FileValidatorTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <dir value="$PROJECT_DIR$/src/test/java/com/udea/GPX" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="GPX in vueloudea" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="vueloudea" />
       <option name="TEST_OBJECT" value="directory" />
@@ -211,6 +203,7 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="JUnit.FileValidatorTest" />
       <item itemvalue="JUnit.GPX in vueloudea" />
       <item itemvalue="JUnit.config in vueloudea" />
       <item itemvalue="JUnit.com.udea.GPX in vueloudea" />
@@ -219,8 +212,9 @@
     <recent_temporary>
       <list>
         <item itemvalue="JUnit.GPX in vueloudea" />
-        <item itemvalue="JUnit.config in vueloudea" />
+        <item itemvalue="JUnit.FileValidatorTest" />
         <item itemvalue="JUnit.com.udea.GPX in vueloudea" />
+        <item itemvalue="JUnit.config in vueloudea" />
       </list>
     </recent_temporary>
   </component>
@@ -275,7 +269,7 @@
       <workItem from="1749477572863" duration="4837000" />
       <workItem from="1749496654720" duration="7127000" />
       <workItem from="1749541425748" duration="4623000" />
-      <workItem from="1749563348848" duration="7677000" />
+      <workItem from="1749563348848" duration="21935000" />
     </task>
     <task id="LOCAL-00001" summary="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <option name="closed" value="true" />
@@ -370,8 +364,11 @@
     </watches-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Back$com_udea_GPX_in_vueloudea.ic" NAME="com.udea.GPX in vueloudea Coverage Results" MODIFIED="1749576320914" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true">
+      <FILTER>com.udea.GPX.*</FILTER>
+    </SUITE>
     <SUITE FILE_PATH="coverage/GPX_Back$GPX_in_vueloudea.ic" NAME="GPX in vueloudea Coverage Results" MODIFIED="1744124736531" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true" />
-    <SUITE FILE_PATH="coverage/Back$GPX_in_vueloudea.ic" NAME="GPX in vueloudea Coverage Results" MODIFIED="1749502365236" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true" />
+    <SUITE FILE_PATH="coverage/Back$GPX_in_vueloudea.ic" NAME="GPX in vueloudea Coverage Results" MODIFIED="1749595570200" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true" />
     <SUITE FILE_PATH="coverage/Back$config_in_vueloudea.ic" NAME="config in vueloudea Coverage Results" MODIFIED="1749502326059" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="true" />
   </component>
 </project>

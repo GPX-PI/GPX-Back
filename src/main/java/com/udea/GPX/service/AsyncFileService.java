@@ -43,12 +43,10 @@ public class AsyncFileService {
       Path directory = Paths.get(targetDirectory);
       if (!Files.exists(directory)) {
         Files.createDirectories(directory);
-      }
-
-      // Generar nombre único
+      } // Generar nombre único
       String originalFilename = file.getOriginalFilename();
       String extension = getFileExtension(originalFilename);
-      String uniqueFilename = System.currentTimeMillis() + "_" +
+      String uniqueFilename = System.currentTimeMillis() + "_" + System.nanoTime() + "_" +
           originalFilename.replaceAll("[^a-zA-Z0-9.]", "_");
 
       // Guardar archivo

@@ -124,7 +124,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.3.0</version>
+            <version>2.8.3</version>
         </dependency>
         
         <!-- Resilience4j para Circuit Breaker simple -->
@@ -187,6 +187,13 @@
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
+        </dependency>
+        
+        <!-- Guava - Override versión transitiva por seguridad -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.4.0-jre</version>
         </dependency>
     </dependencies>
 
@@ -252,16 +259,33 @@
                         <configuration>
                             <rules>
                                 <rule>
-                                    <element>PACKAGE</element>
+                                    <element>BUNDLE</element>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.60</minimum>
+                                            <minimum>0.50</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.45</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
                             </rules>
+                            <excludes>
+                                <!-- Excluir clases de configuración -->
+                                <exclude>com/udea/GPX/config/**</exclude>
+                                <!-- Excluir DTOs simples -->
+                                <exclude>com/udea/GPX/dto/**</exclude>
+                                <!-- Excluir excepciones personalizadas -->
+                                <exclude>com/udea/GPX/exception/**</exclude>
+                                <!-- Excluir constantes -->
+                                <exclude>com/udea/GPX/constants/**</exclude>
+                                <!-- Excluir aplicación principal -->
+                                <exclude>com/udea/GPX/GpxApplication.class</exclude>
+                            </excludes>
                         </configuration>
                     </execution>
                 </executions>

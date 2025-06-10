@@ -9,17 +9,17 @@ import jakarta.validation.constraints.Size;
 public class VehicleRequestDTO {
   @NotBlank(message = "El nombre del vehículo es obligatorio")
   @Size(max = 100, message = "El nombre del vehículo no puede exceder 100 caracteres")
-  @Sanitized(value = Sanitized.SanitizationType.TEXT, allowNull = false)
+  @Sanitized(value = Sanitized.SanitizationType.TEXT, allowNull = true)
   private String name;
 
   @NotBlank(message = "El SOAT del vehículo es obligatorio")
   @Size(max = 50, message = "El SOAT no puede exceder 50 caracteres")
-  @Sanitized(value = Sanitized.SanitizationType.IDENTIFICATION, allowNull = false)
+  @Sanitized(value = Sanitized.SanitizationType.IDENTIFICATION, allowNull = true)
   private String soat;
 
   @NotBlank(message = "Las placas del vehículo son obligatorias")
   @Size(max = 20, message = "Las placas no pueden exceder 20 caracteres")
-  @Sanitized(value = Sanitized.SanitizationType.TEXT, allowNull = false)
+  @Sanitized(value = Sanitized.SanitizationType.TEXT, allowNull = true)
   private String plates;
 
   @NotNull(message = "La categoría del vehículo es obligatoria")

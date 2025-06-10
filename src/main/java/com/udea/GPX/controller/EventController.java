@@ -1,6 +1,5 @@
 package com.udea.GPX.controller;
 
-import com.udea.GPX.exception.FileOperationException;
 import com.udea.GPX.model.Event;
 import com.udea.GPX.model.EventCategory;
 import com.udea.GPX.service.EventService;

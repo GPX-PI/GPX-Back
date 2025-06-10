@@ -29,7 +29,6 @@ public class TokenService {
 
   @Autowired
   private JwtProperties jwtProperties;
-
   // Almacenamiento en memoria para tokens
   private final Map<String, RefreshTokenInfo> refreshTokenStore = new ConcurrentHashMap<>();
   private final Set<String> tokenBlacklist = ConcurrentHashMap.newKeySet();
@@ -38,6 +37,9 @@ public class TokenService {
   private final Map<Long, Set<SessionInfo>> activeSessions = new ConcurrentHashMap<>();
   private final Map<String, SessionInfo> sessionsByToken = new ConcurrentHashMap<>();
 
+  // Gestión de access tokens por usuario (para tokens sin sesión)
+  private final Map<Long, Set<String>> userAccessTokens = new ConcurrentHashMap<>();
+
   public TokenService() {
   }
 
@@ -45,7 +47,24 @@ public class TokenService {
    * Genera un par de tokens (access + refresh)
    */
   public TokenPair generateTokenPair(Long userId, boolean isAdmin) {
-    return generateTokenPairWithSession(userId, isAdmin, null, null);
+    logger.debug("🔍 TokenService.generateTokenPair - Generando tokens para usuario {}", userId);
+
+    // Generar access token
+    String accessToken = jwtUtil.generateToken(userId, isAdmin);
+
+    // Generar refresh token
+    String refreshToken = generateRefreshToken(userId, isAdmin);
+
+    // Almacenar información del refresh token
+    RefreshTokenInfo tokenInfo = new RefreshTokenInfo(userId, isAdmin,
+        Instant.now().plusSeconds(jwtProperties.getRefreshExpirationSeconds()));
+    storeRefreshToken(refreshToken, tokenInfo);
+
+    // Registrar access token para el usuario (para poder invalidarlo después)
+    userAccessTokens.computeIfAbsent(userId, k -> ConcurrentHashMap.newKeySet()).add(accessToken);
+
+    logger.info("✅ TokenService.generateTokenPair - Tokens generados para usuario {} (sin sesión)", userId);
+    return new TokenPair(accessToken, refreshToken);
   }
 
   /**
@@ -83,7 +102,10 @@ public class TokenService {
    * Refresca un access token usando un refresh token válido
    */
   public TokenPair refreshAccessToken(String refreshToken) {
-    logger.debug("🔍 TokenService.refreshAccessToken - Refrescando token");
+    logger.debug("🔍 TokenService.refreshAccessToken - Refrescando token"); // Validar refresh token no nulo
+    if (refreshToken == null || refreshToken.trim().isEmpty()) {
+      throw new IllegalArgumentException("Refresh token inválido o expirado");
+    }
 
     // Validar refresh token
     RefreshTokenInfo tokenInfo = getRefreshTokenInfo(refreshToken);
@@ -149,6 +171,15 @@ public class TokenService {
         sessionsByToken.remove(session.getAccessToken());
       }
       activeSessions.remove(userId);
+    }
+
+    // Invalidar todos los access tokens del usuario (sin sesión)
+    Set<String> userTokens = userAccessTokens.get(userId);
+    if (userTokens != null) {
+      for (String accessToken : userTokens) {
+        addToBlacklist(accessToken);
+      }
+      userAccessTokens.remove(userId);
     }
 
     logger.info("✅ TokenService.invalidateAllUserTokens - Tokens invalidados para usuario {}", userId);
@@ -302,14 +333,16 @@ public class TokenService {
     long sessionTimeoutSeconds = jwtProperties.getSessionTimeoutSeconds();
 
     // Verificar timeout por inactividad
-    if (sessionTimeoutSeconds > 0) {
-      return now.isAfter(session.getLastActivity().plusSeconds(sessionTimeoutSeconds));
+    if (sessionTimeoutSeconds >= 0) {
+      Instant expirationTime = session.getLastActivity().plusSeconds(sessionTimeoutSeconds);
+      return now.isAfter(expirationTime) || (sessionTimeoutSeconds == 0 && !now.isBefore(expirationTime));
     }
 
     // Verificar expiración absoluta (basada en creación)
     long maxSessionDurationSeconds = jwtProperties.getMaxSessionDurationSeconds();
-    if (maxSessionDurationSeconds > 0) {
-      return now.isAfter(session.getCreatedAt().plusSeconds(maxSessionDurationSeconds));
+    if (maxSessionDurationSeconds >= 0) {
+      Instant expirationTime = session.getCreatedAt().plusSeconds(maxSessionDurationSeconds);
+      return now.isAfter(expirationTime) || (maxSessionDurationSeconds == 0 && !now.isBefore(expirationTime));
     }
 
     return false;
