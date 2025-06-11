@@ -68,12 +68,14 @@ jobs:
           restore-keys: ${{ runner.os }}-sonar
 
       - name: 🔍 SonarCloud Analysis
+        if: always()
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=gpx-PI_gpx-Back \
+            -Dsonar.projectKey=GPX-PI_GPX-Back \
+            -Dsonar.organization=gpxpi \
             -Dsonar.qualitygate.wait=false || echo "⚠️ SonarCloud analysis completed with issues"
         continue-on-error: true
 
