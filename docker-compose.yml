@@ -1,8 +1,8 @@
 # =========================================
-# DOCKER COMPOSE - GPX RACING DEVELOPMENT
+# DOCKER COMPOSE - gpx RACING DEVELOPMENT
 # =========================================
 
-version: '3.8'
+version: "3.8"
 
 services:
   # ========== BASE DE DATOS POSTGRESQL ==========
@@ -42,25 +42,25 @@ services:
     environment:
       # Perfil de Spring Boot
       SPRING_PROFILES_ACTIVE: dev
-      
+
       # Base de datos
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gpx_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: password
-      
+
       # JWT
       JWT_SECRET: dev-jwt-secret-key-for-development-only-not-for-production-use-longer-key
-      
+
       # OAuth2 (usar variables reales en .env)
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-tu-google-client-id}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-tu-google-client-secret}
-      
+
       # CORS
       CORS_ALLOWED_ORIGINS: http://localhost:3000,http://localhost:3001
-      
+
       # URL frontend
       FRONTEND_REDIRECT_URL: http://localhost:3000/
-      
+
       # Configuración JVM
       JAVA_OPTS: -Xmx1g -Xms512m -XX:+UseG1GC
     ports:
@@ -95,7 +95,7 @@ services:
     networks:
       - gpx-network
     profiles:
-      - admin  # Solo se inicia si se especifica el perfil: docker-compose --profile admin up
+      - admin # Solo se inicia si se especifica el perfil: docker-compose --profile admin up
 
 # ========== VOLÚMENES PERSISTENTES ==========
 volumes:
@@ -112,4 +112,4 @@ volumes:
 networks:
   gpx-network:
     name: gpx-network
-    driver: bridge 
+    driver: bridge

@@ -1,7 +1,5 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Category;
-import com.udea.GPX.repository.ICategoryRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,12 +7,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import com.udea.gpx.model.Category;
+import com.udea.gpx.repository.ICategoryRepository;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @DisplayName("CategoryService Tests")

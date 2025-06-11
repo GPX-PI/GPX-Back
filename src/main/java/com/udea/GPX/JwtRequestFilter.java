@@ -1,9 +1,8 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.TokenService;
-import com.udea.GPX.service.UserService;
 import io.jsonwebtoken.ExpiredJwtException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
@@ -12,6 +11,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.TokenService;
+import com.udea.gpx.service.UserService;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 
@@ -24,6 +28,8 @@ import java.util.Collections;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
+    private static final Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
+
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
@@ -73,6 +79,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 return;
             } catch (Exception e) {
                 // Token inválido, continuar sin autenticación
+                // Log security event for monitoring
+                logger.debug("Token JWT inválido en request: {}", request.getRequestURI());
             }
         }
 

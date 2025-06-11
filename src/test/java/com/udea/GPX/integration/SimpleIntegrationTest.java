@@ -1,9 +1,11 @@
-package com.udea.GPX.integration;
+package com.udea.gpx.integration;
 
-import com.udea.GPX.config.TestConfig;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.config.TestConfig;
+import com.udea.gpx.util.TestDataBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -28,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("🚀 Simple Integration Test")
 class SimpleIntegrationTest {
 
+  private static final Logger logger = LoggerFactory.getLogger(SimpleIntegrationTest.class);
+
   @Autowired
   private DataSource dataSource;
 
@@ -42,8 +46,8 @@ class SimpleIntegrationTest {
       assertThat(metaData.getDatabaseProductName()).isEqualToIgnoringCase("H2");
       assertThat(metaData.getURL()).contains("jdbc:h2:mem:testdb");
 
-      System.out.println("✅ Base de datos: " + metaData.getDatabaseProductName());
-      System.out.println("✅ URL: " + metaData.getURL());
+      logger.info("✅ Base de datos: {}", metaData.getDatabaseProductName());
+      logger.info("✅ URL: {}", metaData.getURL());
     }
   }
 
@@ -59,10 +63,9 @@ class SimpleIntegrationTest {
       assertThat(resultSet.next()).isTrue();
       assertThat(resultSet.getInt("test_value")).isEqualTo(1);
     }
-
     long duration = System.currentTimeMillis() - startTime;
     assertThat(duration).isLessThan(100);
-    System.out.println("⚡ Test ejecutado en: " + duration + "ms");
+    logger.info("⚡ Test ejecutado en: {}ms", duration);
   }
 
   @Test
@@ -89,7 +92,7 @@ class SimpleIntegrationTest {
     assertThat(vehicle.getUser()).isEqualTo(user);
     assertThat(vehicle.getCategory()).isEqualTo(category);
 
-    System.out.println("🏗️ TestDataBuilder creó objetos correctamente");
+    logger.info("🏗️ TestDataBuilder creó objetos correctamente");
   }
 
   @Test
@@ -102,10 +105,9 @@ class SimpleIntegrationTest {
     // Este test simplemente verifica que no hay errores
     // La funcionalidad real se probará en tests específicos
 
-    // Cleanup
-    TestDataBuilder.clearSecurityContext();
+    // Cleanup TestDataBuilder.clearSecurityContext();
 
-    System.out.println("🔐 Security Context helpers funcionan");
+    logger.info("🔐 Security Context helpers funcionan");
   }
 
   @Test
@@ -120,13 +122,11 @@ class SimpleIntegrationTest {
 
     try (Connection connection = dataSource.getConnection()) {
       assertThat(dataSource).isNotNull();
-      assertThat(connection.isValid(1)).isTrue();
-
-      // Verificar que podemos crear datos de test
+      assertThat(connection.isValid(1)).isTrue(); // Verificar que podemos crear datos de test
       var user = TestDataBuilder.buildNormalUser();
       assertThat(user).isNotNull();
 
-      System.out.println("🎯 ¡Configuración simplificada y funcional!");
+      logger.info("🎯 ¡Configuración simplificada y funcional!");
     }
   }
 }

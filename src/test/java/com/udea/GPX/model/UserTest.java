@@ -1,4 +1,4 @@
-package com.udea.GPX.model;
+package com.udea.gpx.model;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -739,7 +739,7 @@ class UserTest {
                     { "Juan", "Piloto", "PILOTO", false, "Rally Team Alpha" },
                     { "María", "Copiloto", "COPILOTO", false, "Rally Team Alpha" },
                     { "Pedro", "Mecánico", "MECANICO", false, "Team Support" },
-                    { "Ana", "Organizadora", "ORGANIZADOR", true, "GPX Organization" },
+                    { "Ana", "Organizadora", "ORGANIZADOR", true, "gpx Organization" },
                     { "Carlos", "Navegante", "NAVEGANTE", false, "Adventure Team" }
             };
 

@@ -1,7 +1,9 @@
-package com.udea.GPX.repository;
+package com.udea.gpx.repository;
 
-import com.udea.GPX.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.udea.gpx.model.User;
+
 import java.util.Optional;
 
 public interface IUserRepository extends JpaRepository<User, Long> {

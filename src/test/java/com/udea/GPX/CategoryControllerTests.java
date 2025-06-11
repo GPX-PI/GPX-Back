@@ -1,11 +1,8 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import com.udea.GPX.controller.CategoryController;
-import com.udea.GPX.model.Category;
-import com.udea.GPX.service.CategoryService;
-import com.udea.GPX.util.AuthUtils;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,12 +17,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
+
+import com.udea.gpx.controller.CategoryController;
+import com.udea.gpx.model.Category;
+import com.udea.gpx.service.CategoryService;
+import com.udea.gpx.util.AuthUtils;
+
 import java.util.Arrays;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class CategoryControllerTests {
+class CategoryControllerTests {
 
     @InjectMocks
     private CategoryController categoryController;
@@ -64,9 +67,11 @@ public class CategoryControllerTests {
 
         // Verificar
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
-        assertEquals("Autos", response.getBody().get(0).getName());
-        assertEquals("Motos", response.getBody().get(1).getName());
+        List<Category> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
+        assertEquals("Autos", responseBody.get(0).getName());
+        assertEquals("Motos", responseBody.get(1).getName());
     }
 
     @Test
@@ -81,8 +86,10 @@ public class CategoryControllerTests {
 
         // Verificar
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Autos", response.getBody().getName());
-        assertEquals("Categoría para autos", response.getBody().getDetails());
+        Category responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Autos", responseBody.getName());
+        assertEquals("Categoría para autos", responseBody.getDetails());
     }
 
     @Test
@@ -107,7 +114,9 @@ public class CategoryControllerTests {
         ResponseEntity<Category> response = categoryController.createCategory(category);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(savedCategory, response.getBody());
+        Category responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(savedCategory, responseBody);
     }
 
     @Test
@@ -130,7 +139,9 @@ public class CategoryControllerTests {
         ResponseEntity<Category> response = categoryController.updateCategory(1L, category);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(updatedCategory, response.getBody());
+        Category responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(updatedCategory, responseBody);
     }
 
     @Test

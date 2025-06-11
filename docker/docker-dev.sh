@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =======================================
-# SCRIPT DE DESARROLLO - GPX RACING API
+# SCRIPT DE DESARROLLO - gpx RACING API
 # =======================================
 
 set -e
@@ -28,7 +28,7 @@ error() {
 
 # Función de ayuda
 show_help() {
-    echo -e "${BLUE}GPX Racing - Docker Development Helper${NC}"
+    echo -e "${BLUE}gpx Racing - Docker Development Helper${NC}"
     echo ""
     echo "Uso: $0 [COMANDO]"
     echo ""

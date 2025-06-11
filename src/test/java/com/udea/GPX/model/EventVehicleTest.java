@@ -1,11 +1,9 @@
-package com.udea.GPX.model;
+package com.udea.gpx.model;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

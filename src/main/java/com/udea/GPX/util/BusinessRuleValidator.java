@@ -1,8 +1,10 @@
-package com.udea.GPX.util;
+package com.udea.gpx.util;
 
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventVehicle;
 import org.springframework.stereotype.Component;
+
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventVehicle;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +14,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 /**
- * Utilidad para validar reglas de negocio específicas del sistema GPX Racing
+ * Utilidad para validar reglas de negocio específicas del sistema gpx Racing
  */
 @Component
 public class BusinessRuleValidator {

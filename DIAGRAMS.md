@@ -1,4 +1,4 @@
-# 📊 **Diagramas Interactivos - GPX System**
+# 📊 **Diagramas Interactivos - gpx System**
 
 ## 🎯 **Opciones de Visualización**
 

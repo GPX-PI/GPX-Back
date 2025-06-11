@@ -1,12 +1,13 @@
-package com.udea.GPX.util;
+package com.udea.gpx.util;
 
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.stereotype.Component;
+
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.UserService;
 
 @Component
 public class AuthUtils {

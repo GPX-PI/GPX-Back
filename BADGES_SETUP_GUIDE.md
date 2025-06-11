@@ -33,7 +33,7 @@ CODECOV_TOKEN = "tu-token-de-codecov"
 ### Badge:
 
 ```markdown
-[![codecov](https://codecov.io/gh/GPX-PI/GPX-Back/graph/badge.svg?token=J6HXKK6S0H)](https://codecov.io/gh/GPX-PI/GPX-Back)
+[![codecov](https://codecov.io/gh/gpx-PI/gpx-Back/graph/badge.svg?token=J6HXKK6S0H)](https://codecov.io/gh/gpx-PI/gpx-Back)
 ```
 
 ## 🔍 **3. SonarCloud (Análisis de Calidad)**

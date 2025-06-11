@@ -1,4 +1,4 @@
-package com.udea.GPX.util;
+package com.udea.gpx.util;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;

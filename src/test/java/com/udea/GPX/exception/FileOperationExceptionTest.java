@@ -1,4 +1,4 @@
-package com.udea.GPX.exception;
+package com.udea.gpx.exception;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;

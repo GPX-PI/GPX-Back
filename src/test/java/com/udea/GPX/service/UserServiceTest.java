@@ -1,8 +1,8 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.User;
-import com.udea.GPX.repository.IUserRepository;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.model.User;
+import com.udea.gpx.repository.IUserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,8 +61,9 @@ class UserServiceTest {
     List<User> result = userService.getAllUsers();
 
     // Then
-    assertThat(result).hasSize(2);
-    assertThat(result).containsExactly(testUser, adminUser);
+    assertThat(result)
+        .hasSize(2)
+        .containsExactly(testUser, adminUser);
     verify(userRepository).findAll();
   }
 

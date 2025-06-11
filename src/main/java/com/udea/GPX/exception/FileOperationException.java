@@ -1,4 +1,4 @@
-package com.udea.GPX.exception;
+package com.udea.gpx.exception;
 
 /**
  * Excepción específica para operaciones de archivos

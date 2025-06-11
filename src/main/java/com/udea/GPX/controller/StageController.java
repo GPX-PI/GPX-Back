@@ -1,13 +1,15 @@
-package com.udea.GPX.controller;
+package com.udea.gpx.controller;
 
-import com.udea.GPX.model.Stage;
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.StageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import com.udea.gpx.model.Stage;
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.StageService;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 

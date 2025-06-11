@@ -1,14 +1,15 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventVehicle;
-import com.udea.GPX.model.Vehicle;
-import com.udea.GPX.model.User;
-import com.udea.GPX.model.Category;
-import com.udea.GPX.repository.IEventRepository;
-import com.udea.GPX.repository.IEventVehicleRepository;
-import com.udea.GPX.util.BusinessRuleValidator;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.model.Category;
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventVehicle;
+import com.udea.gpx.model.User;
+import com.udea.gpx.model.Vehicle;
+import com.udea.gpx.repository.IEventRepository;
+import com.udea.gpx.repository.IEventVehicleRepository;
+import com.udea.gpx.util.BusinessRuleValidator;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 

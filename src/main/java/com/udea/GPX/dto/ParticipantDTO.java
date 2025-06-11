@@ -1,11 +1,12 @@
-package com.udea.GPX.dto;
+package com.udea.gpx.dto;
 
-import com.udea.GPX.validation.Sanitized;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
+
+import com.udea.gpx.validation.Sanitized;
 
 public class ParticipantDTO {
   @NotNull(message = "El ID del evento-vehículo es obligatorio")

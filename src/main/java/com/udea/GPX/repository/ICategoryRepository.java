@@ -1,7 +1,8 @@
-package com.udea.GPX.repository;
+package com.udea.gpx.repository;
 
-import com.udea.GPX.model.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.udea.gpx.model.Category;
 
 public interface ICategoryRepository extends JpaRepository<Category, Long> {
 }

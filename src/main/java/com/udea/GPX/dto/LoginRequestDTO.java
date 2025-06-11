@@ -1,6 +1,7 @@
-package com.udea.GPX.dto;
+package com.udea.gpx.dto;
 
-import com.udea.GPX.validation.Sanitized;
+import com.udea.gpx.validation.Sanitized;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

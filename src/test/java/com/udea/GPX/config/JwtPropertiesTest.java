@@ -1,4 +1,4 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

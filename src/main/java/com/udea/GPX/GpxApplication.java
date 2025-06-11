@@ -1,4 +1,4 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;

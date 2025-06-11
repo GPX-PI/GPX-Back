@@ -1,11 +1,11 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
-import com.udea.GPX.JwtUtil;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.test.util.ReflectionTestUtils;
+
 import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("JwtUtil Tests")

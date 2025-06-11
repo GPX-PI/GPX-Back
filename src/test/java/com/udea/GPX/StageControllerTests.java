@@ -1,11 +1,5 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
-import com.udea.GPX.controller.StageController;
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.Stage;
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.StageService;
-import com.udea.GPX.util.AuthUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +15,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.udea.gpx.controller.StageController;
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.Stage;
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.StageService;
+import com.udea.gpx.util.AuthUtils;
+
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;

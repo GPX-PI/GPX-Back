@@ -1,4 +1,4 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

@@ -1,21 +1,17 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.JwtUtil;
-import com.udea.GPX.config.JwtProperties;
-import com.udea.GPX.service.TokenService.SessionInfo;
-import com.udea.GPX.service.TokenService.TokenPair;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.time.Instant;
+import com.udea.gpx.JwtUtil;
+import com.udea.gpx.config.JwtProperties;
+import com.udea.gpx.service.TokenService.SessionInfo;
+import com.udea.gpx.service.TokenService.TokenPair;
 import java.util.List;
-
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @DisplayName("TokenService Tests")
@@ -33,7 +29,6 @@ class TokenServiceTest {
     private final Long testUserId = 1L;
     private final boolean isAdmin = false;
     private final String testAccessToken = "test.access.token";
-    private final String testRefreshToken = "test-refresh-token-123";
     private final String userAgent = "Mozilla/5.0 Test Browser";
     private final String ipAddress = "192.168.1.1";
 

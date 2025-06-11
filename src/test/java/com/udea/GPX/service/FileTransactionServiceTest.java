@@ -1,8 +1,5 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.exception.FileOperationException;
-import com.udea.GPX.exception.FileOperationException.FileErrorType;
-import com.udea.GPX.util.FileValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +8,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.udea.gpx.exception.FileOperationException;
+import com.udea.gpx.exception.FileOperationException.FileErrorType;
+import com.udea.gpx.util.FileValidator;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -29,7 +30,6 @@ class FileTransactionServiceTest {
 
     @Mock
     private MultipartFile mockFile;
-
     @InjectMocks
     private FileTransactionService fileTransactionService;
 
@@ -39,8 +39,11 @@ class FileTransactionServiceTest {
     private String testDirectory;
 
     @BeforeEach
-    void setUp() {
-        testDirectory = tempDir.toString();
+    void setUp() throws IOException {
+        // Create test directory inside uploads/ to pass validation
+        Path uploadsDir = tempDir.resolve("uploads");
+        Files.createDirectories(uploadsDir);
+        testDirectory = uploadsDir.toString();
     }
 
     // Transaction Management Tests

@@ -1,11 +1,12 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventCategory;
-import com.udea.GPX.repository.IEventRepository;
-import com.udea.GPX.repository.IEventCategoryRepository;
-import com.udea.GPX.util.BusinessRuleValidator;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventCategory;
+import com.udea.gpx.repository.IEventCategoryRepository;
+import com.udea.gpx.repository.IEventRepository;
+import com.udea.gpx.util.BusinessRuleValidator;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -416,11 +417,9 @@ class EventServiceTest {
     // Given
     MultipartFile mockFile = mock(MultipartFile.class);
     when(mockFile.isEmpty()).thenReturn(true);
-    when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
-
-    // When & Then
+    when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent)); // When & Then
     assertThatThrownBy(() -> eventService.updateEventPicture(1L, mockFile))
-        .isInstanceOf(RuntimeException.class)
+        .isInstanceOf(ImageUploadException.class)
         .hasMessageContaining("Error al subir la imagen del evento");
   }
 }

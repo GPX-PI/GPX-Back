@@ -1,13 +1,13 @@
 # =========================================
-# DOCKERFILE OPTIMIZADO - GPX RACING API
+# DOCKERFILE OPTIMIZADO - gpx RACING API
 # =========================================
 
 # ========== STAGE 1: BUILD ==========
 FROM openjdk:21-jdk-slim AS build
 
 # Metadata
-LABEL maintainer="GPX Racing Team"
-LABEL description="GPX Racing Event Management API"
+LABEL maintainer="gpx Racing Team"
+LABEL description="gpx Racing Event Management API"
 LABEL version="1.0.0"
 
 # Crear usuario no-root para build

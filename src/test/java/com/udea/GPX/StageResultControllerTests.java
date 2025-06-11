@@ -1,22 +1,12 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.udea.GPX.controller.StageResultController;
-import com.udea.GPX.dto.CreateStageResultDTO;
-import com.udea.GPX.dto.UpdateStageResultDTO;
-import com.udea.GPX.dto.ClasificacionCompletaDTO;
-import com.udea.GPX.model.StageResult;
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.StageResultService;
-import com.udea.GPX.service.EventService;
-import com.udea.GPX.util.AuthUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -27,7 +17,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.util.ReflectionTestUtils;
+
+import com.udea.gpx.controller.StageResultController;
+import com.udea.gpx.dto.ClasificacionCompletaDTO;
+import com.udea.gpx.dto.CreateStageResultDTO;
+import com.udea.gpx.dto.UpdateStageResultDTO;
+import com.udea.gpx.model.StageResult;
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.EventService;
+import com.udea.gpx.service.StageResultService;
+import com.udea.gpx.util.AuthUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,7 +35,7 @@ import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class StageResultControllerTests {
+class StageResultControllerTests {
 
     @Mock
     private StageResultService stageResultService;
@@ -52,11 +51,9 @@ public class StageResultControllerTests {
 
     @Mock
     private Authentication authentication;
-
     @Mock
     private AuthUtils authUtils;
 
-    @InjectMocks
     private StageResultController stageResultController;
 
     private User buildUser(Long id, boolean admin) {
@@ -113,8 +110,9 @@ public class StageResultControllerTests {
         MockitoAnnotations.openMocks(this);
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        ReflectionTestUtils.setField(stageResultController, "request", request);
-        ReflectionTestUtils.setField(stageResultController, "authUtils", authUtils);
+
+        // Create the controller manually with mocked dependencies
+        stageResultController = new StageResultController(stageResultService, authUtils);
     }
 
     @Test
@@ -132,7 +130,9 @@ public class StageResultControllerTests {
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(sr, response.getBody());
+        StageResult responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(sr, responseBody);
     }
 
     @Test
@@ -165,7 +165,9 @@ public class StageResultControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(sr, response.getBody());
+        StageResult responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(sr, responseBody);
     }
 
     @Test
@@ -190,7 +192,7 @@ public class StageResultControllerTests {
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
         UpdateStageResultDTO updateDTO = new UpdateStageResultDTO();
-        when(stageResultService.updateResultFromDTO(eq(1L), eq(updateDTO))).thenThrow(new RuntimeException());
+        when(stageResultService.updateResultFromDTO(eq(1L), eq(updateDTO))).thenThrow(new IllegalArgumentException());
 
         // Act
         ResponseEntity<StageResult> response = stageResultController.updateResult(1L, updateDTO);
@@ -242,8 +244,10 @@ public class StageResultControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
-        assertEquals(dto, response.getBody().get(0));
+        List<ClasificacionCompletaDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(1, responseBody.size());
+        assertEquals(dto, responseBody.get(0));
     }
 
     @Test
@@ -260,8 +264,10 @@ public class StageResultControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
-        assertEquals(dto, response.getBody().get(0));
+        List<ClasificacionCompletaDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(1, responseBody.size());
+        assertEquals(dto, responseBody.get(0));
     }
 
     @Test
@@ -279,8 +285,10 @@ public class StageResultControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(1, response.getBody().size());
-        assertEquals(dto, response.getBody().get(0));
+        List<ClasificacionCompletaDTO> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(1, responseBody.size());
+        assertEquals(dto, responseBody.get(0));
     }
 
     @Test
@@ -297,7 +305,9 @@ public class StageResultControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(sr, response.getBody());
+        StageResult responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(sr, responseBody);
     }
 
     @Test

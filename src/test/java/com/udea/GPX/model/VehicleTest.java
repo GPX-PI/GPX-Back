@@ -1,9 +1,8 @@
-package com.udea.GPX.model;
+package com.udea.gpx.model;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -456,7 +455,7 @@ class VehicleTest {
             // Given
             Vehicle vehicle = new Vehicle();
             String nameWithSpecialChars = "Honda CRF-450R Rally/Cross";
-            String soatWithSpecialChars = "SOAT-2024/001-GPX";
+            String soatWithSpecialChars = "SOAT-2024/001-gpx";
             String platesWithSpecialChars = "ABC-123";
 
             // When

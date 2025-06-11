@@ -1,8 +1,8 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.User;
-import com.udea.GPX.repository.IUserRepository;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.model.User;
+import com.udea.gpx.repository.IUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

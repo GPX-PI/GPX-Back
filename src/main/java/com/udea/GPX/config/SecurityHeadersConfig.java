@@ -1,8 +1,9 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -27,9 +28,9 @@ public class SecurityHeadersConfig {
   public static class SecurityHeadersFilter extends OncePerRequestFilter {
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-        HttpServletResponse response,
-        FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+        @NonNull HttpServletResponse response,
+        @NonNull FilterChain filterChain) throws ServletException, IOException {
 
       // Strict Transport Security (HSTS) - Forzar HTTPS
       response.setHeader("Strict-Transport-Security",

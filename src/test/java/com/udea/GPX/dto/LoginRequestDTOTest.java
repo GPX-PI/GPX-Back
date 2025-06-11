@@ -1,4 +1,4 @@
-package com.udea.GPX.dto;
+package com.udea.gpx.dto;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,9 +15,12 @@ import jakarta.validation.ValidatorFactory;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @DisplayName("LoginRequestDTO Tests")
 class LoginRequestDTOTest {
+    private static final Logger logger = LoggerFactory.getLogger(LoginRequestDTOTest.class);
 
     private Validator validator;
     private LoginRequestDTO loginRequestDTO;
@@ -148,32 +151,22 @@ class LoginRequestDTOTest {
         @DisplayName("Email Validation")
         class EmailValidation {
 
+            @ParameterizedTest
+            @ValueSource(strings = { "", "   ", "\t", "\n" })
+            @DisplayName("Null, empty, or blank email should fail validation")
+            void testNullEmptyOrBlankEmail(String email) {
+                loginRequestDTO.setEmail(email);
+                loginRequestDTO.setPassword("password123");
+
+                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
+                assertFalse(violations.isEmpty());
+                assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("El email es requerido")));
+            }
+
             @Test
             @DisplayName("Null email should fail validation")
             void testNullEmail() {
                 loginRequestDTO.setEmail(null);
-                loginRequestDTO.setPassword("password123");
-
-                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-                assertFalse(violations.isEmpty());
-                assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("El email es requerido")));
-            }
-
-            @Test
-            @DisplayName("Empty email should fail validation")
-            void testEmptyEmail() {
-                loginRequestDTO.setEmail("");
-                loginRequestDTO.setPassword("password123");
-
-                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-                assertFalse(violations.isEmpty());
-                assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("El email es requerido")));
-            }
-
-            @Test
-            @DisplayName("Blank email should fail validation")
-            void testBlankEmail() {
-                loginRequestDTO.setEmail("   ");
                 loginRequestDTO.setPassword("password123");
 
                 Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
@@ -231,33 +224,23 @@ class LoginRequestDTOTest {
         @DisplayName("Password Validation")
         class PasswordValidation {
 
+            @ParameterizedTest
+            @ValueSource(strings = { "", "   " })
+            @DisplayName("Null, empty, or blank password should fail validation")
+            void testNullEmptyOrBlankPassword(String password) {
+                loginRequestDTO.setEmail("test@example.com");
+                loginRequestDTO.setPassword(password);
+
+                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
+                assertFalse(violations.isEmpty());
+                assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("La contraseña es requerida")));
+            }
+
             @Test
             @DisplayName("Null password should fail validation")
             void testNullPassword() {
                 loginRequestDTO.setEmail("test@example.com");
                 loginRequestDTO.setPassword(null);
-
-                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-                assertFalse(violations.isEmpty());
-                assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("La contraseña es requerida")));
-            }
-
-            @Test
-            @DisplayName("Empty password should fail validation")
-            void testEmptyPassword() {
-                loginRequestDTO.setEmail("test@example.com");
-                loginRequestDTO.setPassword("");
-
-                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-                assertFalse(violations.isEmpty());
-                assertTrue(violations.stream().anyMatch(v -> v.getMessage().equals("La contraseña es requerida")));
-            }
-
-            @Test
-            @DisplayName("Blank password should fail validation")
-            void testBlankPassword() {
-                loginRequestDTO.setEmail("test@example.com");
-                loginRequestDTO.setPassword("   ");
 
                 Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
                 assertFalse(violations.isEmpty());
@@ -283,42 +266,14 @@ class LoginRequestDTOTest {
                     "password",
                     "password123",
                     "securePassword",
-                    "veryLongPasswordWithManyCharacters123456789"
+                    "veryLongPasswordWithManyCharacters123456789",
+                    "password!@#$%^&*()",
+                    "pass word"
             })
-            @DisplayName("Password with 6 or more characters should pass validation")
-            void testValidPasswordLength(String validPassword) {
+            @DisplayName("Password with 6 or more characters, special characters, or spaces should pass validation")
+            void testValidPasswordVariants(String validPassword) {
                 loginRequestDTO.setEmail("test@example.com");
                 loginRequestDTO.setPassword(validPassword);
-
-                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-                assertTrue(violations.isEmpty());
-            }
-
-            @Test
-            @DisplayName("Password with exactly 6 characters should pass validation")
-            void testPasswordExactlyMinimumLength() {
-                loginRequestDTO.setEmail("test@example.com");
-                loginRequestDTO.setPassword("123456");
-
-                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-                assertTrue(violations.isEmpty());
-            }
-
-            @Test
-            @DisplayName("Password with special characters should pass validation")
-            void testPasswordWithSpecialCharacters() {
-                loginRequestDTO.setEmail("test@example.com");
-                loginRequestDTO.setPassword("password!@#$%^&*()");
-
-                Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-                assertTrue(violations.isEmpty());
-            }
-
-            @Test
-            @DisplayName("Password with spaces should pass validation if length is sufficient")
-            void testPasswordWithSpaces() {
-                loginRequestDTO.setEmail("test@example.com");
-                loginRequestDTO.setPassword("pass word");
 
                 Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
                 assertTrue(violations.isEmpty());
@@ -419,34 +374,22 @@ class LoginRequestDTOTest {
             assertTrue(violations.isEmpty());
         }
 
-        @Test
-        @DisplayName("International domain email should pass validation")
-        void testInternationalDomainEmail() {
-            loginRequestDTO.setEmail("user@example.co.uk");
-            loginRequestDTO.setPassword("password123");
+        @ParameterizedTest
+        @DisplayName("Valid edge-case emails and passwords should pass validation")
+        @org.junit.jupiter.params.provider.MethodSource("provideValidEdgeCaseEmailsAndPasswords")
+        void testValidEdgeCaseEmailsAndPasswords(String email, String password) {
+            loginRequestDTO.setEmail(email);
+            loginRequestDTO.setPassword(password);
 
             Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
             assertTrue(violations.isEmpty());
         }
 
-        @Test
-        @DisplayName("Numeric email username should pass validation")
-        void testNumericEmailUsername() {
-            loginRequestDTO.setEmail("123456@example.com");
-            loginRequestDTO.setPassword("password123");
-
-            Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-            assertTrue(violations.isEmpty());
-        }
-
-        @Test
-        @DisplayName("Password with only numbers should pass validation if long enough")
-        void testNumericPassword() {
-            loginRequestDTO.setEmail("test@example.com");
-            loginRequestDTO.setPassword("123456789");
-
-            Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequestDTO);
-            assertTrue(violations.isEmpty());
+        static java.util.stream.Stream<org.junit.jupiter.params.provider.Arguments> provideValidEdgeCaseEmailsAndPasswords() {
+            return java.util.stream.Stream.of(
+                    org.junit.jupiter.params.provider.Arguments.of("user@example.co.uk", "password123"),
+                    org.junit.jupiter.params.provider.Arguments.of("123456@example.com", "password123"),
+                    org.junit.jupiter.params.provider.Arguments.of("test@example.com", "123456789"));
         }
 
         @Test
@@ -512,11 +455,12 @@ class LoginRequestDTOTest {
 
             // Final validation
             Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(dto);
-            if (!violations.isEmpty()) {
-                System.out.println("Validation violations found:");
+            if (!violations.isEmpty() && logger.isDebugEnabled()) {
+                logger.debug("Validation violations found:");
                 for (ConstraintViolation<LoginRequestDTO> violation : violations) {
-                    System.out.println(
-                            "Property: " + violation.getPropertyPath() + ", Message: " + violation.getMessage());
+                    logger.debug("Property: {}, Message: {}",
+                            violation.getPropertyPath(),
+                            violation.getMessage());
                 }
             }
             assertTrue(violations.isEmpty(),

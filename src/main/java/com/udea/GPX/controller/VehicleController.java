@@ -1,31 +1,33 @@
-package com.udea.GPX.controller;
+package com.udea.gpx.controller;
 
-import com.udea.GPX.model.Vehicle;
-import com.udea.GPX.model.Category;
-import com.udea.GPX.service.VehicleService;
-import com.udea.GPX.service.CategoryService;
-import com.udea.GPX.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.udea.gpx.dto.VehicleRequestDTO;
+import com.udea.gpx.model.Category;
+import com.udea.gpx.model.User;
+import com.udea.gpx.model.Vehicle;
+import com.udea.gpx.repository.IEventVehicleRepository;
+import com.udea.gpx.repository.IStageResultRepository;
+import com.udea.gpx.service.CategoryService;
+import com.udea.gpx.service.UserService;
+import com.udea.gpx.service.VehicleService;
+import com.udea.gpx.util.AuthUtils;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import com.udea.GPX.model.User;
-import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.dao.DataIntegrityViolationException;
-import com.udea.GPX.repository.IEventVehicleRepository;
-import com.udea.GPX.repository.IStageResultRepository;
+
 import java.util.Map;
 import java.util.HashMap;
 
 import java.util.List;
 import java.util.Optional;
-import com.udea.GPX.util.AuthUtils;
-import com.udea.GPX.dto.VehicleRequestDTO;
 
 @RestController
 @RequestMapping("/api/vehicles")

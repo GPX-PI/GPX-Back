@@ -1,12 +1,14 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.User;
-import com.udea.GPX.repository.IUserRepository;
-import com.udea.GPX.util.InputSanitizer;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import com.udea.gpx.model.User;
+import com.udea.gpx.repository.IUserRepository;
+import com.udea.gpx.util.InputSanitizer;
+import com.udea.gpx.constants.AppConstants;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,11 +20,14 @@ public class UserService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
 
-    @Autowired
-    private IUserRepository userRepository;
+    private final IUserRepository userRepository;
+    private final PasswordService passwordService;
 
-    @Autowired
-    private PasswordService passwordService;
+    // Constructor injection (no @Autowired needed)
+    public UserService(IUserRepository userRepository, PasswordService passwordService) {
+        this.userRepository = userRepository;
+        this.passwordService = passwordService;
+    }
 
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -50,13 +55,12 @@ public class UserService {
         return userOpt;
     }
 
-    public User createUser(User user) {
-        // Validar email duplicado
+    public User createUser(User user) { // Validar email duplicado
         if (user.getEmail() != null && !user.getEmail().trim().isEmpty()) {
             String sanitizedEmail = InputSanitizer.sanitizeEmail(user.getEmail());
             User existingUser = findByEmail(sanitizedEmail);
             if (existingUser != null) {
-                throw new IllegalArgumentException("El email ya está en uso");
+                throw new IllegalArgumentException(AppConstants.Messages.EMAIL_YA_EN_USO);
             }
             user.setEmail(sanitizedEmail);
         }
@@ -88,108 +92,30 @@ public class UserService {
 
     public User updateUser(Long id, User updatedUser) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException(AppConstants.Messages.USUARIO_NO_ENCONTRADO));
 
-        // Validar email duplicado si se está actualizando
-        if (updatedUser.getEmail() != null && !updatedUser.getEmail().trim().isEmpty()) {
-            String newEmail = InputSanitizer.sanitizeEmail(updatedUser.getEmail());
-
-            // Verificar que el email no esté ya en uso por otro usuario
-            User existingUser = findByEmail(newEmail);
-            if (existingUser != null && !existingUser.getId().equals(id)) {
-                throw new IllegalArgumentException("El email ya está en uso por otro usuario");
-            }
-
-            user.setEmail(newEmail);
-        }
-
-        // Solo actualizar campos que no sean nulos o que específicamente se quieran
-        // actualizar - Con sanitización
-        if (updatedUser.getFirstName() != null) {
-            user.setFirstName(InputSanitizer.sanitizeName(updatedUser.getFirstName()));
-        }
-        if (updatedUser.getLastName() != null) {
-            user.setLastName(InputSanitizer.sanitizeName(updatedUser.getLastName()));
-        }
-        if (updatedUser.getIdentification() != null) {
-            user.setIdentification(InputSanitizer.sanitizeIdentification(updatedUser.getIdentification()));
-        }
-        if (updatedUser.getPhone() != null) {
-            user.setPhone(InputSanitizer.sanitizePhone(updatedUser.getPhone()));
-        }
-        if (updatedUser.getRole() != null) {
-            user.setRole(InputSanitizer.sanitizeText(updatedUser.getRole()));
-        }
-        if (updatedUser.getBirthdate() != null) {
-            user.setBirthdate(updatedUser.getBirthdate());
-        }
-        if (updatedUser.getTypeOfId() != null) {
-            user.setTypeOfId(InputSanitizer.sanitizeText(updatedUser.getTypeOfId()));
-        }
-        if (updatedUser.getTeamName() != null) {
-            user.setTeamName(InputSanitizer.sanitizeText(updatedUser.getTeamName()));
-        }
-        if (updatedUser.getEps() != null) {
-            user.setEps(InputSanitizer.sanitizeText(updatedUser.getEps()));
-        }
-        if (updatedUser.getRh() != null) {
-            user.setRh(InputSanitizer.sanitizeText(updatedUser.getRh()));
-        }
-        if (updatedUser.getEmergencyPhone() != null) {
-            user.setEmergencyPhone(InputSanitizer.sanitizePhone(updatedUser.getEmergencyPhone()));
-        }
-        if (updatedUser.getAlergies() != null) {
-            user.setAlergies(InputSanitizer.sanitizeText(updatedUser.getAlergies()));
-        }
-        if (updatedUser.getWikiloc() != null) {
-            user.setWikiloc(InputSanitizer.sanitizeUrl(updatedUser.getWikiloc()));
-        }
-        if (updatedUser.getInsurance() != null) {
-            user.setInsurance(updatedUser.getInsurance()); // Archivos no se sanitizan
-        }
-        if (updatedUser.getTerrapirata() != null) {
-            user.setTerrapirata(InputSanitizer.sanitizeUrl(updatedUser.getTerrapirata()));
-        }
-        if (updatedUser.getInstagram() != null) {
-            user.setInstagram(InputSanitizer.sanitizeUrl(updatedUser.getInstagram()));
-        }
-        if (updatedUser.getFacebook() != null) {
-            user.setFacebook(InputSanitizer.sanitizeUrl(updatedUser.getFacebook()));
-        }
-        if (updatedUser.getPicture() != null) {
-            user.setPicture(updatedUser.getPicture()); // Archivos no se sanitizan
-        }
-
-        // Para el campo admin, manejarlo de manera especial porque es un primitivo
-        // boolean
-        // Solo actualizarlo si explícitamente se está enviando
-        // Por ahora, mantenemos el valor existente a menos que específicamente se
-        // quiera cambiar
-        // user.setAdmin(updatedUser.isAdmin()); // Comentado para evitar sobrescritura
-        // accidental
+        updateEmailIfProvided(user, updatedUser.getEmail(), id);
+        updateBasicFields(user, updatedUser);
+        updateContactFields(user, updatedUser);
+        updateMedicalFields(user, updatedUser);
+        updateSocialFields(user, updatedUser);
+        updateFileFields(user, updatedUser);
 
         return userRepository.save(user);
     }
 
-    public User updateUserProfile(Long id, User updatedUser) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        // Validar email duplicado si se está actualizando
-        if (updatedUser.getEmail() != null && !updatedUser.getEmail().trim().isEmpty()) {
-            String newEmail = InputSanitizer.sanitizeEmail(updatedUser.getEmail());
-
-            // Verificar que el email no esté ya en uso por otro usuario
-            User existingUser = findByEmail(newEmail);
-            if (existingUser != null && !existingUser.getId().equals(id)) {
-                throw new IllegalArgumentException("El email ya está en uso por otro usuario");
+    private void updateEmailIfProvided(User user, String newEmail, Long userId) {
+        if (newEmail != null && !newEmail.trim().isEmpty()) {
+            String sanitizedEmail = InputSanitizer.sanitizeEmail(newEmail);
+            User existingUser = findByEmail(sanitizedEmail);
+            if (existingUser != null && !existingUser.getId().equals(userId)) {
+                throw new IllegalArgumentException(AppConstants.Messages.EMAIL_YA_EN_USO_POR_OTRO_USUARIO);
             }
-
-            user.setEmail(newEmail);
+            user.setEmail(sanitizedEmail);
         }
+    }
 
-        // Solo actualizar campos de datos, NO tocar campos de archivos (picture,
-        // insurance) - Con sanitización
+    private void updateBasicFields(User user, User updatedUser) {
         if (updatedUser.getFirstName() != null) {
             user.setFirstName(InputSanitizer.sanitizeName(updatedUser.getFirstName()));
         }
@@ -198,9 +124,6 @@ public class UserService {
         }
         if (updatedUser.getIdentification() != null) {
             user.setIdentification(InputSanitizer.sanitizeIdentification(updatedUser.getIdentification()));
-        }
-        if (updatedUser.getPhone() != null) {
-            user.setPhone(InputSanitizer.sanitizePhone(updatedUser.getPhone()));
         }
         if (updatedUser.getRole() != null) {
             user.setRole(InputSanitizer.sanitizeText(updatedUser.getRole()));
@@ -214,18 +137,30 @@ public class UserService {
         if (updatedUser.getTeamName() != null) {
             user.setTeamName(InputSanitizer.sanitizeText(updatedUser.getTeamName()));
         }
+    }
+
+    private void updateContactFields(User user, User updatedUser) {
+        if (updatedUser.getPhone() != null) {
+            user.setPhone(InputSanitizer.sanitizePhone(updatedUser.getPhone()));
+        }
+        if (updatedUser.getEmergencyPhone() != null) {
+            user.setEmergencyPhone(InputSanitizer.sanitizePhone(updatedUser.getEmergencyPhone()));
+        }
+    }
+
+    private void updateMedicalFields(User user, User updatedUser) {
         if (updatedUser.getEps() != null) {
             user.setEps(InputSanitizer.sanitizeText(updatedUser.getEps()));
         }
         if (updatedUser.getRh() != null) {
             user.setRh(InputSanitizer.sanitizeText(updatedUser.getRh()));
         }
-        if (updatedUser.getEmergencyPhone() != null) {
-            user.setEmergencyPhone(InputSanitizer.sanitizePhone(updatedUser.getEmergencyPhone()));
-        }
         if (updatedUser.getAlergies() != null) {
             user.setAlergies(InputSanitizer.sanitizeText(updatedUser.getAlergies()));
         }
+    }
+
+    private void updateSocialFields(User user, User updatedUser) {
         if (updatedUser.getWikiloc() != null) {
             user.setWikiloc(InputSanitizer.sanitizeUrl(updatedUser.getWikiloc()));
         }
@@ -238,11 +173,42 @@ public class UserService {
         if (updatedUser.getFacebook() != null) {
             user.setFacebook(InputSanitizer.sanitizeUrl(updatedUser.getFacebook()));
         }
+    }
+
+    private void updateFileFields(User user, User updatedUser) {
+        if (updatedUser.getInsurance() != null) {
+            user.setInsurance(updatedUser.getInsurance()); // Archivos no se sanitizan
+        }
+        if (updatedUser.getPicture() != null) {
+            user.setPicture(updatedUser.getPicture()); // Archivos no se sanitizan
+        }
+    }
+
+    public User updateUserProfile(Long id, User updatedUser) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(AppConstants.Messages.USUARIO_NO_ENCONTRADO));
+
+        updateEmailForProfile(user, updatedUser.getEmail(), id);
+        updateBasicFields(user, updatedUser);
+        updateContactFields(user, updatedUser);
+        updateMedicalFields(user, updatedUser);
+        updateSocialFields(user, updatedUser);
 
         // NOTA: NO actualizar picture ni insurance aquí
         // Esos se manejan en endpoints específicos
 
         return userRepository.save(user);
+    }
+
+    private void updateEmailForProfile(User user, String newEmail, Long userId) {
+        if (newEmail != null && !newEmail.trim().isEmpty()) {
+            String sanitizedEmail = InputSanitizer.sanitizeEmail(newEmail);
+            User existingUser = findByEmail(sanitizedEmail);
+            if (existingUser != null && !existingUser.getId().equals(userId)) {
+                throw new IllegalArgumentException(AppConstants.Messages.EMAIL_YA_EN_USO_POR_OTRO_USUARIO);
+            }
+            user.setEmail(sanitizedEmail);
+        }
     }
 
     public User findByEmail(String email) {
@@ -299,11 +265,11 @@ public class UserService {
      */
     public void changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException(AppConstants.Messages.USUARIO_NO_ENCONTRADO));
 
         // Verificar contraseña actual
         if (!checkPassword(user, currentPassword)) {
-            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+            throw new IllegalArgumentException(AppConstants.Messages.PASSWORD_ACTUAL_INCORRECTA);
         }
 
         // Validar nueva contraseña
@@ -313,7 +279,7 @@ public class UserService {
 
         // Verificar que la nueva contraseña sea diferente
         if (passwordService.verifyPassword(newPassword, user.getPassword())) {
-            throw new IllegalArgumentException("La nueva contraseña debe ser diferente a la actual");
+            throw new IllegalArgumentException(AppConstants.Messages.PASSWORD_NUEVA_DEBE_SER_DIFERENTE);
         }
 
         // Hashear y guardar nueva contraseña

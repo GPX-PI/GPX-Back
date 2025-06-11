@@ -1,44 +1,52 @@
-package com.udea.GPX.controller;
+package com.udea.gpx.controller;
 
-import com.udea.GPX.dto.ClasificacionCompletaDTO;
-import com.udea.GPX.dto.CreateStageResultDTO;
-import com.udea.GPX.dto.UpdateStageResultDTO;
-import com.udea.GPX.model.StageResult;
-import com.udea.GPX.service.StageResultService;
-import com.udea.GPX.util.AuthUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import com.udea.gpx.dto.ClasificacionCompletaDTO;
+import com.udea.gpx.dto.CreateStageResultDTO;
+import com.udea.gpx.dto.UpdateStageResultDTO;
+import com.udea.gpx.model.StageResult;
+import com.udea.gpx.service.StageResultService;
+import com.udea.gpx.util.AuthUtils;
+
 import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.List;
-import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/stageresults")
 public class StageResultController {
 
-    @Autowired
-    private StageResultService stageResultService;
+    private static final Logger logger = LoggerFactory.getLogger(StageResultController.class);
 
-    @Autowired
-    private AuthUtils authUtils;
+    private final StageResultService stageResultService;
+    private final AuthUtils authUtils;
 
-    @SuppressWarnings("unused")
-    @Autowired
-    private HttpServletRequest request;
+    public StageResultController(StageResultService stageResultService, AuthUtils authUtils) {
+        this.stageResultService = stageResultService;
+        this.authUtils = authUtils;
+    }
 
     @PostMapping
     public ResponseEntity<StageResult> createResult(@Valid @RequestBody CreateStageResultDTO createDTO) {
         if (!authUtils.isCurrentUserAdmin()) {
+            logger.warn("Unauthorized attempt to create stage result");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
             StageResult result = stageResultService.createResult(createDTO);
+            logger.info("Stage result created successfully with ID: {}", result.getId());
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
-        } catch (RuntimeException e) {
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid data provided for stage result creation: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            logger.error("Unexpected error creating stage result: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -46,23 +54,36 @@ public class StageResultController {
     public ResponseEntity<StageResult> updateResult(@PathVariable Long id,
             @Valid @RequestBody UpdateStageResultDTO updateDTO) {
         if (!authUtils.isCurrentUserAdmin()) {
+            logger.warn("Unauthorized attempt to update stage result with ID: {}", id);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
             StageResult result = stageResultService.updateResultFromDTO(id, updateDTO);
+            logger.info("Stage result updated successfully with ID: {}", id);
             return ResponseEntity.ok(result);
-        } catch (RuntimeException e) {
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid data provided for stage result update: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            logger.error("Unexpected error updating stage result with ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteResult(@PathVariable Long id) {
         if (!authUtils.isCurrentUserAdmin()) {
+            logger.warn("Unauthorized attempt to delete stage result with ID: {}", id);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        stageResultService.deleteResult(id);
-        return ResponseEntity.noContent().build();
+        try {
+            stageResultService.deleteResult(id);
+            logger.info("Stage result deleted successfully with ID: {}", id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            logger.error("Error deleting stage result with ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/clasificacion")
@@ -70,7 +91,9 @@ public class StageResultController {
             @RequestParam Long eventId,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Integer stageNumber) {
+
         stageResultService.updateElapsedTimesForEvent(eventId);
+
         if (categoryId != null) {
             return ResponseEntity.ok(stageResultService.getClasificacionPorCategoria(eventId, categoryId));
         }
@@ -91,10 +114,17 @@ public class StageResultController {
     @PostMapping("/update-elapsed-times/{eventId}")
     public ResponseEntity<Void> updateElapsedTimesForEvent(@PathVariable Long eventId) {
         if (!authUtils.isCurrentUserAdmin()) {
+            logger.warn("Unauthorized attempt to update elapsed times for event ID: {}", eventId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        stageResultService.updateElapsedTimesForEvent(eventId);
-        return ResponseEntity.ok().build();
+        try {
+            stageResultService.updateElapsedTimesForEvent(eventId);
+            logger.info("Elapsed times updated successfully for event ID: {}", eventId);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            logger.error("Error updating elapsed times for event ID {}: {}", eventId, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PutMapping("/penalizacion/{id}")
@@ -103,19 +133,33 @@ public class StageResultController {
             @RequestParam(required = false) String penaltyWaypoint,
             @RequestParam(required = false) String penaltySpeed,
             @RequestParam(required = false) String discountClaim) {
+
         if (!authUtils.isCurrentUserAdmin()) {
+            logger.warn("Unauthorized attempt to apply penalty to stage result ID: {}", id);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        // Convertir strings a Duration, usando Duration.ZERO para valores vacíos o
-        // "PT0S"
-        Duration penaltyWaypointDuration = parseDuration(penaltyWaypoint);
-        Duration penaltySpeedDuration = parseDuration(penaltySpeed);
-        Duration discountClaimDuration = parseDuration(discountClaim);
+        try {
+            Duration penaltyWaypointDuration = parseDuration(penaltyWaypoint);
+            Duration penaltySpeedDuration = parseDuration(penaltySpeed);
+            Duration discountClaimDuration = parseDuration(discountClaim);
 
-        return ResponseEntity
-                .ok(stageResultService.aplicarPenalizacion(id, penaltyWaypointDuration, penaltySpeedDuration,
-                        discountClaimDuration));
+            StageResult result = stageResultService.aplicarPenalizacion(id, penaltyWaypointDuration,
+                    penaltySpeedDuration, discountClaimDuration);
+            logger.info("Penalty applied successfully to stage result ID: {}", id);
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid penalty data for stage result ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (RuntimeException e) {
+            logger.error("Error applying penalty to stage result ID {}: {}", id, e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/by-event/{eventId}")
+    public ResponseEntity<List<StageResult>> getResultsByEvent(@PathVariable Long eventId) {
+        return ResponseEntity.ok(stageResultService.getResultsByEvent(eventId));
     }
 
     private Duration parseDuration(String durationString) {
@@ -125,12 +169,8 @@ public class StageResultController {
         try {
             return Duration.parse(durationString);
         } catch (Exception e) {
+            logger.warn("Failed to parse duration '{}', using Duration.ZERO", durationString);
             return Duration.ZERO;
         }
-    }
-
-    @GetMapping("/by-event/{eventId}")
-    public ResponseEntity<List<StageResult>> getResultsByEvent(@PathVariable Long eventId) {
-        return ResponseEntity.ok(stageResultService.getResultsByEvent(eventId));
     }
 }

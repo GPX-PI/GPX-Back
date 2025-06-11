@@ -1,18 +1,18 @@
-# 🏁 GPX Racing Event Management System
+# 🏁 gpx Racing Event Management System
 
 <!-- Badges profesionales y organizados -->
 <p align="center">
-  <a href="https://github.com/GPX-PI/GPX-Back/actions/workflows/ci.yml">
-    <img src="https://github.com/GPX-PI/GPX-Back/actions/workflows/ci.yml/badge.svg" alt="CI/CD Pipeline"/>
+  <a href="https://github.com/gpx-PI/gpx-Back/actions/workflows/ci.yml">
+    <img src="https://github.com/gpx-PI/gpx-Back/actions/workflows/ci.yml/badge.svg" alt="CI/CD Pipeline"/>
   </a>
-  <a href="https://codecov.io/gh/GPX-PI/GPX-Back">
-    <img src="https://codecov.io/gh/GPX-PI/GPX-Back/graph/badge.svg?token=J6HXKK6S0H" alt="codecov"/>
+  <a href="https://codecov.io/gh/gpx-PI/gpx-Back">
+    <img src="https://codecov.io/gh/gpx-PI/gpx-Back/graph/badge.svg?token=J6HXKK6S0H" alt="codecov"/>
   </a>
-  <a href="https://sonarcloud.io/summary/new_code?id=GPX-PI_GPX-Back">
-    <img src="https://sonarcloud.io/api/project_badges/measure?project=GPX-PI_GPX-Back&metric=alert_status" alt="Quality Gate Status"/>
+  <a href="https://sonarcloud.io/summary/new_code?id=gpx-PI_gpx-Back">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=gpx-PI_gpx-Back&metric=alert_status" alt="Quality Gate Status"/>
   </a>
-  <a href="https://github.com/GPX-PI/GPX-Back/commits/main">
-    <img src="https://img.shields.io/github/last-commit/GPX-PI/GPX-Back" alt="Last Commit"/>
+  <a href="https://github.com/gpx-PI/gpx-Back/commits/main">
+    <img src="https://img.shields.io/github/last-commit/gpx-PI/gpx-Back" alt="Last Commit"/>
   </a>
   <a href="https://openjdk.java.net/projects/jdk/17/">
     <img src="https://img.shields.io/badge/java-17-blue.svg" alt="Java"/>
@@ -30,11 +30,11 @@
   <a href="https://project-gpx.vercel.app">
     <img src="https://img.shields.io/website?url=https%3A//project-gpx.vercel.app" alt="Website Status"/>
   </a>
-  <a href="https://github.com/GPX-PI/GPX-Back/commits/main">
-    <img src="https://img.shields.io/github/commit-activity/m/GPX-PI/GPX-Back" alt="Commit Activity"/>
+  <a href="https://github.com/gpx-PI/gpx-Back/commits/main">
+    <img src="https://img.shields.io/github/commit-activity/m/gpx-PI/gpx-Back" alt="Commit Activity"/>
   </a>
-  <a href="https://github.com/GPX-PI/GPX-Back/issues">
-    <img src="https://img.shields.io/github/issues/GPX-PI/GPX-Back" alt="GitHub issues"/>
+  <a href="https://github.com/gpx-PI/gpx-Back/issues">
+    <img src="https://img.shields.io/github/issues/gpx-PI/gpx-Back" alt="GitHub issues"/>
   </a>
 </p>
 
@@ -99,7 +99,7 @@ Sistema de gestión de eventos de carreras desarrollado con **Spring Boot 3.4.4*
 ## 🏗️ Arquitectura
 
 ```
-src/main/java/com/udea/GPX/
+src/main/java/com/udea/gpx/
 ├── controller/         # Capa de presentación (API REST)
 ├── service/            # Lógica de negocio
 ├── repository/         # Acceso a datos (JPA)
@@ -425,7 +425,7 @@ GOOGLE_CLIENT_SECRET=...
 
 ```dockerfile
 FROM openjdk:17-jdk-slim
-COPY target/GPX-0.0.1-SNAPSHOT.jar app.jar
+COPY target/gpx-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java","-jar","/app.jar"]
 ```

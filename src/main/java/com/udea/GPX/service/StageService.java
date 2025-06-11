@@ -1,9 +1,10 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Stage;
-import com.udea.GPX.repository.IStageRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.udea.gpx.model.Stage;
+import com.udea.gpx.repository.IStageRepository;
+import com.udea.gpx.constants.AppConstants;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,8 +12,12 @@ import java.util.Optional;
 @Service
 public class StageService {
 
-    @Autowired
-    private IStageRepository stageRepository;
+    private final IStageRepository stageRepository;
+
+    // Constructor injection (no @Autowired needed)
+    public StageService(IStageRepository stageRepository) {
+        this.stageRepository = stageRepository;
+    }
 
     public List<Stage> getAllStages() {
         return stageRepository.findAll();
@@ -35,7 +40,7 @@ public class StageService {
 
     public Stage updateStage(Long id, Stage updatedStage) {
         Stage stage = stageRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Stage no encontrado"));
+                .orElseThrow(() -> new RuntimeException(AppConstants.Messages.ETAPA_NO_ENCONTRADA));
 
         stage.setName(updatedStage.getName());
         stage.setOrderNumber(updatedStage.getOrderNumber());

@@ -1,9 +1,8 @@
-package com.udea.GPX.model;
+package com.udea.gpx.model;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -630,7 +629,6 @@ class StageResultTest {
                 Object[] scenario = resultScenarios[i];
 
                 // When
-                String description = (String) scenario[0];
                 int elapsedTime = (int) scenario[1];
                 int waypointPenalty = (int) scenario[2];
                 int speedPenalty = (int) scenario[3];

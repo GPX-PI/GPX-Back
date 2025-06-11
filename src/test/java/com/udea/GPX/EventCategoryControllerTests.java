@@ -1,13 +1,8 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.udea.GPX.controller.EventCategoryController;
-import com.udea.GPX.model.Category;
-import com.udea.GPX.model.EventCategory;
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.EventCategoryService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,13 +20,19 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.udea.gpx.controller.EventCategoryController;
+import com.udea.gpx.model.Category;
+import com.udea.gpx.model.EventCategory;
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.EventCategoryService;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class EventCategoryControllerTests {
+class EventCategoryControllerTests {
 
     @InjectMocks
     private EventCategoryController eventCategoryController;
@@ -43,7 +44,7 @@ public class EventCategoryControllerTests {
     private HttpServletRequest request;
 
     @Mock
-    private com.udea.GPX.util.AuthUtils authUtils;
+    private com.udea.gpx.util.AuthUtils authUtils;
 
     @Mock
     private SecurityContext securityContext;
@@ -111,7 +112,9 @@ public class EventCategoryControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
+        List<EventCategory> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
     }
 
     @Test
@@ -142,7 +145,9 @@ public class EventCategoryControllerTests {
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(eventCategory, response.getBody());
+        EventCategory responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(eventCategory, responseBody);
     }
 
     @Test
@@ -199,7 +204,9 @@ public class EventCategoryControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(eventCategory, response.getBody());
+        EventCategory responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(eventCategory, responseBody);
     }
 
     @Test
@@ -240,6 +247,8 @@ public class EventCategoryControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(eventCategories, response.getBody());
+        List<EventCategory> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(eventCategories, responseBody);
     }
 }

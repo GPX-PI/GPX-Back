@@ -1,9 +1,9 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Stage;
-import com.udea.GPX.model.Event;
-import com.udea.GPX.repository.IStageRepository;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.Stage;
+import com.udea.gpx.repository.IStageRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -189,12 +189,10 @@ class StageServiceTest {
         // Given
         Stage updatedStage = TestDataBuilder.buildStage(null, "Updated Stage", testEvent, 5);
 
-        when(stageRepository.findById(999L)).thenReturn(Optional.empty());
-
-        // When & Then
+        when(stageRepository.findById(999L)).thenReturn(Optional.empty()); // When & Then
         assertThatThrownBy(() -> stageService.updateStage(999L, updatedStage))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Stage no encontrado");
+                .hasMessageContaining("Etapa no encontrada");
 
         verify(stageRepository).findById(999L);
         verify(stageRepository, never()).save(any(Stage.class));
@@ -247,7 +245,7 @@ class StageServiceTest {
         // Then
         assertThat(result).isEqualTo(stageWithNulls);
         assertThat(result.getName()).isNull();
-        assertThat(result.getOrderNumber()).isEqualTo(0);
+        assertThat(result.getOrderNumber()).isZero();
         assertThat(result.getEvent()).isNull();
         verify(stageRepository).save(stageWithNulls);
     }
@@ -269,8 +267,8 @@ class StageServiceTest {
         List<Stage> result = stageService.getStagesByEventId(1L); // Then
         assertThat(result)
                 .hasSize(3)
-                .containsExactlyInAnyOrder(testStage, stage2, stage3);
-        assertThat(result).allMatch(stage -> stage.getEvent().getId().equals(1L));
+                .containsExactlyInAnyOrder(testStage, stage2, stage3)
+                .allMatch(stage -> stage.getEvent().getId().equals(1L));
         verify(stageRepository).findAll();
     }
 
@@ -311,7 +309,7 @@ class StageServiceTest {
         Stage savedStage = TestDataBuilder.buildStage(10L, "Flow Stage", testEvent, 1);
         Stage updatedStage = TestDataBuilder.buildStage(null, "Updated Flow Stage", testEvent, 2);
         Stage finalStage = TestDataBuilder.buildStage(10L, "Updated Flow Stage", testEvent, 2);
-        when(stageRepository.save(eq(newStage))).thenReturn(savedStage);
+        when(stageRepository.save(newStage)).thenReturn(savedStage);
         when(stageRepository.findById(10L)).thenReturn(Optional.of(savedStage));
         when(stageRepository.save(argThat(stage -> stage != newStage))).thenReturn(finalStage);
         doNothing().when(stageRepository).deleteById(10L);

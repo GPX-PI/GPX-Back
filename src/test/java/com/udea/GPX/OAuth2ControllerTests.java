@@ -1,8 +1,5 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
-import com.udea.GPX.controller.OAuth2Controller;
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.OAuth2Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +15,11 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.servlet.view.RedirectView;
+
+import com.udea.gpx.controller.OAuth2Controller;
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.OAuth2Service;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +34,7 @@ public class OAuth2ControllerTests {
     private OAuth2Service oAuth2Service;
 
     @Mock
-    private com.udea.GPX.JwtUtil jwtUtil;
+    private com.udea.gpx.JwtUtil jwtUtil;
 
     @InjectMocks
     private OAuth2Controller oAuth2Controller;
@@ -91,8 +93,10 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
+        String resultUrl = result.getUrl();
+        assertNotNull(resultUrl);
         String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=false&provider=google&profileComplete=true&firstName=Juan&picture=";
-        assertEquals(expectedUrl, result.getUrl());
+        assertEquals(expectedUrl, resultUrl);
     }
 
     @Test
@@ -111,8 +115,10 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
+        String resultUrl = result.getUrl();
+        assertNotNull(resultUrl);
         String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=false&provider=google&profileComplete=false&firstName=Juan&picture=";
-        assertEquals(expectedUrl, result.getUrl());
+        assertEquals(expectedUrl, resultUrl);
     }
 
     @Test
@@ -134,8 +140,10 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
+        String resultUrl = result.getUrl();
+        assertNotNull(resultUrl);
         String expectedUrl = "http://localhost:3000/oauth2/redirect?token=jwt-token&userId=1&admin=true&provider=google&profileComplete=true&firstName=Admin&picture=";
-        assertEquals(expectedUrl, result.getUrl());
+        assertEquals(expectedUrl, resultUrl);
     }
 
     @Test
@@ -149,8 +157,10 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
-        assertTrue(result.getUrl().contains("error=oauth2_failed"));
-        assertTrue(result.getUrl().contains("message=Error al procesar usuario"));
+        String resultUrl = result.getUrl();
+        assertNotNull(resultUrl);
+        assertTrue(resultUrl.contains("error=oauth2_failed"));
+        assertTrue(resultUrl.contains("message=Error al procesar usuario"));
     }
 
     @Test
@@ -169,8 +179,10 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
-        assertTrue(result.getUrl().contains("error=oauth2_failed"));
-        assertTrue(result.getUrl().contains("message=Error al generar JWT"));
+        String resultUrl = result.getUrl();
+        assertNotNull(resultUrl);
+        assertTrue(resultUrl.contains("error=oauth2_failed"));
+        assertTrue(resultUrl.contains("message=Error al generar JWT"));
     }
 
     @Test
@@ -188,7 +200,9 @@ public class OAuth2ControllerTests {
 
         // Assert
         assertNotNull(result);
-        assertTrue(result.getUrl().contains("firstName="));
+        String resultUrl = result.getUrl();
+        assertNotNull(resultUrl);
+        assertTrue(resultUrl.contains("firstName="));
     }
 
     // ========== TESTS PARA GET PROFILE STATUS ==========
@@ -313,6 +327,7 @@ public class OAuth2ControllerTests {
         // Assert
         assertNotNull(result);
         String redirectUrl = result.getUrl();
+        assertNotNull(redirectUrl);
 
         // Verificar que el firstName está correctamente codificado (espacios como + en
         // query params)
@@ -347,6 +362,7 @@ public class OAuth2ControllerTests {
         // Assert
         assertNotNull(result);
         String redirectUrl = result.getUrl();
+        assertNotNull(redirectUrl);
 
         // Verificar que los caracteres especiales están codificados
         // URLEncoder codifica espacios como + y caracteres especiales como %XX

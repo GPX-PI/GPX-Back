@@ -1,14 +1,16 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import org.springframework.lang.NonNull;
+
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
   @Override
-  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+  public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
     // Servir archivos de la carpeta uploads/ como recursos estáticos
     registry.addResourceHandler("/uploads/**")
         .addResourceLocations("file:uploads/")

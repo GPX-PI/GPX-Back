@@ -1,4 +1,4 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;

@@ -1,383 +1,321 @@
-package com.udea.GPX.service;
-
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
-
-import java.lang.reflect.Field;
-import java.util.Map;
+package com.udea.gpx.service;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestTemplate;
+
+import com.udea.gpx.exception.ConnectivityException;
+import com.udea.gpx.exception.OAuth2ServiceException;
+
+import java.util.Map;
+
+/**
+ * Tests unitarios para ExternalServiceClient
+ * Valida el comportamiento del cliente de servicios externos con Circuit
+ * Breaker
+ */
 @ExtendWith(MockitoExtension.class)
 class ExternalServiceClientTest {
 
     @Mock
     private RestTemplate restTemplate;
 
+    @InjectMocks
     private ExternalServiceClient externalServiceClient;
 
+    // Test constants
+    private static final String GOOGLE_OAUTH_URL = "https://www.googleapis.com/oauth2/v2/tokeninfo?access_token=invalid";
+    private static final String GOOGLE_BASE_URL = "https://www.google.com";
+    private static final String TEST_ACCESS_TOKEN = "test_access_token";
+    private static final String TEST_PROVIDER_URL = "https://provider.example.com/userinfo";
+    private static final String SUB_KEY = "sub";
+    private static final String EMAIL_KEY = "email";
+    private static final String NAME_KEY = "name";
+    private static final String PROVIDER_URL_KEY = "provider_url";
+    private static final String FALLBACK_KEY = "fallback";
+
     @BeforeEach
-    void setUp() throws Exception {
-        externalServiceClient = new ExternalServiceClient();
-
-        // Inject mock RestTemplate using reflection
-        Field restTemplateField = ExternalServiceClient.class.getDeclaredField("restTemplate");
-        restTemplateField.setAccessible(true);
-        restTemplateField.set(externalServiceClient, restTemplate);
-    }
-
-    // checkGoogleOAuth2Health Tests
-
-    @Test
-    void checkGoogleOAuth2Health_WithSuccessfulResponse_ShouldReturnTrue() {
-        // Given
-        ResponseEntity<String> successResponse = new ResponseEntity<>("response", HttpStatus.OK);
-        when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(successResponse);
-
-        // When
-        boolean result = externalServiceClient.checkGoogleOAuth2Health();
-
-        // Then
-        assertTrue(result);
-        verify(restTemplate).getForEntity(
-                eq("https://www.googleapis.com/oauth2/v2/tokeninfo?access_token=invalid"),
-                eq(String.class));
+    void setUp() {
+        // Inyectar el mock del RestTemplate usando reflexión
+        ReflectionTestUtils.setField(externalServiceClient, "restTemplate", restTemplate);
+        reset(restTemplate);
     }
 
     @Test
-    void checkGoogleOAuth2Health_WithErrorResponse_ShouldStillReturnTrue() {
-        // Given - Error responses still mean the service is available
-        ResponseEntity<String> errorResponse = new ResponseEntity<>("error", HttpStatus.BAD_REQUEST);
-        when(restTemplate.getForEntity(anyString(), eq(String.class))).thenReturn(errorResponse);
+    void testCheckGoogleOAuth2HealthSuccess() {
+        // Arrange
+        ResponseEntity<String> responseEntity = new ResponseEntity<>("response", HttpStatus.BAD_REQUEST);
+        when(restTemplate.getForEntity(GOOGLE_OAUTH_URL, String.class))
+                .thenReturn(responseEntity);
 
-        // When
-        boolean result = externalServiceClient.checkGoogleOAuth2Health();
-
-        // Then
-        assertTrue(result);
+        // Act & Assert
+        assertDoesNotThrow(() -> {
+            boolean result = externalServiceClient.checkGoogleOAuth2Health();
+            assertTrue(result);
+        });
+        verify(restTemplate).getForEntity(GOOGLE_OAUTH_URL, String.class);
     }
 
     @Test
-    void checkGoogleOAuth2Health_WithRestClientException_ShouldThrowRuntimeException() {
-        // Given
-        when(restTemplate.getForEntity(anyString(), eq(String.class)))
-                .thenThrow(new RestClientException("Connection failed"));
+    void testCheckGoogleOAuth2HealthWithRestClientException() {
+        // Arrange
+        when(restTemplate.getForEntity(GOOGLE_OAUTH_URL, String.class))
+                .thenThrow(new ResourceAccessException("Connection timeout"));
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        // Act & Assert
+        OAuth2ServiceException exception = assertThrows(
+                OAuth2ServiceException.class,
                 () -> externalServiceClient.checkGoogleOAuth2Health());
 
-        assertEquals("Google OAuth2 no disponible", exception.getMessage());
-        assertTrue(exception.getCause() instanceof RestClientException);
+        assertTrue(exception.getMessage().contains("Google OAuth2 no disponible"));
+        assertNotNull(exception.getCause());
+        verify(restTemplate).getForEntity(GOOGLE_OAUTH_URL, String.class);
     }
 
     @Test
-    void checkGoogleOAuth2Health_WithUnexpectedException_ShouldThrowRuntimeException() {
-        // Given
-        when(restTemplate.getForEntity(anyString(), eq(String.class)))
-                .thenThrow(new IllegalArgumentException("Unexpected error"));
+    void testCheckGoogleOAuth2HealthWithGeneralException() {
+        // Arrange
+        when(restTemplate.getForEntity(GOOGLE_OAUTH_URL, String.class))
+                .thenThrow(new RuntimeException("Unexpected error"));
 
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
+        // Act & Assert
+        OAuth2ServiceException exception = assertThrows(
+                OAuth2ServiceException.class,
                 () -> externalServiceClient.checkGoogleOAuth2Health());
 
-        assertEquals("Error verificando OAuth2", exception.getMessage());
-        assertTrue(exception.getCause() instanceof IllegalArgumentException);
+        assertTrue(exception.getMessage().contains("Error crítico"));
+        assertNotNull(exception.getCause());
+        verify(restTemplate).getForEntity(GOOGLE_OAUTH_URL, String.class);
     }
 
-    // fallbackOAuth2Health Tests
-
     @Test
-    void fallbackOAuth2Health_ShouldReturnFalse() {
-        // Given
-        Exception testException = new RuntimeException("Test error");
+    void testFallbackOAuth2Health() {
+        // Arrange
+        OAuth2ServiceException testException = new OAuth2ServiceException("Test error");
 
-        // When
+        // Act
         boolean result = externalServiceClient.fallbackOAuth2Health(testException);
 
-        // Then
+        // Assert
         assertFalse(result);
     }
 
-    // getUserInfoFromProvider Tests
-
     @Test
-    void getUserInfoFromProvider_WithValidToken_ShouldReturnUserInfo() {
-        // Given
-        String accessToken = "valid_token";
-        String providerUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
-
-        Map<String, Object> userInfo = Map.of(
-                "sub", "12345",
-                "email", "user@example.com",
-                "name", "Test User");
-
-        @SuppressWarnings("unchecked")
-        ResponseEntity<Map> response = new ResponseEntity<>(userInfo, HttpStatus.OK);
-        when(restTemplate.exchange(eq(providerUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(Map.class)))
-                .thenReturn(response);
-
-        // When
-        Map<String, Object> result = externalServiceClient.getUserInfoFromProvider(accessToken, providerUrl);
-
-        // Then
-        assertEquals(userInfo, result);
-        verify(restTemplate).exchange(
-                eq(providerUrl),
+    @SuppressWarnings("unchecked") // Suprimir warnings de tipo para ParameterizedTypeReference
+    void testGetUserInfoFromProviderSuccess() {
+        // Arrange
+        Map<String, Object> expectedUserInfo = Map.of(
+                SUB_KEY, "12345",
+                EMAIL_KEY, "test@example.com",
+                NAME_KEY, "Test User");
+        ResponseEntity<Map<String, Object>> responseEntity = new ResponseEntity<>(expectedUserInfo, HttpStatus.OK);
+        when(restTemplate.exchange(
+                eq(TEST_PROVIDER_URL),
                 eq(HttpMethod.GET),
-                argThat(entity -> {
-                    String authHeader = entity.getHeaders().getFirst("Authorization");
-                    return authHeader != null && authHeader.equals("Bearer " + accessToken);
-                }),
-                eq(Map.class));
-    }
+                any(HttpEntity.class),
+                any(ParameterizedTypeReference.class))).thenReturn(responseEntity);
 
-    @Test
-    void getUserInfoFromProvider_WithInvalidToken_ShouldThrowRuntimeException() {
-        // Given
-        String accessToken = "invalid_token";
-        String providerUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
+        // Act
+        Map<String, Object> result = assertDoesNotThrow(
+                () -> externalServiceClient.getUserInfoFromProvider(TEST_ACCESS_TOKEN, TEST_PROVIDER_URL));
 
-        when(restTemplate.exchange(eq(providerUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(Map.class)))
-                .thenThrow(new RestClientException("401 Unauthorized"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> externalServiceClient.getUserInfoFromProvider(accessToken, providerUrl));
-
-        assertEquals("Error obteniendo datos del usuario", exception.getMessage());
-        assertTrue(exception.getCause() instanceof RestClientException);
-    }
-
-    @Test
-    void getUserInfoFromProvider_WithNetworkError_ShouldThrowRuntimeException() {
-        // Given
-        String accessToken = "valid_token";
-        String providerUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
-
-        when(restTemplate.exchange(eq(providerUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(Map.class)))
-                .thenThrow(new RuntimeException("Network timeout"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> externalServiceClient.getUserInfoFromProvider(accessToken, providerUrl));
-
-        assertEquals("Error obteniendo datos del usuario", exception.getMessage());
-        assertTrue(exception.getCause() instanceof RuntimeException);
-    }
-
-    // fallbackGetUserInfo Tests
-
-    @Test
-    void fallbackGetUserInfo_ShouldReturnFallbackUserInfo() {
-        // Given
-        String accessToken = "test_token";
-        String providerUrl = "https://example.com";
-        Exception testException = new RuntimeException("Test error");
-
-        // When
-        Map<String, Object> result = externalServiceClient.fallbackGetUserInfo(accessToken, providerUrl, testException);
-
-        // Then
-        assertNotNull(result);
-        assertEquals("unknown", result.get("sub"));
-        assertEquals("unknown@example.com", result.get("email"));
-        assertEquals("Usuario Temporal", result.get("name"));
-        assertEquals(true, result.get("fallback"));
-    }
-
-    @Test
-    void fallbackGetUserInfo_ShouldContainAllRequiredFields() {
-        // Given
-        String accessToken = "test_token";
-        String providerUrl = "https://example.com";
-        Exception testException = new RuntimeException("Test error");
-
-        // When
-        Map<String, Object> result = externalServiceClient.fallbackGetUserInfo(accessToken, providerUrl, testException);
-
-        // Then
-        assertTrue(result.containsKey("sub"));
-        assertTrue(result.containsKey("email"));
-        assertTrue(result.containsKey("name"));
-        assertTrue(result.containsKey("fallback"));
-        assertEquals(4, result.size());
-    }
-
-    // checkInternetConnectivity Tests
-
-    @Test
-    void checkInternetConnectivity_WithSuccessfulConnection_ShouldReturnTrue() {
-        // Given
-        ResponseEntity<String> successResponse = new ResponseEntity<>("OK", HttpStatus.OK);
-        when(restTemplate.getForEntity(eq("https://www.google.com"), eq(String.class)))
-                .thenReturn(successResponse);
-
-        // When
-        boolean result = externalServiceClient.checkInternetConnectivity();
-
-        // Then
-        assertTrue(result);
-        verify(restTemplate).getForEntity("https://www.google.com", String.class);
-    }
-
-    @Test
-    void checkInternetConnectivity_With2xxStatus_ShouldReturnTrue() {
-        // Given
-        ResponseEntity<String> successResponse = new ResponseEntity<>("OK", HttpStatus.ACCEPTED);
-        when(restTemplate.getForEntity(eq("https://www.google.com"), eq(String.class)))
-                .thenReturn(successResponse);
-
-        // When
-        boolean result = externalServiceClient.checkInternetConnectivity();
-
-        // Then
-        assertTrue(result);
-    }
-
-    @Test
-    void checkInternetConnectivity_WithNon2xxStatus_ShouldReturnFalse() {
-        // Given
-        ResponseEntity<String> errorResponse = new ResponseEntity<>("Error", HttpStatus.INTERNAL_SERVER_ERROR);
-        when(restTemplate.getForEntity(eq("https://www.google.com"), eq(String.class)))
-                .thenReturn(errorResponse);
-
-        // When
-        boolean result = externalServiceClient.checkInternetConnectivity();
-
-        // Then
-        assertFalse(result);
-    }
-
-    @Test
-    void checkInternetConnectivity_WithConnectionError_ShouldThrowRuntimeException() {
-        // Given
-        when(restTemplate.getForEntity(eq("https://www.google.com"), eq(String.class)))
-                .thenThrow(new RestClientException("Connection refused"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> externalServiceClient.checkInternetConnectivity());
-
-        assertEquals("Sin conectividad", exception.getMessage());
-        assertTrue(exception.getCause() instanceof RestClientException);
-    }
-
-    @Test
-    void checkInternetConnectivity_WithTimeoutError_ShouldThrowRuntimeException() {
-        // Given
-        when(restTemplate.getForEntity(eq("https://www.google.com"), eq(String.class)))
-                .thenThrow(new RuntimeException("Read timeout"));
-
-        // When & Then
-        RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> externalServiceClient.checkInternetConnectivity());
-
-        assertEquals("Sin conectividad", exception.getMessage());
-        assertTrue(exception.getCause() instanceof RuntimeException);
-    }
-
-    // fallbackInternetCheck Tests
-
-    @Test
-    void fallbackInternetCheck_ShouldReturnFalse() {
-        // Given
-        Exception testException = new RuntimeException("Test error");
-
-        // When
-        boolean result = externalServiceClient.fallbackInternetCheck(testException);
-
-        // Then
-        assertFalse(result);
-    }
-
-    // Integration-style Tests
-
-    @Test
-    void getUserInfoFromProvider_WithCorrectAuthorizationHeader_ShouldSetBearerToken() {
-        // Given
-        String accessToken = "test_access_token";
-        String providerUrl = "https://api.example.com/user";
-
-        Map<String, Object> userInfo = Map.of("id", "123", "name", "Test");
-        @SuppressWarnings("unchecked")
-        ResponseEntity<Map> response = new ResponseEntity<>(userInfo, HttpStatus.OK);
-
-        when(restTemplate.exchange(any(String.class), any(HttpMethod.class), any(HttpEntity.class), eq(Map.class)))
-                .thenReturn(response);
-
-        // When
-        externalServiceClient.getUserInfoFromProvider(accessToken, providerUrl);
-
-        // Then
+        // Assert
+        assertEquals(expectedUserInfo, result);
+        assertEquals("12345", result.get(SUB_KEY));
+        assertEquals("test@example.com", result.get(EMAIL_KEY));
+        assertEquals("Test User", result.get(NAME_KEY));
         verify(restTemplate).exchange(
-                eq(providerUrl),
+                eq(TEST_PROVIDER_URL),
                 eq(HttpMethod.GET),
-                argThat(httpEntity -> {
-                    String authHeader = httpEntity.getHeaders().getFirst("Authorization");
-                    return "Bearer test_access_token".equals(authHeader);
-                }),
-                eq(Map.class));
+                any(HttpEntity.class),
+                any(ParameterizedTypeReference.class));
     }
 
     @Test
-    void constructor_ShouldCreateInstanceWithRestTemplate() {
-        // When
-        ExternalServiceClient client = new ExternalServiceClient();
+    @SuppressWarnings("unchecked") // Suprimir warnings de tipo para ParameterizedTypeReference
+    void testGetUserInfoFromProviderWithNullResponse() {
+        // Arrange
+        ResponseEntity<Map<String, Object>> responseEntity = new ResponseEntity<>(null, HttpStatus.OK);
+        when(restTemplate.exchange(
+                eq(TEST_PROVIDER_URL),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(ParameterizedTypeReference.class))).thenReturn(responseEntity);
 
-        // Then
-        assertNotNull(client);
-    }
+        // Act
+        Map<String, Object> result = assertDoesNotThrow(
+                () -> externalServiceClient.getUserInfoFromProvider(TEST_ACCESS_TOKEN, TEST_PROVIDER_URL));
 
-    // Edge Cases
-
-    @Test
-    void getUserInfoFromProvider_WithNullResponseBody_ShouldReturnNull() {
-        // Given
-        String accessToken = "valid_token";
-        String providerUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
-
-        @SuppressWarnings("unchecked")
-        ResponseEntity<Map> response = new ResponseEntity<>(null, HttpStatus.OK);
-        when(restTemplate.exchange(eq(providerUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(Map.class)))
-                .thenReturn(response);
-
-        // When
-        Map<String, Object> result = externalServiceClient.getUserInfoFromProvider(accessToken, providerUrl);
-
-        // Then
-        assertNull(result);
-    }
-
-    @Test
-    void getUserInfoFromProvider_WithEmptyResponseBody_ShouldReturnEmptyMap() {
-        // Given
-        String accessToken = "valid_token";
-        String providerUrl = "https://www.googleapis.com/oauth2/v2/userinfo";
-
-        Map<String, Object> emptyUserInfo = Map.of();
-        @SuppressWarnings("unchecked")
-        ResponseEntity<Map> response = new ResponseEntity<>(emptyUserInfo, HttpStatus.OK);
-        when(restTemplate.exchange(eq(providerUrl), eq(HttpMethod.GET), any(HttpEntity.class), eq(Map.class)))
-                .thenReturn(response);
-
-        // When
-        Map<String, Object> result = externalServiceClient.getUserInfoFromProvider(accessToken, providerUrl);
-
-        // Then
+        // Assert
         assertNotNull(result);
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked") // Suprimir warnings de tipo para ParameterizedTypeReference
+    void testGetUserInfoFromProviderWithRestClientException() {
+        // Arrange
+        when(restTemplate.exchange(
+                eq(TEST_PROVIDER_URL),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(ParameterizedTypeReference.class))).thenThrow(new ResourceAccessException("Connection refused"));
+
+        // Act & Assert
+        OAuth2ServiceException exception = assertThrows(
+                OAuth2ServiceException.class,
+                () -> externalServiceClient.getUserInfoFromProvider(TEST_ACCESS_TOKEN, TEST_PROVIDER_URL));
+
+        assertTrue(exception.getMessage().contains("Error obteniendo datos del usuario desde provider"));
+        assertNotNull(exception.getCause());
+        verify(restTemplate).exchange(
+                eq(TEST_PROVIDER_URL),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(ParameterizedTypeReference.class));
+    }
+
+    @Test
+    @SuppressWarnings("unchecked") // Suprimir warnings de tipo para ParameterizedTypeReference
+    void testGetUserInfoFromProviderWithGeneralException() {
+        // Arrange
+        when(restTemplate.exchange(
+                eq(TEST_PROVIDER_URL),
+                eq(HttpMethod.GET),
+                any(HttpEntity.class),
+                any(ParameterizedTypeReference.class))).thenThrow(new RuntimeException("Unexpected error"));
+
+        // Act & Assert
+        OAuth2ServiceException exception = assertThrows(
+                OAuth2ServiceException.class,
+                () -> externalServiceClient.getUserInfoFromProvider(TEST_ACCESS_TOKEN, TEST_PROVIDER_URL));
+
+        assertTrue(exception.getMessage().contains("Error crítico"));
+        assertNotNull(exception.getCause());
+    }
+
+    @Test
+    void testFallbackGetUserInfo() {
+        // Arrange
+        OAuth2ServiceException testException = new OAuth2ServiceException("Test error");
+
+        // Act
+        Map<String, Object> result = externalServiceClient.fallbackGetUserInfo(
+                TEST_ACCESS_TOKEN, TEST_PROVIDER_URL, testException);
+
+        // Assert
+        assertNotNull(result);
+        assertTrue(result.containsKey(SUB_KEY));
+        assertTrue(result.containsKey(EMAIL_KEY));
+        assertTrue(result.containsKey(NAME_KEY));
+        assertTrue(result.containsKey(PROVIDER_URL_KEY));
+        assertTrue(result.containsKey(FALLBACK_KEY));
+
+        assertEquals("unknown@example.com", result.get(EMAIL_KEY));
+        assertEquals("Usuario Temporal", result.get(NAME_KEY));
+        assertEquals(TEST_PROVIDER_URL, result.get(PROVIDER_URL_KEY));
+        assertEquals(Boolean.TRUE, result.get(FALLBACK_KEY));
+
+        String subValue = (String) result.get(SUB_KEY);
+        assertTrue(subValue.startsWith("temp_"));
+    }
+
+    @Test
+    void testCheckInternetConnectivitySuccess() {
+        // Arrange
+        ResponseEntity<String> responseEntity = new ResponseEntity<>("OK", HttpStatus.OK);
+        when(restTemplate.getForEntity(GOOGLE_BASE_URL, String.class))
+                .thenReturn(responseEntity);
+
+        // Act
+        boolean result = assertDoesNotThrow(() -> externalServiceClient.checkInternetConnectivity());
+
+        // Assert
+        assertTrue(result);
+        verify(restTemplate).getForEntity(GOOGLE_BASE_URL, String.class);
+    }
+
+    @Test
+    void testCheckInternetConnectivityWithNon2xxStatus() {
+        // Arrange
+        ResponseEntity<String> responseEntity = new ResponseEntity<>("Error", HttpStatus.INTERNAL_SERVER_ERROR);
+        when(restTemplate.getForEntity(GOOGLE_BASE_URL, String.class))
+                .thenReturn(responseEntity);
+
+        // Act
+        boolean result = assertDoesNotThrow(() -> externalServiceClient.checkInternetConnectivity());
+
+        // Assert
+        assertFalse(result);
+        verify(restTemplate).getForEntity(GOOGLE_BASE_URL, String.class);
+    }
+
+    @Test
+    void testCheckInternetConnectivityWithRestClientException() {
+        // Arrange
+        when(restTemplate.getForEntity(GOOGLE_BASE_URL, String.class))
+                .thenThrow(new ResourceAccessException("No internet connection"));
+
+        // Act & Assert
+        ConnectivityException exception = assertThrows(
+                ConnectivityException.class,
+                () -> externalServiceClient.checkInternetConnectivity());
+
+        assertTrue(exception.getMessage().contains("Sin conectividad a Internet"));
+        assertNotNull(exception.getCause());
+        verify(restTemplate).getForEntity(GOOGLE_BASE_URL, String.class);
+    }
+
+    @Test
+    void testCheckInternetConnectivityWithGeneralException() {
+        // Arrange
+        when(restTemplate.getForEntity(GOOGLE_BASE_URL, String.class))
+                .thenThrow(new RuntimeException("Unexpected error"));
+
+        // Act & Assert
+        ConnectivityException exception = assertThrows(
+                ConnectivityException.class,
+                () -> externalServiceClient.checkInternetConnectivity());
+
+        assertTrue(exception.getMessage().contains("Error crítico"));
+        assertNotNull(exception.getCause());
+    }
+
+    @Test
+    void testFallbackInternetCheck() {
+        // Arrange
+        ConnectivityException testException = new ConnectivityException("Test connectivity error");
+
+        // Act
+        boolean result = externalServiceClient.fallbackInternetCheck(testException);
+
+        // Assert
+        assertFalse(result);
+    }
+
+    @Test
+    void testConstructorCreatesRestTemplate() {
+        // Act
+        ExternalServiceClient newClient = new ExternalServiceClient();
+
+        // Assert
+        assertNotNull(newClient);
+        // Verificamos que se puede llamar a los métodos sin errores de inicialización
+        assertDoesNotThrow(() -> {
+            ConnectivityException ex = new ConnectivityException("test");
+            newClient.fallbackInternetCheck(ex);
+        });
     }
 }

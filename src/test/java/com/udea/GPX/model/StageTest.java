@@ -1,9 +1,8 @@
-package com.udea.GPX.model;
+package com.udea.gpx.model;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -569,7 +568,6 @@ class StageTest {
                 String stageName = (String) scenario[0];
                 int orderNumber = (int) scenario[1];
                 boolean isNeutralized = (boolean) scenario[2];
-                String description = (String) scenario[3];
 
                 Stage stage = new Stage((long) (i + 1), stageName, orderNumber, isNeutralized, rallyEvent);
 

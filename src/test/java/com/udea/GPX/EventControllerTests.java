@@ -1,18 +1,11 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.udea.GPX.controller.EventController;
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventCategory;
-import com.udea.GPX.service.EventService;
-import com.udea.GPX.util.AuthUtils;
-import com.udea.GPX.config.TestConfig;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -22,6 +15,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.udea.gpx.controller.EventController;
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventCategory;
+import com.udea.gpx.service.EventService;
+import com.udea.gpx.util.AuthUtils;
+
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,7 +29,6 @@ import org.mockito.quality.Strictness;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +37,7 @@ import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class EventControllerTests {
+class EventControllerTests {
 
     @InjectMocks
     private EventController eventController;
@@ -60,7 +58,7 @@ public class EventControllerTests {
     private MultipartFile multipartFile;
 
     @Mock
-    private com.udea.GPX.service.FileTransactionService fileTransactionService;
+    private com.udea.gpx.service.FileTransactionService fileTransactionService;
 
     @BeforeEach
     void setUp() {
@@ -87,9 +85,11 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().getContent().size());
-        assertEquals("ruta/imagen1.jpg", response.getBody().getContent().get(0).getPicture());
-        assertEquals("ruta/imagen2.jpg", response.getBody().getContent().get(1).getPicture());
+        Page<Event> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.getContent().size());
+        assertEquals("ruta/imagen1.jpg", responseBody.getContent().get(0).getPicture());
+        assertEquals("ruta/imagen2.jpg", responseBody.getContent().get(1).getPicture());
     }
 
     @Test
@@ -105,8 +105,10 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Evento 1", response.getBody().getName());
-        assertEquals("ruta/imagen1.jpg", response.getBody().getPicture());
+        Event responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals("Evento 1", responseBody.getName());
+        assertEquals("ruta/imagen1.jpg", responseBody.getPicture());
     }
 
     @Test
@@ -138,9 +140,11 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
-        assertEquals("ruta/actual1.jpg", response.getBody().get(0).getPicture());
-        assertEquals("ruta/actual2.jpg", response.getBody().get(1).getPicture());
+        List<Event> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
+        assertEquals("ruta/actual1.jpg", responseBody.get(0).getPicture());
+        assertEquals("ruta/actual2.jpg", responseBody.get(1).getPicture());
     }
 
     @Test
@@ -160,9 +164,11 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
-        assertEquals("ruta/pasado1.jpg", response.getBody().get(0).getPicture());
-        assertEquals("ruta/pasado2.jpg", response.getBody().get(1).getPicture());
+        List<Event> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
+        assertEquals("ruta/pasado1.jpg", responseBody.get(0).getPicture());
+        assertEquals("ruta/pasado2.jpg", responseBody.get(1).getPicture());
     }
 
     @Test
@@ -179,7 +185,9 @@ public class EventControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
+        List<EventCategory> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
     }
 
     @Test
@@ -189,7 +197,9 @@ public class EventControllerTests {
         when(eventService.createEvent(event)).thenReturn(event);
         ResponseEntity<Event> response = eventController.createEvent(event);
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(event, response.getBody());
+        Event responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(event, responseBody);
     }
 
     @Test
@@ -207,7 +217,9 @@ public class EventControllerTests {
         when(eventService.updateEvent(1L, event)).thenReturn(event);
         ResponseEntity<Event> response = eventController.updateEvent(1L, event);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(event, response.getBody());
+        Event responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(event, responseBody);
     }
 
     @Test
@@ -311,7 +323,9 @@ public class EventControllerTests {
         when(eventService.updateEventPictureUrl(1L, "http://test.com/img.jpg")).thenReturn(event);
         ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, node);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(event, response.getBody());
+        Event responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(event, responseBody);
     }
 
     @Test
@@ -342,7 +356,9 @@ public class EventControllerTests {
         when(eventService.removeEventPicture(1L)).thenReturn(event);
         ResponseEntity<Event> response = eventController.removeEventPicture(1L);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(event, response.getBody());
+        Event responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(event, responseBody);
     }
 
     @Test

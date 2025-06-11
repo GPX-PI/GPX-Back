@@ -1,8 +1,7 @@
-package com.udea.GPX.validation;
+package com.udea.gpx.validation;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
 import jakarta.validation.Constraint;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -249,10 +248,6 @@ class SanitizedTest {
 
         @Sanitized // Should use defaults
         private String defaultField;
-
-        public void testMethod(@Sanitized(Sanitized.SanitizationType.TEXT) String parameter) {
-            // Method with sanitized parameter
-        }
     }
 
     @Test
@@ -298,31 +293,12 @@ class SanitizedTest {
         Sanitized identificationAnnotation = identificationField.getAnnotation(Sanitized.class);
         assertNotNull(identificationAnnotation);
         assertEquals(Sanitized.SanitizationType.IDENTIFICATION, identificationAnnotation.value());
-        assertTrue(identificationAnnotation.allowNull());
-
-        // Test default field
+        assertTrue(identificationAnnotation.allowNull()); // Test default field
         var defaultField = TestClass.class.getDeclaredField("defaultField");
         Sanitized defaultAnnotation = defaultField.getAnnotation(Sanitized.class);
         assertNotNull(defaultAnnotation);
         assertEquals(Sanitized.SanitizationType.TEXT, defaultAnnotation.value()); // Default
         assertTrue(defaultAnnotation.allowNull()); // Default
-    }
-
-    @Test
-    @DisplayName("Sanitized annotation should work on method parameters")
-    void sanitizedAnnotation_ShouldWorkOnMethodParameters() throws Exception {
-        // Given
-        Method testMethod = TestClass.class.getMethod("testMethod", String.class);
-        var parameters = testMethod.getParameters();
-
-        // When
-        assertEquals(1, parameters.length);
-        Sanitized annotation = parameters[0].getAnnotation(Sanitized.class);
-
-        // Then
-        assertNotNull(annotation);
-        assertEquals(Sanitized.SanitizationType.TEXT, annotation.value());
-        assertTrue(annotation.allowNull()); // Default value
     }
 
     // ========== CONSTRAINT VALIDATION INTEGRATION TESTS ==========

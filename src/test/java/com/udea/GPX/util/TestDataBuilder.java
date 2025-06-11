@@ -1,9 +1,11 @@
-package com.udea.GPX.util;
+package com.udea.gpx.util;
 
-import com.udea.GPX.model.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.udea.gpx.model.*;
+
 import org.mockito.Mockito;
 
 import java.time.LocalDate;

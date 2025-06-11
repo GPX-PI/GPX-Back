@@ -1,4 +1,4 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;

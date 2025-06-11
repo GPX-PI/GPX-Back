@@ -1,9 +1,10 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Category;
-import com.udea.GPX.repository.ICategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.udea.gpx.model.Category;
+import com.udea.gpx.repository.ICategoryRepository;
 
 import java.util.List;
 

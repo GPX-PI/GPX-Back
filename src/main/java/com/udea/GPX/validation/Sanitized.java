@@ -1,4 +1,4 @@
-package com.udea.GPX.validation;
+package com.udea.gpx.validation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

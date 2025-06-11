@@ -1,11 +1,12 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.JwtUtil;
-import com.udea.GPX.config.JwtProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.udea.gpx.JwtUtil;
+import com.udea.gpx.config.JwtProperties;
 
 import java.time.Instant;
 import java.util.Map;
@@ -29,15 +30,15 @@ public class TokenService {
 
   @Autowired
   private JwtProperties jwtProperties;
-  // Almacenamiento en memoria para tokens
+  // Almacenamiento en memoria para tokens - thread-safe
   private final Map<String, RefreshTokenInfo> refreshTokenStore = new ConcurrentHashMap<>();
   private final Set<String> tokenBlacklist = ConcurrentHashMap.newKeySet();
 
-  // Gestión de sesiones activas por usuario
+  // Gestión de sesiones activas por usuario - thread-safe
   private final Map<Long, Set<SessionInfo>> activeSessions = new ConcurrentHashMap<>();
   private final Map<String, SessionInfo> sessionsByToken = new ConcurrentHashMap<>();
 
-  // Gestión de access tokens por usuario (para tokens sin sesión)
+  // Gestión de access tokens por usuario (para tokens sin sesión) - thread-safe
   private final Map<Long, Set<String>> userAccessTokens = new ConcurrentHashMap<>();
 
   public TokenService() {

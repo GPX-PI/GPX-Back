@@ -1,17 +1,18 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventCategory;
-import com.udea.GPX.repository.IEventCategoryRepository;
-import com.udea.GPX.repository.IEventRepository;
-import com.udea.GPX.util.BusinessRuleValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventCategory;
+import com.udea.gpx.repository.IEventCategoryRepository;
+import com.udea.gpx.repository.IEventRepository;
+import com.udea.gpx.util.BusinessRuleValidator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.File;
@@ -22,31 +23,70 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+
+/**
+ * Dedicated exceptions for EventService
+ */
+class EventServiceException extends Exception {
+    public EventServiceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public EventServiceException(String message) {
+        super(message);
+    }
+}
+
+class InvalidFileTypeException extends EventServiceException {
+    public InvalidFileTypeException(String message) {
+        super(message);
+    }
+}
+
+class FileSizeExceededException extends EventServiceException {
+    public FileSizeExceededException(String message) {
+        super(message);
+    }
+}
+
+class ImageUploadException extends EventServiceException {
+    public ImageUploadException(String message, Throwable cause) {
+        super(message, cause);
+    }
+}
 
 @Service
 public class EventService {
 
     private static final Logger logger = LoggerFactory.getLogger(EventService.class);
 
-    @Autowired
-    private IEventRepository eventRepository;
+    // String constants to eliminate duplicated literals
+    private static final String EVENT_NOT_FOUND_MSG = "Evento no encontrado";
+    private static final String IMAGE_UPLOAD_ERROR_MSG = "Error al subir la imagen del evento: ";
+    private static final String ONLY_IMAGE_FILES_MSG = "Solo se permiten archivos de imagen";
+    private static final String FILE_SIZE_LIMIT_MSG = "El archivo no puede ser mayor a 5MB";
+    private static final String UPLOADS_EVENTS_DIR = "uploads/events/";
 
-    @Autowired
-    private IEventCategoryRepository eventCategoryRepository;
+    private final IEventRepository eventRepository;
+    private final IEventCategoryRepository eventCategoryRepository;
+    private final BusinessRuleValidator businessRuleValidator;
 
-    @Autowired
-    private BusinessRuleValidator businessRuleValidator;
-
-    // Directorio para almacenar imágenes de eventos
-    private final String EVENT_UPLOAD_DIR = "uploads/events/";
+    // Constructor injection (no @Autowired needed)
+    public EventService(
+            IEventRepository eventRepository,
+            IEventCategoryRepository eventCategoryRepository,
+            BusinessRuleValidator businessRuleValidator) {
+        this.eventRepository = eventRepository;
+        this.eventCategoryRepository = eventCategoryRepository;
+        this.businessRuleValidator = businessRuleValidator;
+    }
 
     @Cacheable("events")
     public List<Event> getAllEvents() {
         return eventRepository.findAll()
                 .stream()
                 .sorted((e1, e2) -> e1.getStartDate().compareTo(e2.getStartDate()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Page<Event> getAllEvents(Pageable pageable) {
@@ -63,7 +103,7 @@ public class EventService {
         return eventRepository.findByEndDateAfterOrEndDateEquals(today, today)
                 .stream()
                 .sorted((e1, e2) -> e1.getStartDate().compareTo(e2.getStartDate()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Cacheable("pastEvents")
@@ -73,7 +113,7 @@ public class EventService {
                 .stream()
                 .sorted((e1, e2) -> e2.getStartDate().compareTo(e1.getStartDate())) // Orden descendente para eventos
                                                                                     // pasados
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @CacheEvict(value = { "events", "currentEvents", "pastEvents" }, allEntries = true)
@@ -86,7 +126,7 @@ public class EventService {
     @CacheEvict(value = { "events", "currentEvents", "pastEvents" }, allEntries = true)
     public Event updateEvent(Long id, Event eventDetails) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG));
 
         event.setName(eventDetails.getName());
         event.setLocation(eventDetails.getLocation());
@@ -119,14 +159,14 @@ public class EventService {
         return eventCategoryRepository.findAll()
                 .stream()
                 .filter(ec -> ec.getEvent().getId().equals(eventId))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     // Métodos para manejo de imágenes
 
-    public Event updateEventPicture(Long id, MultipartFile eventPhoto) {
+    public Event updateEventPicture(Long id, MultipartFile eventPhoto) throws ImageUploadException {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG));
 
         try {
             // Eliminar imagen anterior si existe
@@ -138,13 +178,14 @@ public class EventService {
 
             return eventRepository.save(event);
         } catch (Exception e) {
-            throw new RuntimeException("Error al subir la imagen del evento: " + e.getMessage());
+            logger.error("Error uploading event image for event ID {}: {}", id, e.getMessage(), e);
+            throw new ImageUploadException(IMAGE_UPLOAD_ERROR_MSG + e.getMessage(), e);
         }
     }
 
     public Event updateEventPictureUrl(Long id, String pictureUrl) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG));
 
         // Eliminar archivo anterior si no es una URL externa
         deleteOldFile(event.getPicture());
@@ -157,7 +198,7 @@ public class EventService {
 
     public Event removeEventPicture(Long id) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+                .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG));
 
         // Eliminar archivo actual si existe
         deleteOldFile(event.getPicture());
@@ -181,24 +222,24 @@ public class EventService {
         }
     }
 
-    private String saveFile(MultipartFile file, String fileType) throws Exception {
+    private String saveFile(MultipartFile file, String fileType) throws EventServiceException {
         if (file.isEmpty()) {
-            throw new Exception("El archivo está vacío");
+            throw new EventServiceException("El archivo está vacío");
         }
 
         // Verificar tipo de archivo
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
-            throw new Exception("Solo se permiten archivos de imagen");
+            throw new InvalidFileTypeException(ONLY_IMAGE_FILES_MSG);
         }
 
         // Verificar tamaño (máximo 5MB)
         if (file.getSize() > 5 * 1024 * 1024) {
-            throw new Exception("El archivo no puede ser mayor a 5MB");
+            throw new FileSizeExceededException(FILE_SIZE_LIMIT_MSG);
         }
 
         // Crear directorio si no existe
-        File uploadDir = new File(EVENT_UPLOAD_DIR);
+        File uploadDir = new File(UPLOADS_EVENTS_DIR);
         if (!uploadDir.exists()) {
             uploadDir.mkdirs();
         }
@@ -212,8 +253,13 @@ public class EventService {
         String uniqueFilename = fileType + "_" + UUID.randomUUID().toString() + fileExtension;
 
         // Guardar archivo
-        Path filePath = Paths.get(EVENT_UPLOAD_DIR + uniqueFilename);
-        Files.write(filePath, file.getBytes());
+        Path filePath = Paths.get(UPLOADS_EVENTS_DIR + uniqueFilename);
+        try {
+            Files.write(filePath, file.getBytes());
+        } catch (Exception e) {
+            logger.error("Error writing file to disk: {}", filePath, e);
+            throw new EventServiceException("Error saving file to disk: " + e.getMessage(), e);
+        }
 
         return filePath.toString();
     }

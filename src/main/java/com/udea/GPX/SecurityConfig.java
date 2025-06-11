@@ -1,6 +1,5 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
-import com.udea.GPX.model.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
@@ -20,6 +19,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
+
+import com.udea.gpx.model.User;
 
 @Configuration
 public class SecurityConfig {

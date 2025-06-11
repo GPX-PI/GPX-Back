@@ -1,9 +1,5 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
-import com.udea.GPX.JwtUtil;
-import com.udea.GPX.service.OAuth2Service;
-import com.udea.GPX.service.UserService;
-import com.udea.GPX.util.AuthUtils;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -14,6 +10,11 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepo
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+
+import com.udea.gpx.JwtUtil;
+import com.udea.gpx.service.OAuth2Service;
+import com.udea.gpx.service.UserService;
+import com.udea.gpx.util.AuthUtils;
 
 import javax.sql.DataSource;
 

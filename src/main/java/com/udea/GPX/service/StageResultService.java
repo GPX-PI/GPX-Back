@@ -1,43 +1,46 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.dto.ClasificacionCompletaDTO;
-import com.udea.GPX.dto.CreateStageResultDTO;
-import com.udea.GPX.dto.UpdateStageResultDTO;
-import com.udea.GPX.model.*;
-import com.udea.GPX.repository.*;
-import com.udea.GPX.util.BusinessRuleValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.udea.gpx.dto.ClasificacionCompletaDTO;
+import com.udea.gpx.dto.CreateStageResultDTO;
+import com.udea.gpx.dto.UpdateStageResultDTO;
+import com.udea.gpx.model.*;
+import com.udea.gpx.repository.*;
+import com.udea.gpx.util.BusinessRuleValidator;
+
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 
 @Service
 @Transactional(readOnly = true)
 public class StageResultService {
 
-    @Autowired
-    private IStageResultRepository stageResultRepository;
+    // Constants
+    private static final String RESULT_NOT_FOUND_MSG = "Resultado no encontrado";
 
-    @Autowired
-    private IStageRepository stageRepository;
+    private final IStageResultRepository stageResultRepository;
+    private final IStageRepository stageRepository;
+    private final IVehicleRepository vehicleRepository;
+    private final BusinessRuleValidator businessRuleValidator;
 
-    @Autowired
-    private IVehicleRepository vehicleRepository;
-
-    @Autowired
-    private BusinessRuleValidator businessRuleValidator;
+    // Constructor injection (no @Autowired needed)
+    public StageResultService(
+            IStageResultRepository stageResultRepository,
+            IStageRepository stageRepository,
+            IVehicleRepository vehicleRepository,
+            BusinessRuleValidator businessRuleValidator) {
+        this.stageResultRepository = stageResultRepository;
+        this.stageRepository = stageRepository;
+        this.vehicleRepository = vehicleRepository;
+        this.businessRuleValidator = businessRuleValidator;
+    }
 
     // Configuración de memoria optimizada
     private static final int CHUNK_SIZE = 100; // Procesar en chunks de 100 elementos
-    private static final int MAX_PARALLEL_THREADS = 4; // Limitar threads paralelos
-    private final ForkJoinPool customThreadPool = new ForkJoinPool(MAX_PARALLEL_THREADS);
 
     @Transactional
     public StageResult saveResult(StageResult result) {
@@ -78,50 +81,69 @@ public class StageResultService {
                     result.setLongitude(updatedResult.getLongitude());
                     result.setElapsedTimeSeconds(updatedResult.getElapsedTimeSeconds());
                     return stageResultRepository.save(result);
-                }).orElseThrow(() -> new RuntimeException("Resultado no encontrado"));
+                }).orElseThrow(() -> new RuntimeException(RESULT_NOT_FOUND_MSG));
     }
 
     @Transactional
     public StageResult updateResultFromDTO(Long id, UpdateStageResultDTO updateDTO) {
         return stageResultRepository.findById(id).map(result -> {
-            // Actualizar stage si es diferente
-            if (updateDTO.getStageId() != null && !result.getStage().getId().equals(updateDTO.getStageId())) {
-                Stage stage = stageRepository.findById(updateDTO.getStageId())
-                        .orElseThrow(
-                                () -> new RuntimeException("Etapa no encontrada con ID: " + updateDTO.getStageId()));
-                result.setStage(stage);
-            }
-
-            // Actualizar vehicle si es diferente
-            if (updateDTO.getVehicleId() != null && !result.getVehicle().getId().equals(updateDTO.getVehicleId())) {
-                Vehicle vehicle = vehicleRepository.findById(updateDTO.getVehicleId())
-                        .orElseThrow(() -> new RuntimeException(
-                                "Vehículo no encontrado con ID: " + updateDTO.getVehicleId()));
-                result.setVehicle(vehicle);
-            }
-
-            // Validar reglas de negocio antes de actualizar
-            Event event = result.getStage().getEvent();
-            if (updateDTO.getTimestamp() != null) {
-                businessRuleValidator.validateStageResultTimestamp(updateDTO.getTimestamp(), event);
-            }
-            if (updateDTO.getLatitude() != null || updateDTO.getLongitude() != null) {
-                businessRuleValidator.validateGpsCoordinates(updateDTO.getLatitude(), updateDTO.getLongitude());
-            }
-
-            // Actualizar campos básicos
-            if (updateDTO.getTimestamp() != null) {
-                result.setTimestamp(updateDTO.getTimestamp());
-            }
-            if (updateDTO.getLatitude() != null) {
-                result.setLatitude(updateDTO.getLatitude());
-            }
-            if (updateDTO.getLongitude() != null) {
-                result.setLongitude(updateDTO.getLongitude());
-            }
-
+            updateStageIfDifferent(result, updateDTO);
+            updateVehicleIfDifferent(result, updateDTO);
+            validateBusinessRules(result, updateDTO);
+            updateBasicFields(result, updateDTO);
             return stageResultRepository.save(result);
-        }).orElseThrow(() -> new RuntimeException("Resultado no encontrado"));
+        }).orElseThrow(() -> new RuntimeException(RESULT_NOT_FOUND_MSG));
+    }
+
+    /**
+     * Actualiza la etapa del resultado si es diferente
+     */
+    private void updateStageIfDifferent(StageResult result, UpdateStageResultDTO updateDTO) {
+        if (updateDTO.getStageId() != null && !result.getStage().getId().equals(updateDTO.getStageId())) {
+            Stage stage = stageRepository.findById(updateDTO.getStageId())
+                    .orElseThrow(() -> new RuntimeException("Etapa no encontrada con ID: " + updateDTO.getStageId()));
+            result.setStage(stage);
+        }
+    }
+
+    /**
+     * Actualiza el vehículo del resultado si es diferente
+     */
+    private void updateVehicleIfDifferent(StageResult result, UpdateStageResultDTO updateDTO) {
+        if (updateDTO.getVehicleId() != null && !result.getVehicle().getId().equals(updateDTO.getVehicleId())) {
+            Vehicle vehicle = vehicleRepository.findById(updateDTO.getVehicleId())
+                    .orElseThrow(
+                            () -> new RuntimeException("Vehículo no encontrado con ID: " + updateDTO.getVehicleId()));
+            result.setVehicle(vehicle);
+        }
+    }
+
+    /**
+     * Valida las reglas de negocio antes de actualizar
+     */
+    private void validateBusinessRules(StageResult result, UpdateStageResultDTO updateDTO) {
+        Event event = result.getStage().getEvent();
+        if (updateDTO.getTimestamp() != null) {
+            businessRuleValidator.validateStageResultTimestamp(updateDTO.getTimestamp(), event);
+        }
+        if (updateDTO.getLatitude() != null || updateDTO.getLongitude() != null) {
+            businessRuleValidator.validateGpsCoordinates(updateDTO.getLatitude(), updateDTO.getLongitude());
+        }
+    }
+
+    /**
+     * Actualiza los campos básicos del resultado
+     */
+    private void updateBasicFields(StageResult result, UpdateStageResultDTO updateDTO) {
+        if (updateDTO.getTimestamp() != null) {
+            result.setTimestamp(updateDTO.getTimestamp());
+        }
+        if (updateDTO.getLatitude() != null) {
+            result.setLatitude(updateDTO.getLatitude());
+        }
+        if (updateDTO.getLongitude() != null) {
+            result.setLongitude(updateDTO.getLongitude());
+        }
     }
 
     @Transactional
@@ -156,7 +178,7 @@ public class StageResultService {
             processVehicleChunk(vehicleChunk, resultsByVehicle);
 
             // Forzar liberación de memoria después de cada chunk
-            System.gc();
+            // System.gc() removed as it's not recommended to force garbage collection
         }
     }
 
@@ -200,7 +222,7 @@ public class StageResultService {
      */
     public List<ClasificacionCompletaDTO> getClasificacionPorStage(Long eventId, Integer stageNumber) {
         List<StageResult> allResults = stageResultRepository.findByEventIdAndStageNumber(eventId, stageNumber);
-        return buildClasificacionOptimizada(allResults, stageNumber);
+        return buildClasificacionOptimizadaForStage(allResults);
     }
 
     /**
@@ -223,7 +245,7 @@ public class StageResultService {
                     result.setDiscountClaim(discountClaim);
                     return stageResultRepository.save(result);
                 })
-                .orElseThrow(() -> new RuntimeException("Resultado no encontrado"));
+                .orElseThrow(() -> new RuntimeException(RESULT_NOT_FOUND_MSG));
     }
 
     // --- MÉTODOS AUXILIARES OPTIMIZADOS ---
@@ -242,6 +264,24 @@ public class StageResultService {
     }
 
     /**
+     * Construcción optimizada de clasificación para etapa específica
+     */
+    private List<ClasificacionCompletaDTO> buildClasificacionOptimizadaForStage(List<StageResult> results) {
+        // Para etapas específicas, cada resultado representa un vehículo diferente
+        if (results.size() > CHUNK_SIZE) {
+            return results.parallelStream()
+                    .map(this::buildClasificacionForSingleStage)
+                    .sorted(Comparator.comparing(c -> c.getStageTimes().get(0).getAdjustedTimeSeconds()))
+                    .toList();
+        }
+
+        return results.stream()
+                .map(this::buildClasificacionForSingleStage)
+                .sorted(Comparator.comparing(c -> c.getStageTimes().get(0).getAdjustedTimeSeconds()))
+                .toList();
+    }
+
+    /**
      * Procesamiento por chunks para conjuntos grandes de datos
      */
     private List<ClasificacionCompletaDTO> buildClasificacionWithChunks(List<StageResult> results) {
@@ -254,8 +294,8 @@ public class StageResultService {
         for (List<Long> chunk : vehicleChunks) {
             // Procesar chunk y agregar resultados
             List<ClasificacionCompletaDTO> chunkResults = chunk.parallelStream()
-                    .map(vehicleId -> buildClasificacionForVehicle(vehicleId, resultsByVehicle.get(vehicleId)))
-                    .collect(Collectors.toList());
+                    .map(vehicleId -> buildClasificacionForVehicle(resultsByVehicle.get(vehicleId)))
+                    .toList();
 
             allClasificaciones.addAll(chunkResults);
 
@@ -271,7 +311,7 @@ public class StageResultService {
     /**
      * Construye clasificación para un vehículo específico (optimizado para memoria)
      */
-    private ClasificacionCompletaDTO buildClasificacionForVehicle(Long vehicleId, List<StageResult> vehicleResults) {
+    private ClasificacionCompletaDTO buildClasificacionForVehicle(List<StageResult> vehicleResults) {
         Vehicle vehicle = vehicleResults.get(0).getVehicle();
         String driverName = vehicle.getUser() != null
                 ? (vehicle.getUser().getFirstName() + " " + vehicle.getUser().getLastName())
@@ -288,7 +328,7 @@ public class StageResultService {
                 .values().stream()
                 .map(this::createStageTimeCell)
                 .sorted(Comparator.comparing(ClasificacionCompletaDTO.StageTimeCellDTO::getStageOrder))
-                .collect(Collectors.toList());
+                .toList();
 
         // Cálculo optimizado de tiempo total
         int totalTime = stageTimes.stream()
@@ -321,26 +361,9 @@ public class StageResultService {
     }
 
     /**
-     * Clasificación optimizada para etapa específica
-     */
-    private List<ClasificacionCompletaDTO> buildClasificacionOptimizada(List<StageResult> results,
-            Integer stageNumber) {
-        // Para etapas específicas, procesar con streams paralelos si hay muchos
-        // resultados
-        if (results.size() > CHUNK_SIZE) {
-            return results.parallelStream()
-                    .map(r -> buildClasificacionForSingleStage(r, stageNumber))
-                    .sorted(Comparator.comparing(c -> c.getStageTimes().get(0).getAdjustedTimeSeconds()))
-                    .collect(Collectors.toList());
-        }
-
-        return buildClasificacionCompleta(results, stageNumber);
-    }
-
-    /**
      * Construye clasificación para una sola etapa (optimizado)
      */
-    private ClasificacionCompletaDTO buildClasificacionForSingleStage(StageResult r, Integer stageNumber) {
+    private ClasificacionCompletaDTO buildClasificacionForSingleStage(StageResult r) {
         Vehicle vehicle = r.getVehicle();
         String driverName = vehicle.getUser() != null
                 ? (vehicle.getUser().getFirstName() + " " + vehicle.getUser().getLastName())
@@ -371,17 +394,9 @@ public class StageResultService {
                 .collect(Collectors.groupingBy(r -> r.getVehicle().getId()));
 
         return resultsByVehicle.values().stream()
-                .map(vehicleResults -> buildClasificacionForVehicle(vehicleResults.get(0).getVehicle().getId(),
-                        vehicleResults))
+                .map(this::buildClasificacionForVehicle)
                 .sorted(Comparator.comparing(ClasificacionCompletaDTO::getTotalTime))
-                .collect(Collectors.toList());
-    }
-
-    private List<ClasificacionCompletaDTO> buildClasificacionCompleta(List<StageResult> results, Integer stageNumber) {
-        return results.stream()
-                .map(r -> buildClasificacionForSingleStage(r, stageNumber))
-                .sorted(Comparator.comparing(c -> c.getStageTimes().get(0).getAdjustedTimeSeconds()))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

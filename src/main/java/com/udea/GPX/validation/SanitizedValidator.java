@@ -1,6 +1,7 @@
-package com.udea.GPX.validation;
+package com.udea.gpx.validation;
 
-import com.udea.GPX.util.InputSanitizer;
+import com.udea.gpx.util.InputSanitizer;
+
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 

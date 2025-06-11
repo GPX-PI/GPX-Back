@@ -1,4 +1,4 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;

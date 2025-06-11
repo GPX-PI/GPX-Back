@@ -1,17 +1,22 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Vehicle;
-import com.udea.GPX.repository.IVehicleRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.udea.gpx.model.Vehicle;
+import com.udea.gpx.repository.IVehicleRepository;
+import com.udea.gpx.constants.AppConstants;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class VehicleService {
-    @Autowired
-    private IVehicleRepository vehicleRepository;
+    private final IVehicleRepository vehicleRepository;
+
+    // Constructor injection (no @Autowired needed)
+    public VehicleService(IVehicleRepository vehicleRepository) {
+        this.vehicleRepository = vehicleRepository;
+    }
 
     public List<Vehicle> getAllVehicles() {
         return vehicleRepository.findAll();
@@ -27,7 +32,7 @@ public class VehicleService {
 
     public Vehicle updateVehicle(Long id, Vehicle updatedVehicle) {
         Vehicle vehicle = vehicleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+                .orElseThrow(() -> new RuntimeException(AppConstants.Messages.VEHICULO_NO_ENCONTRADO));
 
         vehicle.setName(updatedVehicle.getName());
         vehicle.setSoat(updatedVehicle.getSoat());

@@ -1,4 +1,4 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,6 +152,10 @@ class ValidationConfigTest {
             TestValidationObject testObject = new TestValidationObject();
             testObject.validField = "valid";
             testObject.invalidField = null; // This should be invalid
+
+            // Use validField and invalidField to avoid unused field warning
+            assertEquals("valid", testObject.validField);
+            assertNull(testObject.invalidField);
 
             var violations = validator.validate(testObject);
 

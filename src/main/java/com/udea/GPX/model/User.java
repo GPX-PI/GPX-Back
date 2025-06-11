@@ -1,4 +1,4 @@
-package com.udea.GPX.model;
+package com.udea.gpx.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;

@@ -1,8 +1,5 @@
-package com.udea.GPX.controller;
+package com.udea.gpx.controller;
 
-import com.udea.GPX.JwtUtil;
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.OAuth2Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +7,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.view.RedirectView;
+
+import com.udea.gpx.JwtUtil;
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.OAuth2Service;
 
 import java.util.HashMap;
 import java.util.Map;

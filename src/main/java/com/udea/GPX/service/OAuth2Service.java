@@ -1,88 +1,98 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.User;
-import com.udea.GPX.repository.IUserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+
+import com.udea.gpx.model.User;
+import com.udea.gpx.repository.IUserRepository;
 
 import java.util.Optional;
 
 @Service
 public class OAuth2Service {
 
-    @Autowired
-    private IUserRepository userRepository;
+    private final IUserRepository userRepository;
+
+    // Constructor injection (no @Autowired needed)
+    public OAuth2Service(IUserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     public User processOAuth2User(OAuth2User oauth2User) {
         String email = oauth2User.getAttribute("email");
-        String googleId = oauth2User.getAttribute("sub");
+        String googleId = extractGoogleId(oauth2User);
         String name = oauth2User.getAttribute("name");
         String picture = oauth2User.getAttribute("picture");
 
-        // Fallback: Si googleId es null, usar 'id' en lugar de 'sub'
-        if (googleId == null) {
-            googleId = oauth2User.getAttribute("id");
-        }
-
-        // Buscar usuario existente por email o googleId
         Optional<User> existingUser = userRepository.findByEmail(email);
 
         if (existingUser.isPresent()) {
-            User user = existingUser.get();
-            // Actualizar información de Google si no tiene googleId
-            if (user.getGoogleId() == null) {
-                user.setGoogleId(googleId);
-                user.setAuthProvider("GOOGLE");
-                if (user.getPicture() == null || user.getPicture().isEmpty()) {
-                    user.setPicture(picture);
-                }
-                return userRepository.save(user);
-            }
-            return user;
+            return updateExistingUser(existingUser.get(), googleId, picture);
         } else {
-            // Crear nuevo usuario con datos mínimos de Google
-            User newUser = new User();
+            return createNewGoogleUser(email, googleId, name, picture);
+        }
+    }
 
-            // Datos proporcionados por Google
-            newUser.setEmail(email);
-            newUser.setGoogleId(googleId);
-            newUser.setAuthProvider("GOOGLE");
-            newUser.setPicture(picture != null ? picture : "");
-            newUser.setPassword(null); // Explícitamente null para OAuth2
+    private String extractGoogleId(OAuth2User oauth2User) {
+        String googleId = oauth2User.getAttribute("sub");
+        // Fallback: Si googleId es null, usar 'id' en lugar de 'sub'
+        return googleId != null ? googleId : oauth2User.getAttribute("id");
+    }
 
-            // Procesar nombre: intentar separar firstName y lastName
-            if (name != null && !name.trim().isEmpty()) {
-                String[] nameParts = name.trim().split("\\s+", 2);
-
-                // Truncar firstName si es muy largo (máximo 50 caracteres)
-                String firstName = nameParts[0];
-                if (firstName.length() > 50) {
-                    firstName = firstName.substring(0, 50);
-                }
-                newUser.setFirstName(firstName);
-
-                // Procesar lastName si existe
-                if (nameParts.length > 1) {
-                    String lastName = nameParts[1];
-                    if (lastName.length() > 50) {
-                        lastName = lastName.substring(0, 50);
-                    }
-                    newUser.setLastName(lastName);
-                }
-            } else {
-                // Usar valores por defecto si no hay nombre
-                newUser.setFirstName("Usuario");
-                newUser.setLastName("Google");
+    private User updateExistingUser(User user, String googleId, String picture) {
+        // Actualizar información de Google si no tiene googleId
+        if (user.getGoogleId() == null) {
+            user.setGoogleId(googleId);
+            user.setAuthProvider("GOOGLE");
+            if (user.getPicture() == null || user.getPicture().isEmpty()) {
+                user.setPicture(picture);
             }
+            return userRepository.save(user);
+        }
+        return user;
+    }
 
-            // Configuración por defecto
-            newUser.setAdmin(false);
+    private User createNewGoogleUser(String email, String googleId, String name, String picture) {
+        User newUser = new User();
 
-            // Los demás campos se dejan null o con valores por defecto
-            // El usuario podrá completar su perfil después del registro
+        // Datos proporcionados por Google
+        newUser.setEmail(email);
+        newUser.setGoogleId(googleId);
+        newUser.setAuthProvider("GOOGLE");
+        newUser.setPicture(picture != null ? picture : "");
+        newUser.setPassword(null); // Explícitamente null para OAuth2
 
-            return userRepository.save(newUser);
+        setUserNames(newUser, name);
+
+        // Configuración por defecto
+        newUser.setAdmin(false);
+
+        return userRepository.save(newUser);
+    }
+
+    private void setUserNames(User user, String fullName) {
+        if (fullName != null && !fullName.trim().isEmpty()) {
+            String[] nameParts = fullName.trim().split("\\s+", 2);
+
+            // Truncar firstName si es muy largo (máximo 50 caracteres)
+            String firstName = nameParts[0];
+            if (firstName.length() > 50) {
+                firstName = firstName.substring(0, 50);
+            }
+            user.setFirstName(firstName);
+
+            // Procesar lastName si existe
+            if (nameParts.length > 1) {
+                String lastName = nameParts[1];
+                if (lastName.length() > 50) {
+                    lastName = lastName.substring(0, 50);
+                }
+                user.setLastName(lastName);
+            }
+        } else {
+            // Usar valores por defecto si no hay nombre
+            user.setFirstName("Usuario");
+            user.setLastName("Google");
         }
     }
 

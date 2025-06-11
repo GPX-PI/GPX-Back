@@ -1,4 +1,4 @@
-package com.udea.GPX.dto;
+package com.udea.gpx.dto;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -16,9 +17,11 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("ParticipantDTO Tests")
 class ParticipantDTOTest {
+    private static final Logger logger = LoggerFactory.getLogger(ParticipantDTOTest.class);
 
     private Validator validator;
     private ParticipantDTO participantDTO;
@@ -811,20 +814,10 @@ class ParticipantDTOTest {
             assertEquals(2L, dto.getEventVehicleId());
             assertEquals(101L, dto.getUserId());
             assertEquals("Updated User", dto.getUserName()); // Final validation
-            Set<ConstraintViolation<ParticipantDTO>> violations = validator.validate(dto);
-
-            // Debug: Print violations if any
-            if (!violations.isEmpty()) {
-                System.out.println("Found " + violations.size() + " violations:");
-                for (ConstraintViolation<ParticipantDTO> violation : violations) {
-                    System.out.println("Field: " + violation.getPropertyPath());
-                    System.out.println("Message: " + violation.getMessage());
-                    System.out.println("Invalid value: " + violation.getInvalidValue());
-                    System.out.println("---");
-                }
-            }
-
-            assertTrue(violations.isEmpty());
+            Set<ConstraintViolation<ParticipantDTO>> violations = validator.validate(dto); // Then - Should not have
+                                                                                           // violations since all data
+                                                                                           // is valid
+            assertThat(violations).isEmpty();
         }
 
         @Test

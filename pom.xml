@@ -9,9 +9,9 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.udea</groupId>
-    <artifactId>GPX</artifactId>
+    <artifactId>gpx</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>GPX</name>
+    <name>gpx</name>
     <description>Demo project for Spring Boot</description>
     <url/>
     <licenses>
@@ -276,15 +276,15 @@
                             </rules>
                             <excludes>
                                 <!-- Excluir clases de configuración -->
-                                <exclude>com/udea/GPX/config/**</exclude>
+                                <exclude>com/udea/gpx/config/**</exclude>
                                 <!-- Excluir DTOs simples -->
-                                <exclude>com/udea/GPX/dto/**</exclude>
+                                <exclude>com/udea/gpx/dto/**</exclude>
                                 <!-- Excluir excepciones personalizadas -->
-                                <exclude>com/udea/GPX/exception/**</exclude>
+                                <exclude>com/udea/gpx/exception/**</exclude>
                                 <!-- Excluir constantes -->
-                                <exclude>com/udea/GPX/constants/**</exclude>
+                                <exclude>com/udea/gpx/constants/**</exclude>
                                 <!-- Excluir aplicación principal -->
-                                <exclude>com/udea/GPX/GpxApplication.class</exclude>
+                                <exclude>com/udea/gpx/GpxApplication.class</exclude>
                             </excludes>
                         </configuration>
                     </execution>

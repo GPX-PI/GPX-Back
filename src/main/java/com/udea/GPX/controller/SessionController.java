@@ -1,6 +1,5 @@
-package com.udea.GPX.controller;
+package com.udea.gpx.controller;
 
-import com.udea.GPX.service.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -8,10 +7,11 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import com.udea.gpx.service.TokenService;
 
 import java.util.List;
 import java.util.Map;
@@ -27,8 +27,11 @@ public class SessionController {
 
   private static final Logger logger = LoggerFactory.getLogger(SessionController.class);
 
-  @Autowired
-  private TokenService tokenService;
+  private final TokenService tokenService;
+
+  public SessionController(TokenService tokenService) {
+    this.tokenService = tokenService;
+  }
 
   @GetMapping("/active")
   @Operation(summary = "Obtener sesiones activas", description = "Lista todas las sesiones activas del usuario autenticado")
@@ -109,7 +112,7 @@ public class SessionController {
     Map<String, Object> info = Map.of(
         "userId", userId,
         "activeSessions", sessions.size(),
-        "maxConcurrentSessions", 5, // TODO: Obtener de configuración
+        "maxConcurrentSessions", 5,
         "lastActivity", sessions.isEmpty() ? null : sessions.get(0).getLastActivity());
 
     logger.info("✅ SessionController.getCurrentSessionInfo - Info obtenida para usuario {}", userId);

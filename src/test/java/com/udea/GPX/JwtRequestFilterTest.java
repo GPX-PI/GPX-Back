@@ -1,9 +1,10 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.TokenService;
-import com.udea.GPX.service.UserService;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.TokenService;
+import com.udea.gpx.service.UserService;
+
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -24,14 +25,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 

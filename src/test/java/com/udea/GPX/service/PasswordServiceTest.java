@@ -1,4 +1,4 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -379,4 +379,4 @@ class PasswordServiceTest {
         // Then
         assertThat(result).isTrue();
     }
-} 
+}

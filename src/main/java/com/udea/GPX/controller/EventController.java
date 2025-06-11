@@ -1,10 +1,5 @@
-package com.udea.GPX.controller;
+package com.udea.gpx.controller;
 
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventCategory;
-import com.udea.GPX.service.EventService;
-import com.udea.GPX.service.FileTransactionService;
-import com.udea.GPX.util.AuthUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,6 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventCategory;
+import com.udea.gpx.service.EventService;
+import com.udea.gpx.service.FileTransactionService;
+import com.udea.gpx.util.AuthUtils;
+
 import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping("/api/events")
-@Tag(name = "Eventos", description = "Gestión de eventos de carreras GPX")
+@Tag(name = "Eventos", description = "Gestión de eventos de carreras gpx")
 public class EventController {
 
     @Autowired

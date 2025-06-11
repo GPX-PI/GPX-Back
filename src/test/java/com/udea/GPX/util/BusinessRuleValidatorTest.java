@@ -1,14 +1,14 @@
-package com.udea.GPX.util;
+package com.udea.gpx.util;
 
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventVehicle;
 import org.junit.jupiter.api.Test;
+
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventVehicle;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

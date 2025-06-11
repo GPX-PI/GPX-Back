@@ -1,8 +1,5 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.service.AsyncFileService.ValidationSummary;
-import com.udea.GPX.service.AsyncFileService.BatchProcessingResult;
-import com.udea.GPX.util.FileValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +9,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.udea.gpx.service.AsyncFileService.BatchProcessingResult;
+import com.udea.gpx.service.AsyncFileService.ValidationSummary;
+import com.udea.gpx.util.FileValidator;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +21,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @DisplayName("AsyncFileService Tests")

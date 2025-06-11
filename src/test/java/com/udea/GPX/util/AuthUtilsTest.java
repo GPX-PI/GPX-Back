@@ -1,7 +1,5 @@
-package com.udea.GPX.util;
+package com.udea.gpx.util;
 
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,13 +11,13 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.UserService;
+import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;

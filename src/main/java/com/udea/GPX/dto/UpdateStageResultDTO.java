@@ -1,4 +1,4 @@
-package com.udea.GPX.dto;
+package com.udea.gpx.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMax;

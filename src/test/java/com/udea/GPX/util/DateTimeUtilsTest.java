@@ -1,4 +1,4 @@
-package com.udea.GPX.util;
+package com.udea.gpx.util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -10,16 +10,16 @@ import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("DateTimeUtils Tests")
 class DateTimeUtilsTest {
-
   @Test
   @DisplayName("nowUTC - Debe obtener fecha/hora actual en UTC")
   void nowUTC_shouldGetCurrentDateTimeInUTC() {
     // When
     LocalDateTime now = DateTimeUtils.nowUTC();
+    LocalDateTime utcNow = LocalDateTime.now(ZoneId.of("UTC"));
 
     // Then
     assertThat(now).isNotNull();
-    assertThat(now).isBeforeOrEqualTo(LocalDateTime.now().plusSeconds(1));
+    assertThat(now).isBeforeOrEqualTo(utcNow.plusSeconds(1));
   }
 
   @Test
@@ -141,8 +141,8 @@ class DateTimeUtilsTest {
   @DisplayName("isPastDateTime - Debe validar fechas/horas en el pasado")
   void isPastDateTime_shouldValidatePastDateTimes() {
     // Given
-    LocalDateTime pastDateTime = LocalDateTime.now().minusHours(1);
-    LocalDateTime futureDateTime = LocalDateTime.now().plusHours(1);
+    LocalDateTime pastDateTime = DateTimeUtils.nowUTC().minusHours(1);
+    LocalDateTime futureDateTime = DateTimeUtils.nowUTC().plusHours(1);
 
     // When & Then
     assertThat(DateTimeUtils.isPastDateTime(pastDateTime)).isTrue();

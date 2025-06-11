@@ -1,18 +1,7 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
-import com.udea.GPX.controller.EventVehicleController;
-import com.udea.GPX.model.User;
-import com.udea.GPX.model.Vehicle;
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventVehicle;
-import com.udea.GPX.service.EventVehicleService;
-import com.udea.GPX.service.VehicleService;
-import com.udea.GPX.service.EventService;
-import com.udea.GPX.util.AuthUtils;
-import com.udea.GPX.config.TestConfig;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +19,17 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import com.udea.gpx.controller.EventVehicleController;
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventVehicle;
+import com.udea.gpx.model.User;
+import com.udea.gpx.model.Vehicle;
+import com.udea.gpx.service.EventService;
+import com.udea.gpx.service.EventVehicleService;
+import com.udea.gpx.service.VehicleService;
+import com.udea.gpx.util.AuthUtils;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -37,7 +37,7 @@ import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class EventVehicleControllerTests {
+class EventVehicleControllerTests {
 
     @InjectMocks
     private EventVehicleController eventVehicleController;
@@ -188,23 +188,6 @@ public class EventVehicleControllerTests {
 
     @Test
     void getVehiclesByEventId_whenAdmin_shouldReturnOK() {
-        // Arrange
-        Long eventId = 1L;
-        List<EventVehicle> eventVehicles = Arrays.asList(
-                new EventVehicle(1L, new Event(), new Vehicle()),
-                new EventVehicle(2L, new Event(), new Vehicle()));
-        when(eventVehicleService.getVehiclesByEventId(eventId)).thenReturn(eventVehicles);
-
-        // Act
-        ResponseEntity<List<EventVehicle>> response = eventVehicleController.getVehiclesByEventId(eventId);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
-    }
-
-    @Test
-    void getVehiclesByEventId_whenNotAdmin_shouldReturnOK() {
         // Arrange
         Long eventId = 1L;
         List<EventVehicle> eventVehicles = Arrays.asList(

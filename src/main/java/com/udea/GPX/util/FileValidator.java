@@ -1,4 +1,4 @@
-package com.udea.GPX.util;
+package com.udea.gpx.util;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;

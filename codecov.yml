@@ -1,4 +1,4 @@
-# Configuración de Codecov para el proyecto GPX
+# Configuración de Codecov para el proyecto gpx
 codecov:
   require_ci_to_pass: true
   notify:
@@ -29,11 +29,11 @@ comment:
   require_head: true
 
 ignore:
-  - "src/test/**/*"           # Ignorar archivos de test
+  - "src/test/**/*" # Ignorar archivos de test
   - "src/main/resources/**/*" # Ignorar resources
-  - "**/config/**/*"          # Ignorar configuraciones
-  - "**/dto/**/*"             # DTOs suelen tener poca lógica
-  - "**/GpxApplication.java"  # Clase principal de Spring Boot
+  - "**/config/**/*" # Ignorar configuraciones
+  - "**/dto/**/*" # DTOs suelen tener poca lógica
+  - "**/GpxApplication.java" # Clase principal de Spring Boot
 
 github_checks:
-  annotations: true 
+  annotations: true

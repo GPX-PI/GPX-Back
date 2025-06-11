@@ -1,4 +1,4 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.springframework.test.util.ReflectionTestUtils;
-
 import java.security.Key;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;

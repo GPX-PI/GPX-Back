@@ -1,4 +1,4 @@
-package com.udea.GPX.dto;
+package com.udea.gpx.dto;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

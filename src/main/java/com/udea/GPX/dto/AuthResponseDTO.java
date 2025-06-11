@@ -1,4 +1,4 @@
-package com.udea.GPX.dto;
+package com.udea.gpx.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 

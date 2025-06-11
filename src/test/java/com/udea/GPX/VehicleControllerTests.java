@@ -1,14 +1,8 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import com.udea.GPX.controller.VehicleController;
-import com.udea.GPX.model.Vehicle;
-import com.udea.GPX.model.User;
-import com.udea.GPX.model.Category;
-import com.udea.GPX.service.VehicleService;
-import com.udea.GPX.util.AuthUtils;
-import com.udea.GPX.dto.VehicleRequestDTO;
+
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,15 +19,21 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.mockito.MockitoAnnotations;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.udea.gpx.controller.VehicleController;
+import com.udea.gpx.dto.VehicleRequestDTO;
+import com.udea.gpx.model.Category;
+import com.udea.gpx.model.User;
+import com.udea.gpx.model.Vehicle;
+import com.udea.gpx.service.VehicleService;
+import com.udea.gpx.util.AuthUtils;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class VehicleControllerTests {
+class VehicleControllerTests {
 
     @Mock
     private VehicleService vehicleService;
@@ -51,16 +51,16 @@ public class VehicleControllerTests {
     private AuthUtils authUtils;
 
     @Mock
-    private com.udea.GPX.repository.IEventVehicleRepository eventVehicleRepository;
+    private com.udea.gpx.repository.IEventVehicleRepository eventVehicleRepository;
 
     @Mock
-    private com.udea.GPX.repository.IStageResultRepository stageResultRepository;
+    private com.udea.gpx.repository.IStageResultRepository stageResultRepository;
 
     @Mock
-    private com.udea.GPX.service.UserService userService;
+    private com.udea.gpx.service.UserService userService;
 
     @Mock
-    private com.udea.GPX.service.CategoryService categoryService;
+    private com.udea.gpx.service.CategoryService categoryService;
 
     @InjectMocks
     private VehicleController vehicleController;
@@ -87,18 +87,6 @@ public class VehicleControllerTests {
         dto.setPlates("ABC123");
         dto.setCategoryId(categoryId);
         return dto;
-    }
-
-    private ObjectMapper objectMapper = new ObjectMapper();
-
-    private ObjectNode buildVehicleJson(Long id, Long userId, boolean admin) {
-        ObjectNode node = objectMapper.createObjectNode();
-        node.put("id", id);
-        node.put("name", "Vehículo " + id);
-        node.put("soat", "soat" + id);
-        node.put("plates", "ABC" + id);
-        node.put("categoryId", (Long) null); // Puedes ajustar si necesitas categoría
-        return node;
     }
 
     @BeforeEach
@@ -130,7 +118,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
+        List<Vehicle> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
     }
 
     @Test
@@ -162,7 +152,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(vehicleId, response.getBody().getId());
+        Vehicle responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(vehicleId, responseBody.getId());
     }
 
     @Test
@@ -180,7 +172,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(vehicleId, response.getBody().getId());
+        Vehicle responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(vehicleId, responseBody.getId());
     }
 
     @Test
@@ -232,7 +226,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals(vehicle.getId(), response.getBody().getId());
+        Vehicle responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(vehicle.getId(), responseBody.getId());
     }
 
     @Test
@@ -256,7 +252,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(vehicleId, response.getBody().getId());
+        Vehicle responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(vehicleId, responseBody.getId());
     }
 
     @Test
@@ -280,7 +278,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(vehicleId, response.getBody().getId());
+        Vehicle responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(vehicleId, responseBody.getId());
     }
 
     @Test
@@ -338,7 +338,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
+        List<Vehicle> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
     }
 
     @Test
@@ -373,7 +375,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
+        List<Vehicle> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
     }
 
     @Test
@@ -393,7 +397,9 @@ public class VehicleControllerTests {
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(2, response.getBody().size());
+        List<Vehicle> responseBody = response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(2, responseBody.size());
     }
 
     @Test

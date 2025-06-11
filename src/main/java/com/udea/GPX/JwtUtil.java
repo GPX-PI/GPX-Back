@@ -1,4 +1,4 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

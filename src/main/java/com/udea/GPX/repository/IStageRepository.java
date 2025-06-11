@@ -1,8 +1,9 @@
-package com.udea.GPX.repository;
+package com.udea.gpx.repository;
 
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.Stage;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.Stage;
 
 import java.util.List;
 import java.util.Optional;

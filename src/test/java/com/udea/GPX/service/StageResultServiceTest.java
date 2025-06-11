@@ -1,14 +1,14 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.dto.CreateStageResultDTO;
-import com.udea.GPX.dto.UpdateStageResultDTO;
-import com.udea.GPX.dto.ClasificacionCompletaDTO;
-import com.udea.GPX.model.*;
-import com.udea.GPX.repository.IStageResultRepository;
-import com.udea.GPX.repository.IStageRepository;
-import com.udea.GPX.repository.IVehicleRepository;
-import com.udea.GPX.util.BusinessRuleValidator;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.dto.ClasificacionCompletaDTO;
+import com.udea.gpx.dto.CreateStageResultDTO;
+import com.udea.gpx.dto.UpdateStageResultDTO;
+import com.udea.gpx.model.*;
+import com.udea.gpx.repository.IStageRepository;
+import com.udea.gpx.repository.IStageResultRepository;
+import com.udea.gpx.repository.IVehicleRepository;
+import com.udea.gpx.util.BusinessRuleValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;

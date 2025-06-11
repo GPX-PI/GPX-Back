@@ -1,13 +1,14 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.EventVehicle;
-import com.udea.GPX.repository.IEventRepository;
-import com.udea.GPX.repository.IEventVehicleRepository;
-import com.udea.GPX.util.BusinessRuleValidator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventVehicle;
+import com.udea.gpx.repository.IEventRepository;
+import com.udea.gpx.repository.IEventVehicleRepository;
+import com.udea.gpx.util.BusinessRuleValidator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,14 +20,19 @@ public class EventVehicleService {
 
     private static final Logger logger = LoggerFactory.getLogger(EventVehicleService.class);
 
-    @Autowired
-    private IEventVehicleRepository eventVehicleRepository;
+    private final IEventVehicleRepository eventVehicleRepository;
+    private final IEventRepository eventRepository;
+    private final BusinessRuleValidator businessRuleValidator;
 
-    @Autowired
-    private IEventRepository eventRepository;
-
-    @Autowired
-    private BusinessRuleValidator businessRuleValidator;
+    // Constructor injection (no @Autowired needed)
+    public EventVehicleService(
+            IEventVehicleRepository eventVehicleRepository,
+            IEventRepository eventRepository,
+            BusinessRuleValidator businessRuleValidator) {
+        this.eventVehicleRepository = eventVehicleRepository;
+        this.eventRepository = eventRepository;
+        this.businessRuleValidator = businessRuleValidator;
+    }
 
     public List<EventVehicle> getAllEventVehicles() {
         return eventVehicleRepository.findAll();

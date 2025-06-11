@@ -1,4 +1,4 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -6,6 +6,7 @@ import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.lang.NonNull;
 
 import java.util.Optional;
 
@@ -24,7 +25,7 @@ public class JpaAuditingConfig {
   public static class AuditorAwareImpl implements AuditorAware<String> {
 
     @Override
-    public Optional<String> getCurrentAuditor() {
+    public @NonNull Optional<String> getCurrentAuditor() {
       Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
       if (authentication == null || !authentication.isAuthenticated()) {
@@ -32,15 +33,13 @@ public class JpaAuditingConfig {
       }
 
       // Si el principal es un User (autenticación JWT)
-      if (authentication.getPrincipal() instanceof com.udea.GPX.model.User) {
-        com.udea.GPX.model.User user = (com.udea.GPX.model.User) authentication.getPrincipal();
+      if (authentication.getPrincipal() instanceof com.udea.gpx.model.User user) {
         return Optional.of(user.getEmail());
       }
 
       // Si es autenticación OAuth2
-      if (authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.user.OAuth2User) {
-        org.springframework.security.oauth2.core.user.OAuth2User oauth2User = (org.springframework.security.oauth2.core.user.OAuth2User) authentication
-            .getPrincipal();
+      if (authentication
+          .getPrincipal() instanceof org.springframework.security.oauth2.core.user.OAuth2User oauth2User) {
         String email = oauth2User.getAttribute("email");
         return Optional.ofNullable(email != null ? email : "oauth2-user");
       }

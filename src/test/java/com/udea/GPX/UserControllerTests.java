@@ -1,21 +1,20 @@
-package com.udea.GPX;
+package com.udea.gpx;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.udea.GPX.controller.UserController;
-import com.udea.GPX.model.User;
-import com.udea.GPX.service.UserService;
-import com.udea.GPX.service.TokenService;
-import com.udea.GPX.service.TokenService.TokenPair;
-import com.udea.GPX.util.AuthUtils;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.controller.UserController;
+import com.udea.gpx.model.User;
+import com.udea.gpx.service.TokenService;
+import com.udea.gpx.service.UserService;
+import com.udea.gpx.service.TokenService.TokenPair;
+import com.udea.gpx.util.AuthUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -26,20 +25,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.time.LocalDate;
 import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class UserControllerTests {
+class UserControllerTests {
 
     @Mock
     private UserService userService;
 
     @Mock
-    private com.udea.GPX.JwtUtil jwtUtil;
+    private com.udea.gpx.JwtUtil jwtUtil;
 
     @Mock
     private TokenService tokenService;
@@ -52,11 +48,11 @@ public class UserControllerTests {
 
     @Mock
     private Authentication authentication;
-
     @Mock
     private AuthUtils authUtils;
+    @Mock
+    private com.udea.gpx.service.FileTransactionService fileTransactionService;
 
-    @InjectMocks
     private UserController userController;
 
     // 🏗️ USANDO TestDataBuilder ESTANDARIZADO
@@ -67,8 +63,9 @@ public class UserControllerTests {
         MockitoAnnotations.openMocks(this);
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        ReflectionTestUtils.setField(userController, "request", request);
-        ReflectionTestUtils.setField(userController, "authUtils", authUtils);
+
+        // Crear manualmente el controlador con todos los mocks necesarios
+        userController = new UserController(userService, request, tokenService, authUtils, fileTransactionService);
     }
 
     @Test
@@ -144,7 +141,6 @@ public class UserControllerTests {
     void getUserById_whenDifferentUser_shouldReturnForbidden() {
         // Arrange
         Long userId = 1L;
-        User user = TestDataBuilder.buildUser(userId, "Juan", false);
         User otherUser = TestDataBuilder.buildUser(2L, "Otro", false);
         when(authentication.getPrincipal()).thenReturn(otherUser);
 
@@ -156,6 +152,7 @@ public class UserControllerTests {
     }
 
     @Test
+    @SuppressWarnings("unchecked") // Suprimir warning de cast no seguro para Map
     void login_whenValidCredentials_shouldReturnTokenWithProfileInfo() {
         // Arrange
         Map<String, String> loginData = new HashMap<>();
@@ -188,6 +185,7 @@ public class UserControllerTests {
     }
 
     @Test
+    @SuppressWarnings("unchecked") // Suprimir warning de cast no seguro para Map
     void login_whenValidCredentialsIncompleteProfile_shouldReturnTokenWithProfileIncomplete() {
         // Arrange
         Map<String, String> loginData = new HashMap<>();
@@ -258,9 +256,8 @@ public class UserControllerTests {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
-    // ========== TESTS PARA SIMPLE REGISTER ==========
-
-    @Test
+    // ========== TESTS PARA SIMPLE REGISTER ========== @Test
+    @SuppressWarnings("unchecked") // Suprimir warning de cast no seguro para Map
     void simpleRegister_whenValidData_shouldReturnCreated() {
         // Arrange
         Map<String, String> userData = new HashMap<>();
@@ -427,9 +424,8 @@ public class UserControllerTests {
         verify(userService).findByEmail("existe@ejemplo.com");
     }
 
-    // ========== TESTS PARA COMPLETE PROFILE ==========
-
-    @Test
+    // ========== TESTS PARA COMPLETE PROFILE ========== @Test
+    @SuppressWarnings("unchecked") // Suprimir warning de cast no seguro para Map
     void completeProfile_whenSameUser_shouldCompleteSuccessfully() {
         // Arrange
         Long userId = 1L;
@@ -466,6 +462,7 @@ public class UserControllerTests {
     }
 
     @Test
+    @SuppressWarnings("unchecked") // Suprimir warning de cast no seguro para Map
     void completeProfile_whenAdmin_shouldCompleteSuccessfully() {
         // Arrange
         Long userId = 1L;
@@ -547,7 +544,8 @@ public class UserControllerTests {
     }
 
     @Test
-    void updateUser_whenAdmin_shouldUpdateSuccessfully() throws Exception {
+    @SuppressWarnings("unchecked") // Suprimir warning de cast no seguro para Map
+    void updateUser_whenAdmin_shouldUpdateSuccessfully() {
         // Arrange
         Long userId = 1L;
         User existingUser = TestDataBuilder.buildUser(userId, "Juan", false);
@@ -570,7 +568,8 @@ public class UserControllerTests {
     }
 
     @Test
-    void updateUser_whenSameUser_shouldUpdateSuccessfully() throws Exception {
+    @SuppressWarnings("unchecked") // Suprimir warning de cast no seguro para Map
+    void updateUser_whenSameUser_shouldUpdateSuccessfully() {
         // Arrange
         Long userId = 1L;
         User existingUser = TestDataBuilder.buildUser(userId, "Juan", false);
@@ -592,10 +591,9 @@ public class UserControllerTests {
     }
 
     @Test
-    void updateUser_whenDifferentUser_shouldReturnForbidden() throws Exception {
+    void updateUser_whenDifferentUser_shouldReturnForbidden() {
         // Arrange
         Long userId = 1L;
-        User existingUser = TestDataBuilder.buildUser(userId, "Juan", false);
         User updatedUser = TestDataBuilder.buildUser(userId, "JuanUpdated", false);
         User otherUser = TestDataBuilder.buildUser(2L, "Otro", false);
         when(authentication.getPrincipal()).thenReturn(otherUser);

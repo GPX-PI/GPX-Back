@@ -1,6 +1,5 @@
-package com.udea.GPX.config;
+package com.udea.gpx.config;
 
-import com.udea.GPX.constants.AppConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +7,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.lang.NonNull;
+
+import com.udea.gpx.constants.AppConstants;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,7 +29,7 @@ public class CorsConfig {
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
-            public void addCorsMappings(CorsRegistry registry) {
+            public void addCorsMappings(@NonNull CorsRegistry registry) {
 
                 boolean isProduction = "prod".equals(activeProfile);
                 boolean isTest = "test".equals(activeProfile);

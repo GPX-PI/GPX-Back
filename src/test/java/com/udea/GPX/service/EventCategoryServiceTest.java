@@ -1,10 +1,11 @@
-package com.udea.GPX.service;
+package com.udea.gpx.service;
 
-import com.udea.GPX.model.EventCategory;
-import com.udea.GPX.model.Event;
-import com.udea.GPX.model.Category;
-import com.udea.GPX.repository.IEventCategoryRepository;
-import com.udea.GPX.util.TestDataBuilder;
+import com.udea.gpx.util.TestDataBuilder;
+import com.udea.gpx.model.Category;
+import com.udea.gpx.model.Event;
+import com.udea.gpx.model.EventCategory;
+import com.udea.gpx.repository.IEventCategoryRepository;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;

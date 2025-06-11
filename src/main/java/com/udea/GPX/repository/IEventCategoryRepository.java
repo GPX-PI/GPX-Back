@@ -1,7 +1,9 @@
-package com.udea.GPX.repository;
+package com.udea.gpx.repository;
 
-import com.udea.GPX.model.EventCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.udea.gpx.model.EventCategory;
+
 import java.util.List;
 
 public interface IEventCategoryRepository extends JpaRepository<EventCategory, Long> {
