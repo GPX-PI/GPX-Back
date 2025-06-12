@@ -1,4 +1,4 @@
-name: 🚀 CI/CD Pipeline
+name: 🚀 CI/CD Pipeline with SonarCloud
 
 on:
   push:
@@ -8,8 +8,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    name: 🧪 Tests & Quality Analysis
+  test-and-analysis:
+    name: 🧪 Tests, Coverage & Quality Analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -28,11 +28,33 @@ jobs:
           distribution: "temurin"
           cache: maven
 
+      - name: 📦 Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+
       - name: 🧪 Run tests with coverage
         run: ./mvnw clean test jacoco:report
         env:
           SPRING_PROFILES_ACTIVE: test
           MAVEN_OPTS: "-XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage=false"
+          DATABASE_URL: jdbc:h2:mem:testdb
+          DATABASE_USERNAME: sa
+          DATABASE_PASSWORD: password
+          JWT_SECRET: test-secret-key-for-testing-purposes-only
+          JWT_EXPIRATION: 86400000
+          JWT_REFRESH_EXPIRATION: 604800000
+          OAUTH2_GOOGLE_CLIENT_ID: test-client-id
+          OAUTH2_GOOGLE_CLIENT_SECRET: test-client-secret
+          OAUTH2_GOOGLE_REDIRECT_URI: http://localhost:8080/oauth2/callback/google
+          EMAIL_USERNAME: test@example.com
+          EMAIL_PASSWORD: test-password
+          AWS_ACCESS_KEY_ID: test-key
+          AWS_SECRET_ACCESS_KEY: test-secret
+          AWS_REGION: us-east-1
+          AWS_S3_BUCKET: test-bucket
 
       - name: 🔍 Verify JaCoCo report generation
         run: |
@@ -47,6 +69,7 @@ jobs:
             echo "❌ jacoco.xml not found at target/site/jacoco/jacoco.xml"
             echo "Checking alternative locations..."
             find target -name "jacoco*.xml" -type f
+            exit 1
           fi
 
       - name: 📈 Upload coverage to Codecov
@@ -60,10 +83,21 @@ jobs:
           fail_ci_if_error: false
           verbose: false
 
+      - name: ☁️ SonarCloud Analysis
+        uses: SonarSource/sonarqube-scan-action@v5.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=GPX-PI_GPX-Back
+            -Dsonar.organization=gpxpi
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
   security-scan:
     name: 🛡️ Security Scan
     runs-on: ubuntu-latest
-    needs: test
+    needs: test-and-analysis
     if: github.ref == 'refs/heads/main'
 
     steps:
