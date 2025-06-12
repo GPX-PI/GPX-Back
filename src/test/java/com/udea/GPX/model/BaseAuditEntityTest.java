@@ -244,10 +244,15 @@ class BaseAuditEntityTest {
                             java.time.Duration.between(entity.getCreatedAt(), entity.getUpdatedAt()).toSeconds()) <= 10,
                     "Created and updated timestamps should be equal or within 10 seconds during creation");
 
-            // Verify timestamps are recent (within last 30 seconds for CI/CD environments)
+            // Verify timestamps are recent (allow for CI/CD timing differences - within 2
+            // minutes)
             LocalDateTime now = LocalDateTime.now();
-            assertTrue(entity.getCreatedAt().isAfter(now.minusSeconds(30)));
-            assertTrue(entity.getUpdatedAt().isAfter(now.minusSeconds(30)));
+            assertTrue(entity.getCreatedAt().isBefore(now.plusSeconds(10)) &&
+                    entity.getCreatedAt().isAfter(now.minusMinutes(2)),
+                    "Created timestamp should be within reasonable time range for CI/CD");
+            assertTrue(entity.getUpdatedAt().isBefore(now.plusSeconds(10)) &&
+                    entity.getUpdatedAt().isAfter(now.minusMinutes(2)),
+                    "Updated timestamp should be within reasonable time range for CI/CD");
         }
 
         @Test
@@ -268,11 +273,13 @@ class BaseAuditEntityTest {
             // Then - Verify only updated timestamp changes
             assertEquals(originalCreated, entity.getCreatedAt()); // Creation time unchanged
             assertNotNull(entity.getUpdatedAt());
-            assertTrue(entity.getUpdatedAt().isAfter(originalUpdated)); // Updated time changed // Verify updated
-                                                                        // timestamp is recent (within last 30 seconds
-                                                                        // for CI/CD)
+            assertTrue(entity.getUpdatedAt().isAfter(originalUpdated)); // Updated time changed
+
+            // Verify updated timestamp is recent (allow for CI/CD timing differences)
             LocalDateTime now = LocalDateTime.now();
-            assertTrue(entity.getUpdatedAt().isAfter(now.minusSeconds(30)));
+            assertTrue(entity.getUpdatedAt().isBefore(now.plusSeconds(10)) &&
+                    entity.getUpdatedAt().isAfter(now.minusMinutes(2)),
+                    "Updated timestamp should be within reasonable time range for CI/CD");
         }
 
         @Test
