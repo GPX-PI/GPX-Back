@@ -3,20 +3,15 @@ package com.udea.gpx;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
 
 import com.udea.gpx.controller.CategoryController;
 import com.udea.gpx.model.Category;
@@ -27,164 +22,229 @@ import java.util.Arrays;
 import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
+@DisplayName("CategoryController Unit Tests")
 class CategoryControllerTests {
-
-    @InjectMocks
-    private CategoryController categoryController;
 
     @Mock
     private CategoryService categoryService;
 
     @Mock
-    private HttpServletRequest request;
-
-    @Mock
-    private SecurityContext securityContext;
-
-    @Mock
-    private Authentication authentication;
-
-    @Mock
     private AuthUtils authUtils;
+
+    @InjectMocks
+    private CategoryController categoryController;
+    private Category testCategory1;
+    private Category testCategory2;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        testCategory1 = new Category(1L, "Autos", "Categoría para autos");
+        testCategory2 = new Category(2L, "Motos", "Categoría para motos");
     }
 
-    @Test
-    void getAllCategories_shouldReturnAllCategories() {
-        // Preparar datos de prueba
-        Category category1 = new Category(1L, "Autos", "Categoría para autos");
-        Category category2 = new Category(2L, "Motos", "Categoría para motos");
-        List<Category> categories = Arrays.asList(category1, category2);
+    // ========== GET ALL CATEGORIES TESTS ==========
 
+    @Test
+    @DisplayName("getAllCategories - Debe retornar todas las categorías")
+    void getAllCategories_shouldReturnAllCategories() {
+        // Given
+        List<Category> categories = Arrays.asList(testCategory1, testCategory2);
         when(categoryService.getAllCategories()).thenReturn(categories);
 
-        // Ejecutar
+        // When
         ResponseEntity<List<Category>> response = categoryController.getAllCategories();
 
-        // Verificar
+        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         List<Category> responseBody = response.getBody();
         assertNotNull(responseBody);
         assertEquals(2, responseBody.size());
         assertEquals("Autos", responseBody.get(0).getName());
         assertEquals("Motos", responseBody.get(1).getName());
+        verify(categoryService).getAllCategories();
     }
 
+    // ========== GET CATEGORY BY ID TESTS ==========
+
     @Test
+    @DisplayName("getCategoryById - Debe retornar categoría cuando existe")
     void getCategoryById_whenCategoryExists_shouldReturnCategory() {
-        // Preparar datos
-        Category category = new Category(1L, "Autos", "Categoría para autos");
+        // Given
+        when(categoryService.getCategoryById(1L)).thenReturn(testCategory1);
 
-        when(categoryService.getCategoryById(1L)).thenReturn(category);
-
-        // Ejecutar
+        // When
         ResponseEntity<Category> response = categoryController.getCategoryById(1L);
 
-        // Verificar
+        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Category responseBody = response.getBody();
         assertNotNull(responseBody);
         assertEquals("Autos", responseBody.getName());
         assertEquals("Categoría para autos", responseBody.getDetails());
+        verify(categoryService).getCategoryById(1L);
     }
 
     @Test
-    void getCategoryById_whenCategoryNotExists_shouldReturn404() {
+    @DisplayName("getCategoryById - Debe retornar NOT_FOUND cuando no existe")
+    void getCategoryById_whenCategoryNotExists_shouldReturnNotFound() {
+        // Given
         when(categoryService.getCategoryById(99L)).thenReturn(null);
 
-        // Ejecutar
+        // When
         ResponseEntity<Category> response = categoryController.getCategoryById(99L);
 
-        // Verificar
+        // Then
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
+        verify(categoryService).getCategoryById(99L);
     }
 
+    // ========== CREATE CATEGORY TESTS ==========
+
     @Test
+    @DisplayName("createCategory - Debe crear categoría cuando el usuario es admin")
     void createCategory_whenAdmin_shouldCreateAndReturnCategory() {
-        Category category = new Category(null, "Bicicletas", "Categoría para bicicletas");
+        // Given
+        Category newCategory = new Category(null, "Bicicletas", "Categoría para bicicletas");
         Category savedCategory = new Category(3L, "Bicicletas", "Categoría para bicicletas");
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        when(categoryService.save(category)).thenReturn(savedCategory);
+        when(categoryService.save(newCategory)).thenReturn(savedCategory);
 
-        ResponseEntity<Category> response = categoryController.createCategory(category);
+        // When
+        ResponseEntity<Category> response = categoryController.createCategory(newCategory);
 
+        // Then
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         Category responseBody = response.getBody();
         assertNotNull(responseBody);
         assertEquals(savedCategory, responseBody);
+        verify(authUtils).isCurrentUserAdmin();
+        verify(categoryService).save(newCategory);
     }
 
     @Test
+    @DisplayName("createCategory - Debe retornar FORBIDDEN cuando el usuario no es admin")
     void createCategory_whenNotAdmin_shouldReturnForbidden() {
-        Category category = new Category(null, "Bicicletas", "Categoría para bicicletas");
+        // Given
+        Category newCategory = new Category(null, "Bicicletas", "Categoría para bicicletas");
         when(authUtils.isCurrentUserAdmin()).thenReturn(false);
 
-        ResponseEntity<Category> response = categoryController.createCategory(category);
+        // When
+        ResponseEntity<Category> response = categoryController.createCategory(newCategory);
 
+        // Then
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(authUtils).isCurrentUserAdmin();
+        verify(categoryService, never()).save(any(Category.class));
     }
 
+    // ========== UPDATE CATEGORY TESTS ==========
+
     @Test
+    @DisplayName("updateCategory - Debe actualizar categoría cuando el usuario es admin y existe")
     void updateCategory_whenAdminAndExists_shouldUpdateAndReturnCategory() {
-        Category category = new Category(null, "Autos", "Actualizado");
-        Category updatedCategory = new Category(1L, "Autos", "Actualizado");
+        // Given
+        Category categoryToUpdate = new Category(null, "Autos", "Descripción actualizada");
+        Category updatedCategory = new Category(1L, "Autos", "Descripción actualizada");
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
         when(categoryService.save(any(Category.class))).thenReturn(updatedCategory);
 
-        ResponseEntity<Category> response = categoryController.updateCategory(1L, category);
+        // When
+        ResponseEntity<Category> response = categoryController.updateCategory(1L, categoryToUpdate);
 
+        // Then
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Category responseBody = response.getBody();
         assertNotNull(responseBody);
         assertEquals(updatedCategory, responseBody);
+        verify(authUtils).isCurrentUserAdmin();
+        verify(categoryService).save(any(Category.class));
     }
 
     @Test
+    @DisplayName("updateCategory - Debe retornar FORBIDDEN cuando el usuario no es admin")
     void updateCategory_whenNotAdmin_shouldReturnForbidden() {
-        Category category = new Category(null, "Autos", "Actualizado");
+        // Given
+        Category categoryToUpdate = new Category(null, "Autos", "Descripción actualizada");
         when(authUtils.isCurrentUserAdmin()).thenReturn(false);
 
-        ResponseEntity<Category> response = categoryController.updateCategory(1L, category);
+        // When
+        ResponseEntity<Category> response = categoryController.updateCategory(1L, categoryToUpdate);
 
+        // Then
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(authUtils).isCurrentUserAdmin();
+        verify(categoryService, never()).save(any(Category.class));
     }
 
     @Test
+    @DisplayName("updateCategory - Debe retornar NOT_FOUND cuando el usuario es admin pero la categoría no existe")
     void updateCategory_whenAdminAndNotExists_shouldReturnNotFound() {
-        Category category = new Category(null, "Autos", "Actualizado");
+        // Given
+        Category categoryToUpdate = new Category(null, "Autos", "Descripción actualizada");
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        doThrow(new RuntimeException()).when(categoryService).save(org.mockito.ArgumentMatchers.any(Category.class));
+        when(categoryService.save(any(Category.class))).thenThrow(new RuntimeException("Category not found"));
 
-        ResponseEntity<Category> response = categoryController.updateCategory(99L, category);
+        // When
+        ResponseEntity<Category> response = categoryController.updateCategory(99L, categoryToUpdate);
 
+        // Then
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(authUtils).isCurrentUserAdmin();
+        verify(categoryService).save(any(Category.class));
     }
 
+    // ========== DELETE CATEGORY TESTS ==========
+
     @Test
+    @DisplayName("deleteCategory - Debe eliminar categoría cuando el usuario es admin y existe")
     void deleteCategory_whenAdminAndExists_shouldDeleteAndReturnNoContent() {
+        // Given
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+
+        // When
         ResponseEntity<Void> response = categoryController.deleteCategory(1L);
+
+        // Then
         assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(authUtils).isCurrentUserAdmin();
         verify(categoryService).delete(1L);
     }
 
     @Test
+    @DisplayName("deleteCategory - Debe retornar FORBIDDEN cuando el usuario no es admin")
     void deleteCategory_whenNotAdmin_shouldReturnForbidden() {
+        // Given
         when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+
+        // When
         ResponseEntity<Void> response = categoryController.deleteCategory(1L);
+
+        // Then
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(authUtils).isCurrentUserAdmin();
+        verify(categoryService, never()).delete(anyLong());
     }
 
     @Test
+    @DisplayName("deleteCategory - Debe retornar NOT_FOUND cuando el usuario es admin pero la categoría no existe")
     void deleteCategory_whenAdminAndNotExists_shouldReturnNotFound() {
+        // Given
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        doThrow(new RuntimeException()).when(categoryService).delete(99L);
+        doThrow(new RuntimeException("Category not found")).when(categoryService).delete(99L);
+
+        // When
         ResponseEntity<Void> response = categoryController.deleteCategory(99L);
+
+        // Then
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(authUtils).isCurrentUserAdmin();
+        verify(categoryService).delete(99L);
     }
 }

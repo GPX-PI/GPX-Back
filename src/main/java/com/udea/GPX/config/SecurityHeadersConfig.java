@@ -82,10 +82,10 @@ public class SecurityHeadersConfig {
 
       // Cache Control para endpoints sensibles
       String requestURI = request.getRequestURI();
-      if (requestURI.contains("/api/users/login") ||
+      if (requestURI != null && (requestURI.contains("/api/users/login") ||
           requestURI.contains("/api/users/profile") ||
           requestURI.contains("/oauth2/") ||
-          requestURI.contains("/actuator/")) {
+          requestURI.contains("/actuator/"))) {
 
         response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
         response.setHeader("Pragma", "no-cache");

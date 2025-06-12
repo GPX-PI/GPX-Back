@@ -45,6 +45,9 @@ public class AsyncFileService {
         Files.createDirectories(directory);
       } // Generar nombre único
       String originalFilename = file.getOriginalFilename();
+      if (originalFilename == null) {
+        originalFilename = "unnamed_file";
+      }
       String uniqueFilename = System.currentTimeMillis() + "_" + System.nanoTime() + "_" +
           originalFilename.replaceAll("[^a-zA-Z0-9.]", "_");
 
@@ -175,6 +178,9 @@ public class AsyncFileService {
         CompletableFuture<String> future = processImageAsync(file, targetDirectory);
         String savedPath = future.get(); // Esperar resultado
         result.addSuccess(file.getOriginalFilename(), savedPath);
+      } catch (InterruptedException ie) {
+        Thread.currentThread().interrupt();
+        result.addFailure(file.getOriginalFilename(), "Processing interrupted: " + ie.getMessage());
       } catch (Exception e) {
         result.addFailure(file.getOriginalFilename(), e.getMessage());
       }

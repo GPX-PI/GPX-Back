@@ -105,7 +105,8 @@ class SimpleIntegrationTest {
     // Este test simplemente verifica que no hay errores
     // La funcionalidad real se probará en tests específicos
 
-    // Cleanup TestDataBuilder.clearSecurityContext();
+    // Assert that the security context is not null
+    assertThat(org.springframework.security.core.context.SecurityContextHolder.getContext()).isNotNull();
 
     logger.info("🔐 Security Context helpers funcionan");
   }

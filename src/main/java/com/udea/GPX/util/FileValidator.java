@@ -13,8 +13,8 @@ import java.util.*;
 public class FileValidator {
 
   // Tamaños máximos por tipo de archivo (en bytes)
-  private static final long MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-  private static final long MAX_DOCUMENT_SIZE = 5 * 1024 * 1024; // 5MB
+  private static final long MAX_IMAGE_SIZE = 10L * 1024 * 1024; // 10MB
+  private static final long MAX_DOCUMENT_SIZE = 5L * 1024 * 1024; // 5MB
 
   // Magic numbers (signatures) para tipos de archivo comunes
   private static final Map<String, List<byte[]>> FILE_SIGNATURES = new HashMap<>();

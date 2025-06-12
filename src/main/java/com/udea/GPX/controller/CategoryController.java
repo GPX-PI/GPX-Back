@@ -1,6 +1,5 @@
 package com.udea.gpx.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +8,6 @@ import com.udea.gpx.model.Category;
 import com.udea.gpx.service.CategoryService;
 import com.udea.gpx.util.AuthUtils;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -18,15 +16,13 @@ import java.util.List;
 @RequestMapping("/api/categories")
 public class CategoryController {
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
+    private final AuthUtils authUtils;
 
-    @Autowired
-    private AuthUtils authUtils;
-
-    @SuppressWarnings("unused")
-    @Autowired
-    private HttpServletRequest request;
+    public CategoryController(CategoryService categoryService, AuthUtils authUtils) {
+        this.categoryService = categoryService;
+        this.authUtils = authUtils;
+    }
 
     @GetMapping
     public ResponseEntity<List<Category>> getAllCategories() {

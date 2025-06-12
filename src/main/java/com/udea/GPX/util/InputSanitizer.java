@@ -5,6 +5,7 @@ import java.util.regex.Pattern;
 /**
  * Clase utilitaria para sanitización de inputs básica sin dependencias externas
  * para prevenir ataques XSS, SQL injection y otros.
+ * Optimizada para prevenir vulnerabilidades ReDoS.
  */
 public final class InputSanitizer {
 
@@ -13,16 +14,34 @@ public final class InputSanitizer {
     throw new IllegalStateException("Utility class");
   }
 
-  // Patrones para detectar posibles ataques
-  private static final Pattern SQL_INJECTION_PATTERN = Pattern.compile(
-      "(?i).*(\\b(union|select|insert|delete|drop|create|alter|exec|execute)\\b).*");
-  private static final Pattern XSS_ATTACK_PATTERN = Pattern.compile(
-      "(?i).*(javascript:(?!void\\(0\\))|vbscript:|data:(text/html|.*script)).*");
-
-  private static final Pattern XSS_PATTERN = Pattern.compile(
-      "(?i).*(on\\w+\\s*=|<iframe|<object|<embed|<link|<meta).*");
+  // Patrones optimizados para prevenir ReDoS - sin backtracking exponencial
+  private static final Pattern SEVERE_SQL_INJECTION_PATTERN = Pattern.compile(
+      "(?i)\\b(drop\\s+table|truncate|delete\\s+from)\\b");
+      
+  private static final Pattern SEVERE_XSS_ATTACK_PATTERN = Pattern.compile(
+      "(?i)(data:text/html|data:[^,]*script)");
+      
   private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile(
-      ".*(\\.\\./|\\.\\.\\\\|%2e%2e%2f|%2e%2e\\\\).*");
+      "(\\.\\./|\\.\\.\\\\/|%2e%2e%2f|%2e%2e%5c)");
+
+  // Patrones adicionales para validaciones específicas
+  private static final Pattern EMAIL_PATTERN = Pattern.compile(
+      "^[A-Za-z0-9+_.\\-]+@[A-Za-z0-9\\-]+\\.[A-Za-z0-9\\-.]+$");
+      
+  private static final Pattern NAME_PATTERN = Pattern.compile(
+      "^[\\p{L}\\s'\\-]{1,100}$");
+      
+  private static final Pattern URL_PATTERN = Pattern.compile(
+      "^https?://[A-Za-z0-9.\\-]+(?:/[A-Za-z0-9._/\\-]*)?$");
+      
+  private static final Pattern PHONE_PATTERN = Pattern.compile(
+      "^[0-9\\s()\\+\\-]{1,20}$");
+      
+  private static final Pattern IDENTIFICATION_PATTERN = Pattern.compile(
+      "^[A-Za-z0-9_\\-]{1,50}$");
+      
+  private static final Pattern NUMERIC_WITH_HYPHENS = Pattern.compile(
+      "^[0-9\\-]+$");
 
   /**
    * Sanitiza texto removiendo caracteres peligrosos
@@ -36,30 +55,39 @@ public final class InputSanitizer {
     }
 
     String trimmed = input.trim();
+    
+    // Límite de longitud para prevenir ataques
+    if (trimmed.length() > 10000) {
+      throw new IllegalArgumentException("Input demasiado largo");
+    }
 
     // Check for serious SQL injection patterns that should be rejected
-    if (SQL_INJECTION_PATTERN.matcher(trimmed).matches()) {
+    if (SEVERE_SQL_INJECTION_PATTERN.matcher(trimmed).find()) {
       throw new IllegalArgumentException("Input contiene patrones sospechosos de SQL injection");
-    } // Check for serious XSS attacks that should be rejected
-    if (XSS_ATTACK_PATTERN.matcher(trimmed).matches()) {
+    }
+    
+    // Check for serious XSS attacks that should be rejected
+    if (SEVERE_XSS_ATTACK_PATTERN.matcher(trimmed).find()) {
       throw new IllegalArgumentException("Input contiene patrones sospechosos de XSS");
     }
 
-    if (PATH_TRAVERSAL_PATTERN.matcher(trimmed).matches()) {
+    // Check for javascript: and vbscript: schemes
+    if (trimmed.toLowerCase().contains("javascript:") || trimmed.toLowerCase().contains("vbscript:")) {
+      throw new IllegalArgumentException("Input contiene patrones sospechosos de XSS");
+    }
+
+    if (PATH_TRAVERSAL_PATTERN.matcher(trimmed).find()) {
       throw new IllegalArgumentException("Input contiene patrones de path traversal");
-    } // Clean/sanitize the content (remove tags, scripts, etc.)
+    }
+
+    // Clean/sanitize the content (remove tags, scripts, etc.)
     String sanitized = trimmed
-        .replaceAll("<script[^>]*>.*?</script>", "")
+        .replaceAll("(?i)<script[^>]*+>.*?</script>", "")
         .replaceAll("<[^>]*+>", "")
         .replace("javascript:", "")
         .replace("vbscript:", "")
-        .replaceAll("onload\\s*=", "")
-        .replaceAll("onerror\\s*=", "");
-
-    // Check for remaining XSS patterns after cleaning
-    if (XSS_PATTERN.matcher(sanitized).matches()) {
-      throw new IllegalArgumentException("Input contiene patrones sospechosos de XSS");
-    }
+        .replaceAll("(?i)onload\\s*=", "")
+        .replaceAll("(?i)onerror\\s*=", "");
 
     return sanitized;
   }
@@ -74,6 +102,11 @@ public final class InputSanitizer {
     if (email == null) {
       return null;
     }
+    
+    if (email.length() > 320) { // RFC 5321 limit
+      throw new IllegalArgumentException("Email demasiado largo");
+    }
+    
     String sanitized = sanitizeText(email.toLowerCase().trim());
 
     // Verificar que sanitized no sea null
@@ -81,8 +114,8 @@ public final class InputSanitizer {
       throw new IllegalArgumentException("El email no puede ser procesado");
     }
 
-    // Validación básica de formato de email - domain must have at least one dot
-    if (!sanitized.matches("^[A-Za-z0-9+_.\\-]+@[A-Za-z0-9\\-]+\\.[A-Za-z0-9\\-.]+$")) {
+    // Validación básica de formato de email
+    if (!EMAIL_PATTERN.matcher(sanitized).matches()) {
       throw new IllegalArgumentException("El email debe tener un formato válido");
     }
 
@@ -99,6 +132,7 @@ public final class InputSanitizer {
     if (name == null) {
       return null;
     }
+    
     String sanitized = sanitizeText(name);
 
     // Verificar que sanitized no sea null
@@ -106,9 +140,8 @@ public final class InputSanitizer {
       throw new IllegalArgumentException("El nombre no puede ser procesado");
     }
 
-    // Solo permitir letras, espacios, guiones y apostrofes (incluye caracteres
-    // internacionales)
-    if (!sanitized.matches("^[\\p{L}\\s'-]+$")) {
+    // Solo permitir letras, espacios, guiones y apostrofes (incluye caracteres internacionales)
+    if (!NAME_PATTERN.matcher(sanitized).matches()) {
       throw new IllegalArgumentException("El nombre contiene caracteres no válidos");
     }
 
@@ -126,6 +159,10 @@ public final class InputSanitizer {
       return null;
     }
 
+    if (url.length() > 2048) { // URL length limit
+      throw new IllegalArgumentException("URL demasiado larga");
+    }
+
     String sanitized = sanitizeText(url);
 
     // Verificar que sanitized no sea null
@@ -134,7 +171,7 @@ public final class InputSanitizer {
     }
 
     // Solo permitir HTTP y HTTPS
-    if (!sanitized.matches("^https?://[A-Za-z0-9.-]+(/[A-Za-z0-9./_-]*)?$")) {
+    if (!URL_PATTERN.matcher(sanitized).matches()) {
       throw new IllegalArgumentException("URL no válida o protocolo no permitido");
     }
 
@@ -160,7 +197,7 @@ public final class InputSanitizer {
     }
 
     // Solo permitir números, espacios, guiones, paréntesis y el símbolo +
-    if (!sanitized.matches("^[0-9\\s()+-]+$")) {
+    if (!PHONE_PATTERN.matcher(sanitized).matches()) {
       throw new IllegalArgumentException("El teléfono contiene caracteres no válidos");
     }
 
@@ -185,14 +222,13 @@ public final class InputSanitizer {
       throw new IllegalArgumentException("La identificación no puede ser procesada");
     }
 
-    // Allow alphanumeric with underscores and hyphens, but reject purely numeric
-    // with hyphens
-    if (!sanitized.matches("^[A-Za-z0-9_-]+$")) {
+    // Allow alphanumeric with underscores and hyphens, but reject purely numeric with hyphens
+    if (!IDENTIFICATION_PATTERN.matcher(sanitized).matches()) {
       throw new IllegalArgumentException("La identificación contiene caracteres no válidos");
     }
 
     // Reject purely numeric strings with hyphens (like SSN format)
-    if (sanitized.matches("^[0-9-]+$") && sanitized.contains("-")) {
+    if (NUMERIC_WITH_HYPHENS.matcher(sanitized).matches() && sanitized.contains("-")) {
       throw new IllegalArgumentException("La identificación contiene caracteres no válidos");
     }
 

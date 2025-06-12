@@ -1,6 +1,5 @@
 package com.udea.gpx.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,14 +18,16 @@ import java.util.Map;
 @RequestMapping("/api/oauth2")
 public class OAuth2Controller {
 
-    @Autowired
-    private OAuth2Service oauth2Service;
+    private final OAuth2Service oauth2Service;
+    private final JwtUtil jwtUtil;
+    private final String frontendRedirectUrl;
 
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Value("${app.oauth2.frontend-redirect-url:https://gpx-back.onrender.com/login/oauth2-redirect}")
-    private String frontendRedirectUrl;
+    public OAuth2Controller(OAuth2Service oauth2Service, JwtUtil jwtUtil,
+            @Value("${app.oauth2.frontend-redirect-url:https://gpx-back.onrender.com/login/oauth2-redirect}") String frontendRedirectUrl) {
+        this.oauth2Service = oauth2Service;
+        this.jwtUtil = jwtUtil;
+        this.frontendRedirectUrl = frontendRedirectUrl;
+    }
 
     @GetMapping("/success")
     public RedirectView oauth2LoginSuccess(@AuthenticationPrincipal OAuth2User oauth2User) {

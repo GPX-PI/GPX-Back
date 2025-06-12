@@ -1,6 +1,5 @@
 package com.udea.gpx.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -10,7 +9,6 @@ import com.udea.gpx.model.Stage;
 import com.udea.gpx.model.User;
 import com.udea.gpx.service.StageService;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -20,12 +18,11 @@ import java.util.Optional;
 @RequestMapping("/api/stages")
 public class StageController {
 
-    @Autowired
-    private StageService stageService;
+    private final StageService stageService;
 
-    @SuppressWarnings("unused")
-    @Autowired
-    private HttpServletRequest request;
+    public StageController(StageService stageService) {
+        this.stageService = stageService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Stage>> getAllStages() {

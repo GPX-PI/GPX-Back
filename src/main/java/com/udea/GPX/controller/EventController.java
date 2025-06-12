@@ -1,6 +1,5 @@
 package com.udea.gpx.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,13 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import jakarta.servlet.http.HttpServletRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
@@ -35,25 +32,26 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/events")
 @Tag(name = "Eventos", description = "Gestión de eventos de carreras gpx")
 public class EventController {
+    private final EventService eventService;
+    private final AuthUtils authUtils;
+    private final FileTransactionService fileTransactionService;
 
-    @Autowired
-    private EventService eventService;
+    // Constants for response keys
+    private static final String KEY_ERROR = "error";
+    private static final String KEY_ERROR_TYPE = "errorType";
+    private static final String KEY_MESSAGE = "message";
+    private static final String KEY_EVENT = "event";
 
-    @Autowired
-    private AuthUtils authUtils;
-
-    @Autowired
-    private FileTransactionService fileTransactionService;
-
-    @SuppressWarnings("unused")
-    @Autowired
-    private HttpServletRequest request;
+    public EventController(EventService eventService, AuthUtils authUtils,
+            FileTransactionService fileTransactionService) {
+        this.eventService = eventService;
+        this.authUtils = authUtils;
+        this.fileTransactionService = fileTransactionService;
+    }
 
     @GetMapping
     @Operation(summary = "Listar eventos con paginación", description = "Obtiene una lista paginada de todos los eventos disponibles")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Lista de eventos obtenida exitosamente", content = @Content(schema = @Schema(implementation = Page.class)))
-    })
+    @ApiResponse(responseCode = "200", description = "Lista de eventos obtenida exitosamente", content = @Content(schema = @Schema(implementation = Page.class)))
     public ResponseEntity<Page<Event>> getAllEvents(
             @Parameter(description = "Número de página (0-based)", example = "0") @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "Tamaño de página", example = "10") @RequestParam(defaultValue = "10") int size,
@@ -88,11 +86,9 @@ public class EventController {
     @PostMapping
     @Operation(summary = "Crear nuevo evento", description = "Crea un nuevo evento de carrera. Solo accesible para administradores.")
     @SecurityRequirement(name = "Bearer Authentication")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Evento creado exitosamente", content = @Content(schema = @Schema(implementation = Event.class))),
-            @ApiResponse(responseCode = "403", description = "Acceso denegado - Solo administradores"),
-            @ApiResponse(responseCode = "400", description = "Datos del evento inválidos")
-    })
+    @ApiResponse(responseCode = "201", description = "Evento creado exitosamente", content = @Content(schema = @Schema(implementation = Event.class)))
+    @ApiResponse(responseCode = "403", description = "Acceso denegado - Solo administradores")
+    @ApiResponse(responseCode = "400", description = "Datos del evento inválidos")
     public ResponseEntity<Event> createEvent(
             @Parameter(description = "Datos del evento a crear", required = true) @Valid @RequestBody Event event) {
         if (!authUtils.isCurrentUserAdmin()) {
@@ -125,7 +121,8 @@ public class EventController {
 
     @GetMapping("/{id}/categories")
     public ResponseEntity<List<EventCategory>> getCategoriesByEventId(@PathVariable Long id) {
-        return ResponseEntity.ok(eventService.getCategoriesByEventId(id));
+        List<EventCategory> categories = eventService.getCategoriesByEventId(id);
+        return ResponseEntity.ok(categories);
     }
 
     // Endpoint para subir imagen de evento con archivo
@@ -134,15 +131,14 @@ public class EventController {
             @PathVariable Long id,
             @RequestParam(value = "eventPhoto", required = false) MultipartFile eventPhoto,
             @RequestParam(value = "event", required = false) String eventJson) {
-
         if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         if (eventPhoto == null || eventPhoto.isEmpty()) {
             Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Archivo de imagen requerido");
-            errorResponse.put("errorType", "VALIDATION_ERROR");
+            errorResponse.put(KEY_ERROR, "Archivo de imagen requerido");
+            errorResponse.put(KEY_ERROR_TYPE, "VALIDATION_ERROR");
             return ResponseEntity.badRequest().body(errorResponse);
         }
 
@@ -156,14 +152,13 @@ public class EventController {
 
         // Actualizar imagen usando el servicio transaccional
         String newPicturePath = fileTransactionService.updateFileTransactional(
-                eventPhoto, currentEvent.getPicture(), "image", "uploads/events/");
-
-        // Actualizar evento en base de datos
+                eventPhoto, currentEvent.getPicture(), "image", "uploads/events/"); // Actualizar evento en base de
+                                                                                    // datos
         Event updatedEvent = eventService.updateEventPictureUrl(id, newPicturePath);
 
         Map<String, Object> response = new HashMap<>();
-        response.put("message", "Imagen de evento actualizada exitosamente");
-        response.put("event", updatedEvent);
+        response.put(KEY_MESSAGE, "Imagen de evento actualizada exitosamente");
+        response.put(KEY_EVENT, updatedEvent);
 
         return ResponseEntity.ok(response);
     }

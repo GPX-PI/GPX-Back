@@ -46,33 +46,33 @@ class AppConstantsTest {
     // ========== FILES CONSTANTS TESTS ==========
 
     @Test
-    @DisplayName("Files constants should have correct values")
-    void filesConstants_ShouldHaveCorrectValues() {
-        // File sizes
-        assertEquals(10 * 1024 * 1024, AppConstants.Files.MAX_FILE_SIZE_BYTES);
-        assertEquals(5 * 1024 * 1024, AppConstants.Files.MAX_EVENT_IMAGE_SIZE_BYTES);
+    @DisplayName("Files - Constantes de tamaño deben estar definidas correctamente")
+    void testFilesSizeConstants() {
+        assertEquals(10L * 1024 * 1024, AppConstants.Files.MAX_FILE_SIZE_BYTES);
+        assertEquals(5L * 1024 * 1024, AppConstants.Files.MAX_EVENT_IMAGE_SIZE_BYTES);
+    }
 
-        // Directories
+    @Test
+    @DisplayName("Files - Directorios de upload deben estar definidos")
+    void testFilesDirectoryConstants() {
         assertEquals("uploads/", AppConstants.Files.UPLOADS_DIR);
         assertEquals("uploads/events/", AppConstants.Files.EVENTS_UPLOAD_DIR);
     }
 
     @Test
-    @DisplayName("Files allowed image types should be comprehensive")
-    void filesAllowedImageTypes_ShouldBeComprehensive() {
-        // Given
-        String[] expectedTypes = { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp" };
+    @DisplayName("Files - Tipos MIME permitidos para imágenes")
+    void testAllowedImageTypes() {
+        String[] expected = { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp" };
+        assertArrayEquals(expected, AppConstants.Files.ALLOWED_IMAGE_TYPES);
+        assertEquals(5, AppConstants.Files.ALLOWED_IMAGE_TYPES.length);
+    }
 
-        // When
-        String[] actualTypes = AppConstants.Files.ALLOWED_IMAGE_TYPES;
-
-        // Then
-        assertNotNull(actualTypes);
-        assertEquals(expectedTypes.length, actualTypes.length);
-
-        for (String expectedType : expectedTypes) {
-            assertArrayContains(actualTypes, expectedType);
-        }
+    @Test
+    @DisplayName("Files - Extensiones válidas para imágenes")
+    void testValidImageExtensions() {
+        String[] expected = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+        assertArrayEquals(expected, AppConstants.Files.VALID_IMAGE_EXTENSIONS);
+        assertEquals(5, AppConstants.Files.VALID_IMAGE_EXTENSIONS.length);
     }
 
     @Test
@@ -90,24 +90,6 @@ class AppConstantsTest {
 
         for (String expectedType : expectedTypes) {
             assertArrayContains(actualTypes, expectedType);
-        }
-    }
-
-    @Test
-    @DisplayName("Files valid image extensions should match types")
-    void filesValidImageExtensions_ShouldMatchTypes() {
-        // Given
-        String[] expectedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-
-        // When
-        String[] actualExtensions = AppConstants.Files.VALID_IMAGE_EXTENSIONS;
-
-        // Then
-        assertNotNull(actualExtensions);
-        assertEquals(expectedExtensions.length, actualExtensions.length);
-
-        for (String expectedExt : expectedExtensions) {
-            assertArrayContains(actualExtensions, expectedExt);
         }
     }
 
@@ -132,16 +114,18 @@ class AppConstantsTest {
     // ========== VALIDATION CONSTANTS TESTS ==========
 
     @Test
-    @DisplayName("Validation constants should have reasonable limits")
-    void validationConstants_ShouldHaveReasonableLimits() {
-        // String length limits
+    @DisplayName("Validation - Longitudes máximas deben estar definidas")
+    void testValidationLengthConstants() {
         assertEquals(100, AppConstants.Validation.MAX_NAME_LENGTH);
         assertEquals(100, AppConstants.Validation.MAX_TEAM_NAME_LENGTH);
         assertEquals(20, AppConstants.Validation.MAX_VEHICLE_PLATES_LENGTH);
         assertEquals(50, AppConstants.Validation.MAX_SOAT_LENGTH);
         assertEquals(100, AppConstants.Validation.MAX_CATEGORY_NAME_LENGTH);
+    }
 
-        // Geographic coordinates
+    @Test
+    @DisplayName("Validation - Límites de coordenadas geográficas")
+    void testGeoCoordinatesLimits() {
         assertEquals(-90.0, AppConstants.Validation.MIN_LATITUDE);
         assertEquals(90.0, AppConstants.Validation.MAX_LATITUDE);
         assertEquals(-180.0, AppConstants.Validation.MIN_LONGITUDE);
@@ -165,26 +149,30 @@ class AppConstantsTest {
     // ========== SECURITY CONSTANTS TESTS ==========
 
     @Test
-    @DisplayName("Security auth providers should be defined")
-    void securityAuthProviders_ShouldBeDefined() {
+    @DisplayName("Security - Proveedores de autenticación")
+    void testAuthProviders() {
         assertEquals("LOCAL", AppConstants.Security.AUTH_PROVIDER_LOCAL);
         assertEquals("GOOGLE", AppConstants.Security.AUTH_PROVIDER_GOOGLE);
     }
 
     @Test
-    @DisplayName("Security production origins should be HTTPS")
-    void securityProductionOrigins_ShouldBeHttps() {
-        // When
-        String[] origins = AppConstants.Security.PRODUCTION_ORIGINS;
+    @DisplayName("Security - Orígenes de producción CORS")
+    void testProductionOrigins() {
+        String[] expected = {
+                "https://project-gpx.vercel.app",
+                "https://gpx-racing.com",
+                "https://gpx-back.onrender.com"
+        };
+        assertArrayEquals(expected, AppConstants.Security.PRODUCTION_ORIGINS);
+        assertEquals(3, AppConstants.Security.PRODUCTION_ORIGINS.length);
+    }
 
-        // Then
-        assertNotNull(origins);
-        assertTrue(origins.length > 0);
-
-        for (String origin : origins) {
-            assertTrue(origin.startsWith("https://"),
-                    "Production origin should use HTTPS: " + origin);
-        }
+    @Test
+    @DisplayName("Security - Métodos HTTP permitidos")
+    void testAllowedMethods() {
+        String[] expected = { "GET", "POST", "PUT", "DELETE", "OPTIONS" };
+        assertArrayEquals(expected, AppConstants.Security.ALLOWED_METHODS);
+        assertEquals(5, AppConstants.Security.ALLOWED_METHODS.length);
     }
 
     @Test
@@ -236,16 +224,19 @@ class AppConstantsTest {
     // ========== MESSAGES CONSTANTS TESTS ==========
 
     @Test
-    @DisplayName("Messages should be in Spanish and descriptive")
-    void messages_ShouldBeInSpanishAndDescriptive() {
-        // Entity not found messages
+    @DisplayName("Messages - Mensajes de entidades no encontradas")
+    void testNotFoundMessages() {
         assertEquals("Usuario no encontrado", AppConstants.Messages.USUARIO_NO_ENCONTRADO);
         assertEquals("Vehículo no encontrado", AppConstants.Messages.VEHICULO_NO_ENCONTRADO);
         assertEquals("Evento no encontrado", AppConstants.Messages.EVENTO_NO_ENCONTRADO);
         assertEquals("Etapa no encontrada", AppConstants.Messages.ETAPA_NO_ENCONTRADA);
         assertEquals("Categoría no encontrada", AppConstants.Messages.CATEGORIA_NO_ENCONTRADA);
         assertEquals("Resultado no encontrado", AppConstants.Messages.RESULTADO_NO_ENCONTRADO);
+    }
 
+    @Test
+    @DisplayName("Messages should be in Spanish and descriptive")
+    void messages_ShouldBeInSpanishAndDescriptive() {
         // Validation messages
         assertEquals("El email ya está en uso", AppConstants.Messages.EMAIL_YA_EN_USO);
         assertEquals("El archivo está vacío", AppConstants.Messages.ARCHIVO_VACIO);
@@ -266,8 +257,8 @@ class AppConstantsTest {
     // ========== API CONSTANTS TESTS ==========
 
     @Test
-    @DisplayName("API paths should be consistent")
-    void apiPaths_ShouldBeConsistent() {
+    @DisplayName("Api - Rutas base de la API")
+    void testApiPaths() {
         assertEquals("/api", AppConstants.Api.BASE_PATH);
         assertEquals("/api/users", AppConstants.Api.USERS_PATH);
         assertEquals("/api/events", AppConstants.Api.EVENTS_PATH);
@@ -275,14 +266,6 @@ class AppConstantsTest {
         assertEquals("/api/categories", AppConstants.Api.CATEGORIES_PATH);
         assertEquals("/api/stages", AppConstants.Api.STAGES_PATH);
         assertEquals("/api/stageresults", AppConstants.Api.STAGE_RESULTS_PATH);
-
-        // All paths should start with base path
-        assertTrue(AppConstants.Api.USERS_PATH.startsWith(AppConstants.Api.BASE_PATH));
-        assertTrue(AppConstants.Api.EVENTS_PATH.startsWith(AppConstants.Api.BASE_PATH));
-        assertTrue(AppConstants.Api.VEHICLES_PATH.startsWith(AppConstants.Api.BASE_PATH));
-        assertTrue(AppConstants.Api.CATEGORIES_PATH.startsWith(AppConstants.Api.BASE_PATH));
-        assertTrue(AppConstants.Api.STAGES_PATH.startsWith(AppConstants.Api.BASE_PATH));
-        assertTrue(AppConstants.Api.STAGE_RESULTS_PATH.startsWith(AppConstants.Api.BASE_PATH));
     }
 
     @Test
@@ -304,8 +287,8 @@ class AppConstantsTest {
     // ========== CONFIG CONSTANTS TESTS ==========
 
     @Test
-    @DisplayName("Config profiles should be standard Spring profiles")
-    void configProfiles_ShouldBeStandardSpringProfiles() {
+    @DisplayName("Config - Perfiles de Spring")
+    void testSpringProfiles() {
         assertEquals("prod", AppConstants.Config.PROFILE_PRODUCTION);
         assertEquals("dev", AppConstants.Config.PROFILE_DEVELOPMENT);
         assertEquals("test", AppConstants.Config.PROFILE_TEST);
@@ -334,6 +317,14 @@ class AppConstantsTest {
     }
 
     // ========== LOGGING CONSTANTS TESTS ==========
+
+    @Test
+    @DisplayName("Logging - Mensajes de operaciones")
+    void testLoggingOperationMessages() {
+        assertEquals("Iniciando operación: {}", AppConstants.Logging.OPERATION_START);
+        assertEquals("Operación completada exitosamente: {}", AppConstants.Logging.OPERATION_SUCCESS);
+        assertEquals("Error en operación {}: {}", AppConstants.Logging.OPERATION_ERROR);
+    }
 
     @Test
     @DisplayName("Logging templates should contain placeholders")

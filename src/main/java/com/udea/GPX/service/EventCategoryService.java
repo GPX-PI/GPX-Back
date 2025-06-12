@@ -1,6 +1,5 @@
 package com.udea.gpx.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.udea.gpx.model.EventCategory;
@@ -11,8 +10,11 @@ import java.util.List;
 @Service
 public class EventCategoryService {
 
-    @Autowired
-    private IEventCategoryRepository eventCategoryRepository;
+    private final IEventCategoryRepository eventCategoryRepository;
+
+    public EventCategoryService(IEventCategoryRepository eventCategoryRepository) {
+        this.eventCategoryRepository = eventCategoryRepository;
+    }
 
     public List<EventCategory> getAll() {
         return eventCategoryRepository.findAll();

@@ -17,17 +17,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.mockito.MockitoAnnotations;
+
 import com.udea.gpx.controller.VehicleController;
 import com.udea.gpx.dto.VehicleRequestDTO;
 import com.udea.gpx.model.Category;
 import com.udea.gpx.model.User;
 import com.udea.gpx.model.Vehicle;
+import com.udea.gpx.repository.IEventVehicleRepository;
+import com.udea.gpx.repository.IStageResultRepository;
+import com.udea.gpx.service.CategoryService;
+import com.udea.gpx.service.UserService;
 import com.udea.gpx.service.VehicleService;
 import com.udea.gpx.util.AuthUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,28 +43,28 @@ class VehicleControllerTests {
     private VehicleService vehicleService;
 
     @Mock
+    private UserService userService;
+
+    @Mock
+    private CategoryService categoryService;
+
+    @Mock
+    private IEventVehicleRepository eventVehicleRepository;
+
+    @Mock
+    private IStageResultRepository stageResultRepository;
+
+    @Mock
     private HttpServletRequest request;
+
+    @Mock
+    private AuthUtils authUtils;
 
     @Mock
     private SecurityContext securityContext;
 
     @Mock
     private Authentication authentication;
-
-    @Mock
-    private AuthUtils authUtils;
-
-    @Mock
-    private com.udea.gpx.repository.IEventVehicleRepository eventVehicleRepository;
-
-    @Mock
-    private com.udea.gpx.repository.IStageResultRepository stageResultRepository;
-
-    @Mock
-    private com.udea.gpx.service.UserService userService;
-
-    @Mock
-    private com.udea.gpx.service.CategoryService categoryService;
 
     @InjectMocks
     private VehicleController vehicleController;
@@ -69,15 +73,28 @@ class VehicleControllerTests {
         User user = new User();
         user.setId(id);
         user.setAdmin(admin);
+        user.setEmail("user" + id + "@test.com");
+        user.setFirstName("User " + id);
         return user;
     }
 
     private Vehicle buildVehicle(Long id, Long userId, boolean admin) {
         Vehicle vehicle = new Vehicle();
         vehicle.setId(id);
+        vehicle.setName("Vehicle " + id);
+        vehicle.setSoat("SOAT" + id);
+        vehicle.setPlates("ABC" + id);
+
         User user = buildUser(userId, admin);
         vehicle.setUser(user);
         return vehicle;
+    }
+
+    private Category buildCategory(Long id) {
+        Category category = new Category();
+        category.setId(id);
+        category.setName("Category " + id);
+        return category;
     }
 
     private VehicleRequestDTO buildVehicleRequestDTO(Long categoryId) {
@@ -91,15 +108,13 @@ class VehicleControllerTests {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        // Configurar SecurityContext
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
-        ReflectionTestUtils.setField(vehicleController, "request", request);
-        ReflectionTestUtils.setField(vehicleController, "authUtils", authUtils);
 
-        // Mock repository responses to avoid NullPointerException
-        when(eventVehicleRepository.findAll()).thenReturn(java.util.Collections.emptyList());
-        when(stageResultRepository.findAll()).thenReturn(java.util.Collections.emptyList());
+        // Mock repository responses para evitar NullPointerException
+        when(eventVehicleRepository.findAll()).thenReturn(Collections.emptyList());
+        when(stageResultRepository.findAll()).thenReturn(Collections.emptyList());
     }
 
     @Test
@@ -108,6 +123,7 @@ class VehicleControllerTests {
         User adminUser = buildUser(1L, true);
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+
         List<Vehicle> vehicles = Arrays.asList(
                 buildVehicle(1L, 10L, false),
                 buildVehicle(2L, 20L, false));
@@ -128,6 +144,7 @@ class VehicleControllerTests {
         // Arrange
         User nonAdminUser = buildUser(1L, false);
         when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
 
         // Act
         ResponseEntity<List<Vehicle>> response = vehicleController.getAllVehicles();
@@ -143,9 +160,10 @@ class VehicleControllerTests {
         Long vehicleId = 1L;
         User adminUser = buildUser(99L, true);
         Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
+
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(authUtils.isCurrentUserOrAdmin(anyLong())).thenReturn(true);
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(true);
 
         // Act
         ResponseEntity<Vehicle> response = vehicleController.getVehicleById(vehicleId);
@@ -163,9 +181,10 @@ class VehicleControllerTests {
         Long vehicleId = 1L;
         User ownerUser = buildUser(10L, false);
         Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
+
         when(authentication.getPrincipal()).thenReturn(ownerUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(authUtils.isCurrentUserOrAdmin(anyLong())).thenReturn(true);
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(true);
 
         // Act
         ResponseEntity<Vehicle> response = vehicleController.getVehicleById(vehicleId);
@@ -183,8 +202,10 @@ class VehicleControllerTests {
         Long vehicleId = 1L;
         User otherUser = buildUser(20L, false);
         Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
+
         when(authentication.getPrincipal()).thenReturn(otherUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(false);
 
         // Act
         ResponseEntity<Vehicle> response = vehicleController.getVehicleById(vehicleId);
@@ -198,6 +219,7 @@ class VehicleControllerTests {
         // Arrange
         Long vehicleId = 1L;
         User adminUser = buildUser(99L, true);
+
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.empty());
 
@@ -213,13 +235,13 @@ class VehicleControllerTests {
     void createVehicle_shouldReturnCreated() {
         // Arrange
         User ownerUser = buildUser(10L, false);
-        Vehicle vehicle = buildVehicle(1L, 10L, false);
+        Vehicle createdVehicle = buildVehicle(1L, 10L, false);
         VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
-        Category category = new Category();
-        category.setId(1L);
+        Category category = buildCategory(1L);
+
         when(authentication.getPrincipal()).thenReturn(ownerUser);
         when(categoryService.getCategoryById(1L)).thenReturn(category);
-        when(vehicleService.createVehicle(any(Vehicle.class))).thenReturn(vehicle);
+        when(vehicleService.createVehicle(any(Vehicle.class))).thenReturn(createdVehicle);
 
         // Act
         ResponseEntity<Vehicle> response = vehicleController.createVehicle(vehicleDTO);
@@ -228,7 +250,23 @@ class VehicleControllerTests {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         Vehicle responseBody = response.getBody();
         assertNotNull(responseBody);
-        assertEquals(vehicle.getId(), responseBody.getId());
+        assertEquals(createdVehicle.getId(), responseBody.getId());
+    }
+
+    @Test
+    void createVehicle_whenCategoryNotFound_shouldReturnBadRequest() {
+        // Arrange
+        User ownerUser = buildUser(10L, false);
+        VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
+
+        when(authentication.getPrincipal()).thenReturn(ownerUser);
+        when(categoryService.getCategoryById(1L)).thenReturn(null);
+
+        // Act
+        ResponseEntity<Vehicle> response = vehicleController.createVehicle(vehicleDTO);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
@@ -239,13 +277,13 @@ class VehicleControllerTests {
         Vehicle existingVehicle = buildVehicle(vehicleId, 10L, false);
         Vehicle updatedVehicle = buildVehicle(vehicleId, 10L, false);
         VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
-        Category category = new Category();
-        category.setId(1L);
+        Category category = buildCategory(1L);
+
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(existingVehicle));
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(true);
         when(categoryService.getCategoryById(1L)).thenReturn(category);
-        when(vehicleService.updateVehicle(vehicleId, existingVehicle)).thenReturn(updatedVehicle);
-        when(authUtils.isCurrentUserOrAdmin(anyLong())).thenReturn(true);
+        when(vehicleService.updateVehicle(eq(vehicleId), any(Vehicle.class))).thenReturn(updatedVehicle);
 
         // Act
         ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, vehicleDTO);
@@ -265,13 +303,13 @@ class VehicleControllerTests {
         Vehicle existingVehicle = buildVehicle(vehicleId, 10L, false);
         Vehicle updatedVehicle = buildVehicle(vehicleId, 10L, false);
         VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
-        Category category = new Category();
-        category.setId(1L);
+        Category category = buildCategory(1L);
+
         when(authentication.getPrincipal()).thenReturn(ownerUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(existingVehicle));
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(true);
         when(categoryService.getCategoryById(1L)).thenReturn(category);
-        when(vehicleService.updateVehicle(vehicleId, existingVehicle)).thenReturn(updatedVehicle);
-        when(authUtils.isCurrentUserOrAdmin(anyLong())).thenReturn(true);
+        when(vehicleService.updateVehicle(eq(vehicleId), any(Vehicle.class))).thenReturn(updatedVehicle);
 
         // Act
         ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, vehicleDTO);
@@ -290,8 +328,10 @@ class VehicleControllerTests {
         User otherUser = buildUser(20L, false);
         Vehicle existingVehicle = buildVehicle(vehicleId, 10L, false);
         VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
+
         when(authentication.getPrincipal()).thenReturn(otherUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(existingVehicle));
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(false);
 
         // Act
         ResponseEntity<Vehicle> response = vehicleController.updateVehicle(vehicleId, vehicleDTO);
@@ -306,6 +346,7 @@ class VehicleControllerTests {
         Long vehicleId = 1L;
         User adminUser = buildUser(99L, true);
         VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
+
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.empty());
 
@@ -322,16 +363,22 @@ class VehicleControllerTests {
         // Arrange
         Long categoryId = 1L;
         User adminUser = buildUser(1L, true);
+        Category category = buildCategory(categoryId);
+
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        Category category = new Category();
-        category.setId(categoryId);
-        List<Vehicle> vehicles = Arrays.asList(
+
+        List<Vehicle> allVehicles = Arrays.asList(
                 buildVehicle(1L, 10L, false),
-                buildVehicle(2L, 20L, false));
-        vehicles.get(0).setCategory(category);
-        vehicles.get(1).setCategory(category);
-        when(vehicleService.getAllVehicles()).thenReturn(vehicles);
+                buildVehicle(2L, 20L, false),
+                buildVehicle(3L, 30L, false));
+
+        // Asignar categorías
+        allVehicles.get(0).setCategory(category);
+        allVehicles.get(1).setCategory(category);
+        allVehicles.get(2).setCategory(buildCategory(2L)); // Diferente categoría
+
+        when(vehicleService.getAllVehicles()).thenReturn(allVehicles);
 
         // Act
         ResponseEntity<List<Vehicle>> response = vehicleController.getVehiclesByCategory(categoryId);
@@ -340,7 +387,7 @@ class VehicleControllerTests {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         List<Vehicle> responseBody = response.getBody();
         assertNotNull(responseBody);
-        assertEquals(2, responseBody.size());
+        assertEquals(2, responseBody.size()); // Solo 2 vehículos de la categoría 1
     }
 
     @Test
@@ -348,7 +395,9 @@ class VehicleControllerTests {
         // Arrange
         Long categoryId = 1L;
         User nonAdminUser = buildUser(1L, false);
+
         when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
 
         // Act
         ResponseEntity<List<Vehicle>> response = vehicleController.getVehiclesByCategory(categoryId);
@@ -363,12 +412,16 @@ class VehicleControllerTests {
         // Arrange
         Long userId = 10L;
         User adminUser = buildUser(99L, true);
+
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        List<Vehicle> vehicles = Arrays.asList(
-                buildVehicle(1L, userId, false),
-                buildVehicle(2L, userId, false));
         when(authentication.getPrincipal()).thenReturn(adminUser);
-        when(vehicleService.getAllVehicles()).thenReturn(vehicles);
+
+        List<Vehicle> allVehicles = Arrays.asList(
+                buildVehicle(1L, userId, false),
+                buildVehicle(2L, userId, false),
+                buildVehicle(3L, 20L, false)); // Diferente usuario
+
+        when(vehicleService.getAllVehicles()).thenReturn(allVehicles);
 
         // Act
         ResponseEntity<List<Vehicle>> response = vehicleController.getVehiclesByUser(userId);
@@ -377,7 +430,7 @@ class VehicleControllerTests {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         List<Vehicle> responseBody = response.getBody();
         assertNotNull(responseBody);
-        assertEquals(2, responseBody.size());
+        assertEquals(2, responseBody.size()); // Solo 2 vehículos del usuario 10
     }
 
     @Test
@@ -385,12 +438,16 @@ class VehicleControllerTests {
         // Arrange
         Long userId = 10L;
         User ownerUser = buildUser(userId, false);
+
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        List<Vehicle> vehicles = Arrays.asList(
-                buildVehicle(1L, userId, false),
-                buildVehicle(2L, userId, false));
         when(authentication.getPrincipal()).thenReturn(ownerUser);
-        when(vehicleService.getAllVehicles()).thenReturn(vehicles);
+
+        List<Vehicle> allVehicles = Arrays.asList(
+                buildVehicle(1L, userId, false),
+                buildVehicle(2L, userId, false),
+                buildVehicle(3L, 20L, false)); // Diferente usuario
+
+        when(vehicleService.getAllVehicles()).thenReturn(allVehicles);
 
         // Act
         ResponseEntity<List<Vehicle>> response = vehicleController.getVehiclesByUser(userId);
@@ -399,7 +456,7 @@ class VehicleControllerTests {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         List<Vehicle> responseBody = response.getBody();
         assertNotNull(responseBody);
-        assertEquals(2, responseBody.size());
+        assertEquals(2, responseBody.size()); // Solo 2 vehículos del usuario 10
     }
 
     @Test
@@ -407,7 +464,9 @@ class VehicleControllerTests {
         // Arrange
         Long userId = 10L;
         User otherUser = buildUser(20L, false);
+
         when(authentication.getPrincipal()).thenReturn(otherUser);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(false);
 
         // Act
         ResponseEntity<List<Vehicle>> response = vehicleController.getVehiclesByUser(userId);
@@ -423,9 +482,10 @@ class VehicleControllerTests {
         Long vehicleId = 1L;
         User adminUser = buildUser(99L, true);
         Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
+
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(authUtils.isCurrentUserOrAdmin(anyLong())).thenReturn(true);
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(true);
 
         // Act
         ResponseEntity<?> response = vehicleController.deleteVehicle(vehicleId);
@@ -441,9 +501,10 @@ class VehicleControllerTests {
         Long vehicleId = 1L;
         User ownerUser = buildUser(10L, false);
         Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
+
         when(authentication.getPrincipal()).thenReturn(ownerUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(authUtils.isCurrentUserOrAdmin(anyLong())).thenReturn(true);
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(true);
 
         // Act
         ResponseEntity<?> response = vehicleController.deleteVehicle(vehicleId);
@@ -459,8 +520,10 @@ class VehicleControllerTests {
         Long vehicleId = 1L;
         User otherUser = buildUser(20L, false);
         Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
+
         when(authentication.getPrincipal()).thenReturn(otherUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
+        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(false);
 
         // Act
         ResponseEntity<?> response = vehicleController.deleteVehicle(vehicleId);
@@ -475,6 +538,7 @@ class VehicleControllerTests {
         // Arrange
         Long vehicleId = 1L;
         User adminUser = buildUser(99L, true);
+
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.empty());
 

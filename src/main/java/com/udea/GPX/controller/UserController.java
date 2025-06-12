@@ -1,6 +1,7 @@
 package com.udea.gpx.controller;
 
 import com.udea.gpx.dto.AuthResponseDTO;
+import com.udea.gpx.exception.InternalServerException;
 import com.udea.gpx.model.User;
 import com.udea.gpx.service.FileTransactionService;
 import com.udea.gpx.service.UserService;
@@ -379,6 +380,10 @@ public class UserController {
         } catch (IllegalArgumentException e) {
             // Crear una respuesta más informativa para errores de validación
             return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage(), VALIDATION_ERROR));
+        } catch (InternalServerException e) {
+            // Manejar errores internos específicamente
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse(INTERNAL_SERVER_ERROR_MSG, INTERNAL_ERROR));
         } catch (RuntimeException e) {
             if (e.getMessage().contains(USER_NOT_FOUND_MSG)) {
                 return ResponseEntity.notFound().build();

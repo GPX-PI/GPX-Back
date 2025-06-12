@@ -1,6 +1,5 @@
 package com.udea.gpx.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +24,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.Map;
 import java.util.HashMap;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -33,27 +31,36 @@ import java.util.Optional;
 @RequestMapping("/api/vehicles")
 public class VehicleController {
 
-    @Autowired
-    private VehicleService vehicleService;
+    private final VehicleService vehicleService;
+    private final UserService userService;
+    private final CategoryService categoryService;
+    private final IEventVehicleRepository eventVehicleRepository;
+    private final IStageResultRepository stageResultRepository;
+    private final HttpServletRequest request;
+    private final AuthUtils authUtils;
 
-    @Autowired
-    private UserService userService;
+    // Constants for response keys
+    private static final String KEY_ERROR = "error";
+    private static final String KEY_MESSAGE = "message";
+    private static final String KEY_VEHICLE_NAME = "vehicleName";
 
-    @Autowired
-    private CategoryService categoryService;
-
-    @Autowired
-    private IEventVehicleRepository eventVehicleRepository;
-
-    @Autowired
-    private IStageResultRepository stageResultRepository;
-
-    @SuppressWarnings("unused")
-    @Autowired
-    private HttpServletRequest request;
-
-    @Autowired
-    private AuthUtils authUtils;
+    // Constructor injection - reemplaza todos los @Autowired
+    public VehicleController(
+            VehicleService vehicleService,
+            UserService userService,
+            CategoryService categoryService,
+            IEventVehicleRepository eventVehicleRepository,
+            IStageResultRepository stageResultRepository,
+            HttpServletRequest request,
+            AuthUtils authUtils) {
+        this.vehicleService = vehicleService;
+        this.userService = userService;
+        this.categoryService = categoryService;
+        this.eventVehicleRepository = eventVehicleRepository;
+        this.stageResultRepository = stageResultRepository;
+        this.request = request;
+        this.authUtils = authUtils;
+    }
 
     /**
      * Obtiene el usuario autenticado, manejando tanto autenticación local como
@@ -63,9 +70,9 @@ public class VehicleController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof User) {
+        if (principal instanceof User user) {
             // Autenticación local - el principal ya es un User
-            return (User) principal;
+            return user;
         } else if (principal instanceof OAuth2User oauth2User) {
             // Autenticación OAuth2 - necesitamos buscar el User en la base de datos
             String email = oauth2User.getAttribute("email");
@@ -90,17 +97,15 @@ public class VehicleController {
         return ResponseEntity.ok(vehicleService.getAllVehicles());
     }
 
-    @GetMapping("/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    @CrossOrigin(origins = "*")
-    @ResponseBody
     /**
      * Retrieves a vehicle by its ID.
+     * CORS is handled globally by SecurityConfig - no need for @CrossOrigin here
      *
      * @param id the ID of the vehicle to retrieve
      * @return ResponseEntity containing the vehicle if found, or 404 Not Found if
      *         not found
      */
+    @GetMapping("/{id}")
     public ResponseEntity<Vehicle> getVehicleById(@PathVariable Long id) {
         Optional<Vehicle> vehicle = vehicleService.getVehicleById(id);
         if (vehicle.isEmpty()) {
@@ -207,13 +212,12 @@ public class VehicleController {
 
         boolean hasStageResults = stageResultRepository.findAll().stream()
                 .anyMatch(sr -> sr.getVehicle() != null && sr.getVehicle().getId().equals(id));
-
         if (hasEventVehicles || hasStageResults) {
             Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "No se puede eliminar el vehículo");
-            errorResponse.put("message", "Este vehículo está vinculado a eventos y/o resultados de competencias. " +
+            errorResponse.put(KEY_ERROR, "No se puede eliminar el vehículo");
+            errorResponse.put(KEY_MESSAGE, "Este vehículo está vinculado a eventos y/o resultados de competencias. " +
                     "No es posible eliminarlo para mantener la integridad de los datos históricos.");
-            errorResponse.put("vehicleName", vehicle.getName());
+            errorResponse.put(KEY_VEHICLE_NAME, vehicle.getName());
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         }
 
@@ -222,8 +226,8 @@ public class VehicleController {
             return ResponseEntity.noContent().build();
         } catch (DataIntegrityViolationException e) {
             Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error de integridad de datos");
-            errorResponse.put("message",
+            errorResponse.put(KEY_ERROR, "Error de integridad de datos");
+            errorResponse.put(KEY_MESSAGE,
                     "No se puede eliminar el vehículo debido a restricciones de la base de datos. " +
                             "El vehículo está relacionado con otros registros del sistema.");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);

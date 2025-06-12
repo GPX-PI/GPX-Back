@@ -1,6 +1,5 @@
 package com.udea.gpx.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.udea.gpx.model.Category;
@@ -10,8 +9,11 @@ import java.util.List;
 
 @Service
 public class CategoryService {
-    @Autowired
-    private ICategoryRepository categoryRepository;
+    private final ICategoryRepository categoryRepository;
+
+    public CategoryService(ICategoryRepository categoryRepository) {
+        this.categoryRepository = categoryRepository;
+    }
 
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();

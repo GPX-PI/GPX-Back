@@ -296,4 +296,75 @@ class DateTimeUtilsTest {
     assertThat(DateTimeUtils.isValidDateTimeRange(null, end)).isFalse();
     assertThat(DateTimeUtils.isValidDateTimeRange(start, null)).isFalse();
   }
+
+  @Test
+  @DisplayName("formatDateForDisplay debe formatear fecha correctamente")
+  void testFormatDateForDisplay() {
+    LocalDate date = LocalDate.of(2024, 1, 15);
+    String formatted = DateTimeUtils.formatDateForDisplay(date);
+
+    assertThat(formatted).isNotNull();
+    assertThat(formatted).isEqualTo("2024-01-15");
+  }
+
+  @Test
+  @DisplayName("startOfDayUTC debe obtener inicio del día correctamente")
+  void testStartOfDayUTC() {
+    LocalDate date = LocalDate.of(2024, 1, 15);
+    LocalDateTime startOfDay = DateTimeUtils.startOfDayUTC(date);
+
+    assertThat(startOfDay).isNotNull();
+    assertThat(startOfDay.toLocalDate()).isEqualTo(date);
+    assertThat(startOfDay.getHour()).isEqualTo(0);
+    assertThat(startOfDay.getMinute()).isEqualTo(0);
+    assertThat(startOfDay.getSecond()).isEqualTo(0);
+  }
+
+  @Test
+  @DisplayName("endOfDayUTC debe obtener final del día correctamente")
+  void testEndOfDayUTC() {
+    LocalDate date = LocalDate.of(2024, 1, 15);
+    LocalDateTime endOfDay = DateTimeUtils.endOfDayUTC(date);
+
+    assertThat(endOfDay).isNotNull();
+    assertThat(endOfDay.toLocalDate()).isEqualTo(date);
+    assertThat(endOfDay.getHour()).isEqualTo(23);
+    assertThat(endOfDay.getMinute()).isEqualTo(59);
+    assertThat(endOfDay.getSecond()).isEqualTo(59);
+  }
+
+  @Test
+  @DisplayName("fromColombiaToUTC debe convertir correctamente")
+  void testFromColombiaToUTC() {
+    LocalDateTime colombiaTime = LocalDateTime.of(2024, 1, 15, 10, 30, 0);
+    LocalDateTime utcTime = DateTimeUtils.fromColombiaToUTC(colombiaTime);
+
+    assertThat(utcTime).isNotNull();
+    // Colombia está UTC-5, entonces 10:30 Colombia = 15:30 UTC
+    assertThat(utcTime.getHour()).isEqualTo(15);
+    assertThat(utcTime.getMinute()).isEqualTo(30);
+  }
+
+  @Test
+  @DisplayName("nowUTC debe retornar timestamp actual UTC")
+  void testNowUTC() {
+    LocalDateTime before = LocalDateTime.now().minusSeconds(1);
+    LocalDateTime current = DateTimeUtils.nowUTC();
+    LocalDateTime after = LocalDateTime.now().plusSeconds(1);
+
+    assertThat(current).isNotNull();
+    assertThat(current.isAfter(before)).isTrue();
+    assertThat(current.isBefore(after)).isTrue();
+  }
+
+  @Test
+  @DisplayName("Debe manejar valores nulos sin errores")
+  void testHandlesNullValues() {
+    assertThat(DateTimeUtils.formatDateForDisplay(null)).isNull();
+    assertThat(DateTimeUtils.formatForDisplay(null)).isNull();
+    assertThat(DateTimeUtils.toColombiaTime(null)).isNull();
+    assertThat(DateTimeUtils.fromColombiaToUTC(null)).isNull();
+    assertThat(DateTimeUtils.startOfDayUTC(null)).isNull();
+    assertThat(DateTimeUtils.endOfDayUTC(null)).isNull();
+  }
 }

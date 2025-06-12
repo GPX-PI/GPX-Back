@@ -414,10 +414,12 @@ class AsyncFileServiceTest {
 
         // When
         CompletableFuture<String> future = asyncFileService.processImageAsync(mockFile, targetDirectory);
+        String result = future.get();
 
         // Then
-        assertThatThrownBy(() -> future.get())
-                .isInstanceOf(ExecutionException.class);
+        assertThat(result).isNotNull();
+        assertThat(result).contains("unnamed_file"); // El servicio usa "unnamed_file" para filenames null
+        assertThat(Files.exists(Path.of(result))).isTrue();
 
         verify(fileValidator).validateImageFile(mockFile);
     }

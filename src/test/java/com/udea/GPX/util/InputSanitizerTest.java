@@ -40,10 +40,12 @@ class InputSanitizerTest {
   }
 
   @Test
-  @DisplayName("sanitizeText - Debe detectar javascript con alert como SQL injection")
-  void sanitizeText_shouldDetectJavaScriptWithAlertAsSqlInjection() {
+  @DisplayName("sanitizeText - Debe detectar javascript con alert como XSS")
+  void sanitizeText_shouldDetectJavaScriptWithAlertAsXSS() {
     // Given
-    String jsInput = "javascript:alert('XSS')"; // When & Then
+    String jsInput = "javascript:alert('XSS')";
+
+    // When & Then
     assertThatThrownBy(() -> InputSanitizer.sanitizeText(jsInput))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("XSS");
@@ -85,8 +87,8 @@ class InputSanitizerTest {
   }
 
   @Test
-  @DisplayName("sanitizeText - Debe lanzar excepción para SQL injection")
-  void sanitizeText_shouldThrowExceptionForSqlInjection() {
+  @DisplayName("sanitizeText - Debe lanzar excepción para SQL injection severo")
+  void sanitizeText_shouldThrowExceptionForSevereSqlInjection() {
     // Given
     String sqlInput = "'; DROP TABLE users; --";
 
@@ -98,13 +100,12 @@ class InputSanitizerTest {
 
   @ParameterizedTest
   @ValueSource(strings = {
-      "SELECT * FROM users",
-      "union select password",
-      "INSERT INTO table",
-      "DELETE FROM events"
+      "DROP TABLE users",
+      "TRUNCATE events", 
+      "DELETE FROM users WHERE 1=1"
   })
-  @DisplayName("sanitizeText - Debe detectar patrones SQL injection")
-  void sanitizeText_shouldDetectSqlInjectionPatterns(String sqlInput) {
+  @DisplayName("sanitizeText - Debe detectar patrones SQL injection severos")
+  void sanitizeText_shouldDetectSevereSqlInjectionPatterns(String sqlInput) {
     // When & Then
     assertThatThrownBy(() -> InputSanitizer.sanitizeText(sqlInput))
         .isInstanceOf(IllegalArgumentException.class)
@@ -112,16 +113,15 @@ class InputSanitizerTest {
   }
 
   @Test
-  @DisplayName("sanitizeText - JavaScript void se limpia sin error")
-  void sanitizeText_shouldCleanJavaScriptVoid() {
+  @DisplayName("sanitizeText - JavaScript void debe ser rechazado por XSS")
+  void sanitizeText_shouldRejectJavaScriptVoid() {
     // Given
     String jsInput = "javascript:void(0)";
 
-    // When
-    String result = InputSanitizer.sanitizeText(jsInput);
-
-    // Then
-    assertThat(result).isEqualTo("void(0)");
+    // When & Then - Ahora rechazamos javascript: completamente
+    assertThatThrownBy(() -> InputSanitizer.sanitizeText(jsInput))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("XSS");
   }
 
   @Test
@@ -139,16 +139,17 @@ class InputSanitizerTest {
 
   @ParameterizedTest
   @ValueSource(strings = {
-      "Mixed SELECT content with script",
-      "Some union attack here",
-      "Text with INSERT malicious"
+      "Regular SELECT content here",
+      "Some union of ideas",
+      "Text to INSERT into document"
   })
-  @DisplayName("sanitizeText - Debe detectar texto con palabras SQL mezcladas")
-  void sanitizeText_shouldDetectMixedSqlContent(String mixedSqlInput) {
-    // When & Then
-    assertThatThrownBy(() -> InputSanitizer.sanitizeText(mixedSqlInput))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("SQL injection");
+  @DisplayName("sanitizeText - Debe permitir texto normal con palabras SQL no maliciosas")
+  void sanitizeText_shouldAllowNormalTextWithSqlWords(String normalText) {
+    // When
+    String result = InputSanitizer.sanitizeText(normalText);
+
+    // Then - Texto normal debe pasar sin problemas
+    assertThat(result).isEqualTo(normalText);
   }
 
   @Test
@@ -180,7 +181,9 @@ class InputSanitizerTest {
   @DisplayName("sanitizeEmail - Debe rechazar formato inválido")
   void sanitizeEmail_shouldRejectInvalidFormat() {
     // Given
-    String invalidEmail = "notanemail"; // When & Then
+    String invalidEmail = "notanemail";
+
+    // When & Then
     assertThatThrownBy(() -> InputSanitizer.sanitizeEmail(invalidEmail))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("El email debe tener un formato válido");

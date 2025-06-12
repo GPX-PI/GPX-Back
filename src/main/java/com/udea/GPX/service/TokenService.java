@@ -2,7 +2,6 @@ package com.udea.gpx.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.udea.gpx.JwtUtil;
@@ -22,14 +21,11 @@ import java.util.ArrayList;
  */
 @Service
 public class TokenService {
-
   private static final Logger logger = LoggerFactory.getLogger(TokenService.class);
 
-  @Autowired
-  private JwtUtil jwtUtil;
+  private final JwtUtil jwtUtil;
+  private final JwtProperties jwtProperties;
 
-  @Autowired
-  private JwtProperties jwtProperties;
   // Almacenamiento en memoria para tokens - thread-safe
   private final Map<String, RefreshTokenInfo> refreshTokenStore = new ConcurrentHashMap<>();
   private final Set<String> tokenBlacklist = ConcurrentHashMap.newKeySet();
@@ -41,7 +37,9 @@ public class TokenService {
   // Gestión de access tokens por usuario (para tokens sin sesión) - thread-safe
   private final Map<Long, Set<String>> userAccessTokens = new ConcurrentHashMap<>();
 
-  public TokenService() {
+  public TokenService(JwtUtil jwtUtil, JwtProperties jwtProperties) {
+    this.jwtUtil = jwtUtil;
+    this.jwtProperties = jwtProperties;
   }
 
   /**

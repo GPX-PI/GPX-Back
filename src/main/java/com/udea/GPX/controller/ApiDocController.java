@@ -22,6 +22,9 @@ import java.util.Arrays;
 @Tag(name = "Administración", description = "Información y documentación de la API")
 public class ApiDocController {
 
+        // Constants for repeated literals
+        private static final String ACTIVE_STATUS = "active";
+
         @GetMapping("/info")
         @Operation(summary = "Información de la API", description = "Proporciona información general sobre la API, versión y capacidades")
         @ApiResponse(responseCode = "200", description = "Información de la API obtenida exitosamente", content = @Content(schema = @Schema(example = "{\"name\":\"gpx Racing API\",\"version\":\"1.0.0\",\"status\":\"active\"}")))
@@ -30,7 +33,7 @@ public class ApiDocController {
                 info.put("name", "gpx Racing API");
                 info.put("version", "1.0.0");
                 info.put("description", "API para gestión de eventos de carreras gpx");
-                info.put("status", "active");
+                info.put("status", ACTIVE_STATUS);
                 info.put("environment", "development");
                 info.put("documentation", "/swagger-ui.html");
                 info.put("openapi", "/api-docs");
@@ -141,16 +144,15 @@ public class ApiDocController {
                 Map<String, Object> status = new HashMap<>();
                 status.put("api", "online");
                 status.put("database", "connected");
-                status.put("authentication", "active");
+                status.put("authentication", ACTIVE_STATUS);
                 status.put("timestamp", System.currentTimeMillis());
                 status.put("uptime", "Available");
-
                 Map<String, String> services = new HashMap<>();
-                services.put("user-service", "active");
-                services.put("event-service", "active");
-                services.put("vehicle-service", "active");
-                services.put("stage-service", "active");
-                services.put("file-service", "active");
+                services.put("user-service", ACTIVE_STATUS);
+                services.put("event-service", ACTIVE_STATUS);
+                services.put("vehicle-service", ACTIVE_STATUS);
+                services.put("stage-service", ACTIVE_STATUS);
+                services.put("file-service", ACTIVE_STATUS);
                 status.put("services", services);
 
                 return ResponseEntity.ok(status);

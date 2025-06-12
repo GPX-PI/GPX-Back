@@ -1,6 +1,5 @@
 package com.udea.gpx.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,7 +10,6 @@ import com.udea.gpx.model.User;
 import com.udea.gpx.service.EventCategoryService;
 import com.udea.gpx.util.AuthUtils;
 
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
 import java.util.List;
@@ -20,15 +18,13 @@ import java.util.List;
 @RequestMapping("/api/event-categories")
 public class EventCategoryController {
 
-    @Autowired
-    private EventCategoryService eventCategoryService;
+    private final EventCategoryService eventCategoryService;
+    private final AuthUtils authUtils;
 
-    @SuppressWarnings("unused")
-    @Autowired
-    private HttpServletRequest request;
-
-    @Autowired
-    private AuthUtils authUtils;
+    public EventCategoryController(EventCategoryService eventCategoryService, AuthUtils authUtils) {
+        this.eventCategoryService = eventCategoryService;
+        this.authUtils = authUtils;
+    }
 
     @GetMapping
     public ResponseEntity<List<EventCategory>> getAllEventCategories() {
@@ -59,12 +55,12 @@ public class EventCategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventCategory> getEventCategoryById(@PathVariable Long categoryId) {
+    public ResponseEntity<EventCategory> getEventCategoryById(@PathVariable("id") Long id) {
         User authUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         if (!authUser.isAdmin()) {
             return ResponseEntity.status(403).body(null);
         }
-        EventCategory eventCategory = eventCategoryService.getById(categoryId);
+        EventCategory eventCategory = eventCategoryService.getById(id);
         return eventCategory != null ? ResponseEntity.ok(eventCategory) : ResponseEntity.notFound().build();
     }
 

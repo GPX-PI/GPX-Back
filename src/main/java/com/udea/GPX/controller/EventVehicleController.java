@@ -1,6 +1,5 @@
 package com.udea.gpx.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,8 +15,6 @@ import com.udea.gpx.service.EventVehicleService;
 import com.udea.gpx.service.UserService;
 import com.udea.gpx.service.VehicleService;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -26,18 +23,20 @@ import java.util.HashMap;
 @RequestMapping("/api/event-vehicles")
 public class EventVehicleController {
 
-    @Autowired
-    private EventVehicleService eventVehicleService;
+    private final EventVehicleService eventVehicleService;
+    private final UserService userService;
+    private final VehicleService vehicleService;
 
-    @Autowired
-    private UserService userService;
+    // Constants for response keys
+    private static final String KEY_ERROR = "error";
+    private static final String KEY_MESSAGE = "message";
 
-    @Autowired
-    private VehicleService vehicleService;
-
-    @SuppressWarnings("unused")
-    @Autowired
-    private HttpServletRequest request;
+    public EventVehicleController(EventVehicleService eventVehicleService, UserService userService,
+            VehicleService vehicleService) {
+        this.eventVehicleService = eventVehicleService;
+        this.userService = userService;
+        this.vehicleService = vehicleService;
+    }
 
     /**
      * Obtiene el usuario autenticado, manejando tanto autenticación local como
@@ -47,9 +46,9 @@ public class EventVehicleController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
 
-        if (principal instanceof User) {
+        if (principal instanceof User user) {
             // Autenticación local - el principal ya es un User
-            return (User) principal;
+            return user;
         } else if (principal instanceof OAuth2User oauth2User) {
             // Autenticación OAuth2 - necesitamos buscar el User en la base de datos
             String email = oauth2User.getAttribute("email");
@@ -137,7 +136,6 @@ public class EventVehicleController {
     @PostMapping
     public ResponseEntity<?> createEventVehicle(@RequestBody EventVehicle eventVehicle) {
         User authUser = getAuthenticatedUser();
-
         try {
             // Cargar el vehículo completo desde la base de datos
             Long vehicleId = eventVehicle.getVehicleId().getId();
@@ -146,8 +144,8 @@ public class EventVehicleController {
 
             if (vehicle == null) {
                 Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Vehículo no encontrado");
-                errorResponse.put("message", "El vehículo seleccionado no existe.");
+                errorResponse.put(KEY_ERROR, "Vehículo no encontrado");
+                errorResponse.put(KEY_MESSAGE, "El vehículo seleccionado no existe.");
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorResponse);
             }
 
@@ -155,8 +153,8 @@ public class EventVehicleController {
             if (!authUser.isAdmin() && (vehicle.getUser() == null
                     || !vehicle.getUser().getId().equals(authUser.getId()))) {
                 Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Sin permisos");
-                errorResponse.put("message", "No tienes permisos para inscribir este vehículo.");
+                errorResponse.put(KEY_ERROR, "Sin permisos");
+                errorResponse.put(KEY_MESSAGE, "No tienes permisos para inscribir este vehículo.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorResponse);
             }
 
@@ -166,27 +164,25 @@ public class EventVehicleController {
 
             List<EventVehicle> existingRegistrations = eventVehicleService.getVehiclesByEventId(eventId);
             boolean userAlreadyRegistered = existingRegistrations.stream()
-                    .anyMatch(ev -> ev.getVehicleId() != null
-                            && ev.getVehicleId().getUser() != null
+                    .anyMatch(ev -> ev.getVehicleId() != null && ev.getVehicleId().getUser() != null
                             && ev.getVehicleId().getUser().getId().equals(userId));
 
             if (userAlreadyRegistered) {
                 Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Usuario ya inscrito");
-                errorResponse.put("message",
+                errorResponse.put(KEY_ERROR, "Usuario ya inscrito");
+                errorResponse.put(KEY_MESSAGE,
                         "Ya tienes un vehículo inscrito en este evento. Solo se permite una inscripción por persona.");
                 return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
             }
 
             // Establecer el vehículo completo en el EventVehicle
             eventVehicle.setVehicleId(vehicle);
-
             EventVehicle savedEventVehicle = eventVehicleService.createEventVehicle(eventVehicle);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedEventVehicle);
         } catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error al procesar inscripción");
-            errorResponse.put("message", "No se pudo completar la inscripción. Intenta nuevamente.");
+            errorResponse.put(KEY_ERROR, "Error al procesar inscripción");
+            errorResponse.put(KEY_MESSAGE, "No se pudo completar la inscripción. Intenta nuevamente.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }

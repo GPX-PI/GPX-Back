@@ -8,8 +8,11 @@
   <a href="https://codecov.io/gh/gpx-PI/gpx-Back">
     <img src="https://codecov.io/gh/gpx-PI/gpx-Back/graph/badge.svg?token=J6HXKK6S0H" alt="codecov"/>
   </a>
-  <a href="https://sonarcloud.io/summary/new_code?id=gpx-PI_gpx-Back">
-    <img src="https://sonarcloud.io/api/project_badges/measure?project=gpx-PI_gpx-Back&metric=alert_status" alt="Quality Gate Status"/>
+  <a href="https://sonarcloud.io/summary/new_code?id=GPX-PI_GPX-Back">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=GPX-PI_GPX-Back&metric=alert_status" alt="Quality Gate Status"/>
+  </a>
+  <a href="https://sonarcloud.io/summary/new_code?id=GPX-PI_GPX-Back">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=GPX-PI_GPX-Back&metric=coverage" alt="Coverage"/>
   </a>
   <a href="https://github.com/gpx-PI/gpx-Back/commits/main">
     <img src="https://img.shields.io/github/last-commit/gpx-PI/gpx-Back" alt="Last Commit"/>

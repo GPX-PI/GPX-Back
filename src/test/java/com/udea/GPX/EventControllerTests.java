@@ -5,30 +5,29 @@ import static org.mockito.Mockito.*;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.udea.gpx.controller.EventController;
 import com.udea.gpx.model.Event;
 import com.udea.gpx.model.EventCategory;
 import com.udea.gpx.service.EventService;
+import com.udea.gpx.service.FileTransactionService;
 import com.udea.gpx.util.AuthUtils;
 
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.security.core.Authentication;
-import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -36,35 +35,39 @@ import java.util.Map;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
+@DisplayName("EventController Unit Tests")
 class EventControllerTests {
-
-    @InjectMocks
-    private EventController eventController;
 
     @Mock
     private EventService eventService;
 
     @Mock
-    private HttpServletRequest request;
-
-    @Mock
-    private Authentication authentication;
-
-    @Mock
     private AuthUtils authUtils;
+
+    @Mock
+    private FileTransactionService fileTransactionService;
 
     @Mock
     private MultipartFile multipartFile;
 
-    @Mock
-    private com.udea.gpx.service.FileTransactionService fileTransactionService;
+    @InjectMocks
+    private EventController eventController;
+
+    private Event testEvent1;
+    private Event testEvent2;
+    private EventCategory testEventCategory1;
+    private EventCategory testEventCategory2;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-        // Inyectar el mock de FileTransactionService usando reflection
-        ReflectionTestUtils.setField(eventController, "fileTransactionService", fileTransactionService);
+        testEvent1 = new Event(1L, "Evento 1", "Ubicación 1", "Detalles 1", LocalDate.now(), LocalDate.now());
+        testEvent1.setPicture("ruta/imagen1.jpg");
+
+        testEvent2 = new Event(2L, "Evento 2", "Ubicación 2", "Detalles 2", LocalDate.now(), LocalDate.now());
+        testEvent2.setPicture("ruta/imagen2.jpg");
+
+        testEventCategory1 = new EventCategory();
+        testEventCategory2 = new EventCategory();
     }
 
     @Test

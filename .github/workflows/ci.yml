@@ -29,7 +29,7 @@ jobs:
           cache: maven
 
       - name: 🧪 Run tests with coverage
-        run: ./mvnw clean compile test-compile test jacoco:report
+        run: ./mvnw clean test jacoco:report
         env:
           SPRING_PROFILES_ACTIVE: test
           MAVEN_OPTS: "-XX:+EnableDynamicAgentLoading -Djdk.instrument.traceUsage=false"
@@ -76,6 +76,9 @@ jobs:
           ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.projectKey=GPX-PI_GPX-Back \
             -Dsonar.organization=gpxpi \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.junit.reportPaths=target/surefire-reports \
+            -Dsonar.java.coveragePlugin=jacoco \
             -Dsonar.qualitygate.wait=false || echo "⚠️ SonarCloud analysis completed with issues"
         continue-on-error: true
 

@@ -28,14 +28,18 @@ import java.util.Collections;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
-    private static final Logger logger = LoggerFactory.getLogger(JwtRequestFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(JwtRequestFilter.class);
+
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
+    private final TokenService tokenService;
 
     @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private TokenService tokenService;
+    public JwtRequestFilter(JwtUtil jwtUtil, UserService userService, TokenService tokenService) {
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
+        this.tokenService = tokenService;
+    }
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
@@ -80,7 +84,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             } catch (Exception e) {
                 // Token inválido, continuar sin autenticación
                 // Log security event for monitoring
-                logger.debug("Token JWT inválido en request: {}", request.getRequestURI());
+                log.debug("Token JWT inválido en request: {}", request.getRequestURI());
             }
         }
 

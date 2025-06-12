@@ -25,5 +25,7 @@ class CircuitBreakerApiTest {
                 logger.info("- {} -> {}", method.getName() + "()", method.getReturnType().getSimpleName());
             }
         }
+        // Add at least one assertion
+        org.junit.jupiter.api.Assertions.assertNotNull(circuitBreaker, "CircuitBreaker should not be null");
     }
 }

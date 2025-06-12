@@ -38,6 +38,7 @@ public class PasswordService {
 
   /**
    * Verifica si una contraseña cumple con los requisitos de seguridad
+   * Implementación optimizada sin vulnerabilidades ReDoS
    */
   public boolean isPasswordValid(String password) {
     if (password == null || password.trim().isEmpty()) {
@@ -56,17 +57,36 @@ public class PasswordService {
       return false;
     }
 
-    // Al menos una letra
-    if (!trimmedPassword.matches(".*[a-zA-Z].*")) {
-      return false;
-    }
+    // Verificaciones optimizadas sin regex vulnerables
+    return hasLetter(trimmedPassword) && hasDigit(trimmedPassword);
+  }
 
-    // Al menos un número
-    if (!trimmedPassword.matches(".*\\d.*")) {
-      return false;
+  /**
+   * Verifica si la cadena contiene al menos una letra
+   * Implementación segura sin backtracking
+   */
+  private boolean hasLetter(String text) {
+    for (int i = 0; i < text.length(); i++) {
+      char c = text.charAt(i);
+      if (Character.isLetter(c)) {
+        return true;
+      }
     }
+    return false;
+  }
 
-    return true;
+  /**
+   * Verifica si la cadena contiene al menos un dígito
+   * Implementación segura sin backtracking
+   */
+  private boolean hasDigit(String text) {
+    for (int i = 0; i < text.length(); i++) {
+      char c = text.charAt(i);
+      if (Character.isDigit(c)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -87,11 +107,11 @@ public class PasswordService {
       return "La contraseña no puede tener más de 128 caracteres";
     }
 
-    if (!trimmedPassword.matches(".*[a-zA-Z].*")) {
+    if (!hasLetter(trimmedPassword)) {
       return "La contraseña debe contener al menos una letra";
     }
 
-    if (!trimmedPassword.matches(".*\\d.*")) {
+    if (!hasDigit(trimmedPassword)) {
       return "La contraseña debe contener al menos un número";
     }
 

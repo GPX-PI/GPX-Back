@@ -4,13 +4,9 @@ import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.io.File;
-import org.springframework.beans.factory.annotation.Value;
 
 @SpringBootApplication
 public class GpxApplication {
-
-    @Value("${cors.allowed-origins:http://localhost:3000}")
-    private static String allowedOrigins;
 
     public static void main(String[] args) {
         // Cargar variables de entorno desde archivos .env
@@ -34,9 +30,7 @@ public class GpxApplication {
 
             // Establecer variables como propiedades del sistema para Spring Boot
             if (dotenv != null) {
-                dotenv.entries().forEach(entry -> {
-                    System.setProperty(entry.getKey(), entry.getValue());
-                });
+                dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
             }
         } catch (Exception e) {
             // Continuar sin errores si no se pueden cargar las variables

@@ -1,6 +1,5 @@
 package com.udea.gpx.util;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.oidc.user.DefaultOidcUser;
@@ -11,9 +10,11 @@ import com.udea.gpx.service.UserService;
 
 @Component
 public class AuthUtils {
+  private final UserService userService;
 
-  @Autowired
-  private UserService userService;
+  public AuthUtils(UserService userService) {
+    this.userService = userService;
+  }
 
   /**
    * Obtiene el usuario autenticado actual, manejando tanto usuarios OAuth2 como
@@ -31,13 +32,12 @@ public class AuthUtils {
     Object principal = authentication.getPrincipal();
 
     // Si es un usuario local (JWT)
-    if (principal instanceof User) {
-      return (User) principal;
+    if (principal instanceof User user) {
+      return user;
     }
 
     // Si es un usuario OAuth2 (Google)
-    if (principal instanceof DefaultOidcUser) {
-      DefaultOidcUser oidcUser = (DefaultOidcUser) principal;
+    if (principal instanceof DefaultOidcUser oidcUser) {
       String email = oidcUser.getEmail();
 
       if (email != null) {

@@ -25,6 +25,17 @@ public class GlobalExceptionHandler {
 
   private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+  // Constants for repeated literals
+  private static final String TIMESTAMP = "timestamp";
+  private static final String STATUS = "status";
+  private static final String ERROR = "error";
+  private static final String MESSAGE = "message";
+  private static final String PATH = "path";
+  private static final String ERROR_CATEGORY = "errorCategory";
+  private static final String ERROR_TYPE = "errorType";
+  private static final String FILE_OPERATION = "FILE_OPERATION";
+  private static final String URI_PREFIX = "uri=";
+
   /**
    * Maneja errores de validación Bean Validation (@Valid)
    */
@@ -35,20 +46,21 @@ public class GlobalExceptionHandler {
     Map<String, Object> response = new HashMap<>();
     Map<String, String> fieldErrors = new HashMap<>();
 
-    ex.getBindingResult().getAllErrors().forEach((error) -> {
+    ex.getBindingResult().getAllErrors().forEach(error -> {
       String fieldName = ((FieldError) error).getField();
       String errorMessage = error.getDefaultMessage();
       fieldErrors.put(fieldName, errorMessage);
     });
-
-    response.put("timestamp", LocalDateTime.now());
-    response.put("status", HttpStatus.BAD_REQUEST.value());
-    response.put("error", "Error de validación");
-    response.put("message", "Los datos enviados no son válidos");
+    response.put(TIMESTAMP, LocalDateTime.now());
+    response.put(STATUS, HttpStatus.BAD_REQUEST.value());
+    response.put(ERROR, "Error de validación");
+    response.put(MESSAGE, "Los datos enviados no son válidos");
     response.put("fieldErrors", fieldErrors);
-    response.put("path", request.getDescription(false).replace("uri=", ""));
+    response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
 
-    logger.warn("Error de validación en {}: {}", request.getDescription(false), fieldErrors);
+    if (logger.isWarnEnabled()) {
+      logger.warn("Error de validación en {}: {}", request.getDescription(false), fieldErrors);
+    }
 
     return ResponseEntity.badRequest().body(response);
   }
@@ -69,15 +81,16 @@ public class GlobalExceptionHandler {
       String message = violation.getMessage();
       violations.put(propertyPath, message);
     }
-
-    response.put("timestamp", LocalDateTime.now());
-    response.put("status", HttpStatus.BAD_REQUEST.value());
-    response.put("error", "Violación de restricciones");
-    response.put("message", "Los datos no cumplen las restricciones requeridas");
+    response.put(TIMESTAMP, LocalDateTime.now());
+    response.put(STATUS, HttpStatus.BAD_REQUEST.value());
+    response.put(ERROR, "Violación de restricciones");
+    response.put(MESSAGE, "Los datos no cumplen las restricciones requeridas");
     response.put("violations", violations);
-    response.put("path", request.getDescription(false).replace("uri=", ""));
+    response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
 
-    logger.warn("Violación de restricciones en {}: {}", request.getDescription(false), violations);
+    if (logger.isWarnEnabled()) {
+      logger.warn("Violación de restricciones en {}: {}", request.getDescription(false), violations);
+    }
 
     return ResponseEntity.badRequest().body(response);
   }
@@ -88,15 +101,16 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(
       IllegalArgumentException ex, WebRequest request) {
-
     Map<String, Object> response = new HashMap<>();
-    response.put("timestamp", LocalDateTime.now());
-    response.put("status", HttpStatus.BAD_REQUEST.value());
-    response.put("error", "Argumento inválido");
-    response.put("message", ex.getMessage());
-    response.put("path", request.getDescription(false).replace("uri=", ""));
+    response.put(TIMESTAMP, LocalDateTime.now());
+    response.put(STATUS, HttpStatus.BAD_REQUEST.value());
+    response.put(ERROR, "Argumento inválido");
+    response.put(MESSAGE, ex.getMessage());
+    response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
 
-    logger.warn("Argumento inválido en {}: {}", request.getDescription(false), ex.getMessage());
+    if (logger.isWarnEnabled()) {
+      logger.warn("Argumento inválido en {}: {}", request.getDescription(false), ex.getMessage());
+    }
 
     return ResponseEntity.badRequest().body(response);
   }
@@ -113,38 +127,41 @@ public class GlobalExceptionHandler {
     // Casos especiales de RuntimeException
     if (ex.getMessage() != null) {
       if (ex.getMessage().contains("no encontrado") || ex.getMessage().contains("not found")) {
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("error", "Recurso no encontrado");
-        response.put("message", ex.getMessage());
-        response.put("path", request.getDescription(false).replace("uri=", ""));
+        response.put(TIMESTAMP, LocalDateTime.now());
+        response.put(STATUS, HttpStatus.NOT_FOUND.value());
+        response.put(ERROR, "Recurso no encontrado");
+        response.put(MESSAGE, ex.getMessage());
+        response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
 
-        logger.warn("Recurso no encontrado en {}: {}", request.getDescription(false), ex.getMessage());
+        if (logger.isWarnEnabled()) {
+          logger.warn("Recurso no encontrado en {}: {}", request.getDescription(false), ex.getMessage());
+        }
 
         return ResponseEntity.notFound().build();
       }
-
       if (ex.getMessage().contains("ya existe") || ex.getMessage().contains("duplicado")) {
-        response.put("timestamp", LocalDateTime.now());
-        response.put("status", HttpStatus.CONFLICT.value());
-        response.put("error", "Conflicto de datos");
-        response.put("message", ex.getMessage());
-        response.put("path", request.getDescription(false).replace("uri=", ""));
+        response.put(TIMESTAMP, LocalDateTime.now());
+        response.put(STATUS, HttpStatus.CONFLICT.value());
+        response.put(ERROR, "Conflicto de datos");
+        response.put(MESSAGE, ex.getMessage());
+        response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
 
-        logger.warn("Conflicto de datos en {}: {}", request.getDescription(false), ex.getMessage());
+        if (logger.isWarnEnabled()) {
+          logger.warn("Conflicto de datos en {}: {}", request.getDescription(false), ex.getMessage());
+        }
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
       }
+    } // RuntimeException genérica
+    response.put(TIMESTAMP, LocalDateTime.now());
+    response.put(STATUS, HttpStatus.BAD_REQUEST.value());
+    response.put(ERROR, "Error de procesamiento");
+    response.put(MESSAGE, ex.getMessage() != null ? ex.getMessage() : "Error interno de procesamiento");
+    response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
+
+    if (logger.isErrorEnabled()) {
+      logger.error("Error de runtime en {}: {}", request.getDescription(false), ex.getMessage(), ex);
     }
-
-    // RuntimeException genérica
-    response.put("timestamp", LocalDateTime.now());
-    response.put("status", HttpStatus.BAD_REQUEST.value());
-    response.put("error", "Error de procesamiento");
-    response.put("message", ex.getMessage() != null ? ex.getMessage() : "Error interno de procesamiento");
-    response.put("path", request.getDescription(false).replace("uri=", ""));
-
-    logger.error("Error de runtime en {}: {}", request.getDescription(false), ex.getMessage(), ex);
 
     return ResponseEntity.badRequest().body(response);
   }
@@ -155,12 +172,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(FileOperationException.class)
   public ResponseEntity<Map<String, Object>> handleFileOperationException(
       FileOperationException ex, WebRequest request) {
-
     Map<String, Object> response = new HashMap<>();
-    response.put("timestamp", LocalDateTime.now());
-    response.put("path", request.getDescription(false).replace("uri=", ""));
-    response.put("errorType", ex.getErrorType().getCode());
-    response.put("errorCategory", "FILE_OPERATION");
+    response.put(TIMESTAMP, LocalDateTime.now());
+    response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
+    response.put(ERROR_TYPE, ex.getErrorType().getCode());
+    response.put(ERROR_CATEGORY, FILE_OPERATION);
 
     // Detalles adicionales sin exponer información sensible
     Map<String, Object> fileInfo = new HashMap<>();
@@ -175,45 +191,47 @@ public class GlobalExceptionHandler {
 
     // Mapear tipos de error a códigos HTTP y mensajes apropiados
     switch (ex.getErrorType()) {
-      case INVALID_FORMAT:
-      case FILE_EMPTY:
-      case VALIDATION_ERROR:
-        response.put("status", HttpStatus.BAD_REQUEST.value());
-        response.put("error", "Error de validación de archivo");
-        response.put("message", ex.getErrorType().getDescription());
-        logger.warn("Error de validación de archivo en {}: {}", request.getDescription(false), ex.getMessage());
+      case INVALID_FORMAT, FILE_EMPTY, VALIDATION_ERROR:
+        response.put(STATUS, HttpStatus.BAD_REQUEST.value());
+        response.put(ERROR, "Error de validación de archivo");
+        response.put(MESSAGE, ex.getErrorType().getDescription());
+        if (logger.isWarnEnabled()) {
+          logger.warn("Error de validación de archivo en {}: {}", request.getDescription(false), ex.getMessage());
+        }
         return ResponseEntity.badRequest().body(response);
-
       case FILE_TOO_LARGE:
-        response.put("status", HttpStatus.PAYLOAD_TOO_LARGE.value());
-        response.put("error", "Archivo demasiado grande");
-        response.put("message", "El archivo excede el tamaño máximo permitido");
-        logger.warn("Archivo demasiado grande en {}: {}", request.getDescription(false), ex.getMessage());
+        response.put(STATUS, HttpStatus.PAYLOAD_TOO_LARGE.value());
+        response.put(ERROR, "Archivo demasiado grande");
+        response.put(MESSAGE, "El archivo excede el tamaño máximo permitido");
+        if (logger.isWarnEnabled()) {
+          logger.warn("Archivo demasiado grande en {}: {}", request.getDescription(false), ex.getMessage());
+
+        }
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
-
-      case MALICIOUS_CONTENT:
-      case ACCESS_DENIED:
-        response.put("status", HttpStatus.FORBIDDEN.value());
-        response.put("error", "Acceso denegado");
-        response.put("message", "Operación de archivo no permitida");
-        logger.warn("Acceso denegado a archivo en {}: {}", request.getDescription(false), ex.getMessage());
+      case MALICIOUS_CONTENT, ACCESS_DENIED:
+        response.put(STATUS, HttpStatus.FORBIDDEN.value());
+        response.put(ERROR, "Acceso denegado");
+        response.put(MESSAGE, "Operación de archivo no permitida");
+        if (logger.isWarnEnabled()) {
+          logger.warn("Acceso denegado a archivo en {}: {}", request.getDescription(false), ex.getMessage());
+        }
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-
       case FILE_NOT_FOUND:
-        response.put("status", HttpStatus.NOT_FOUND.value());
-        response.put("error", "Archivo no encontrado");
-        response.put("message", "El archivo solicitado no existe");
-        logger.warn("Archivo no encontrado en {}: {}", request.getDescription(false), ex.getMessage());
+        response.put(STATUS, HttpStatus.NOT_FOUND.value());
+        response.put(ERROR, "Archivo no encontrado");
+        response.put(MESSAGE, "El archivo solicitado no existe");
+        if (logger.isWarnEnabled()) {
+          logger.warn("Archivo no encontrado en {}: {}", request.getDescription(false), ex.getMessage());
+        }
         return ResponseEntity.notFound().build();
-
-      case STORAGE_ERROR:
-      case DELETION_ERROR:
-      case PROCESSING_ERROR:
+      case STORAGE_ERROR, DELETION_ERROR, PROCESSING_ERROR:
       default:
-        response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        response.put("error", "Error de servidor");
-        response.put("message", "Error interno al procesar archivo. Contacte al administrador.");
-        logger.error("Error interno de archivo en {}: {}", request.getDescription(false), ex.getMessage(), ex);
+        response.put(STATUS, HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.put(ERROR, "Error de servidor");
+        response.put(MESSAGE, "Error interno al procesar archivo. Contacte al administrador.");
+        if (logger.isErrorEnabled()) {
+          logger.error("Error interno de archivo en {}: {}", request.getDescription(false), ex.getMessage(), ex);
+        }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
   }
@@ -224,15 +242,14 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MaxUploadSizeExceededException.class)
   public ResponseEntity<Map<String, Object>> handleMaxUploadSizeExceededException(
       MaxUploadSizeExceededException ex, WebRequest request) {
-
     Map<String, Object> response = new HashMap<>();
-    response.put("timestamp", LocalDateTime.now());
-    response.put("status", HttpStatus.PAYLOAD_TOO_LARGE.value());
-    response.put("error", "Archivo demasiado grande");
-    response.put("message", "El archivo excede el tamaño máximo permitido (10MB)");
-    response.put("errorType", "FILE_TOO_LARGE");
-    response.put("errorCategory", "FILE_OPERATION");
-    response.put("path", request.getDescription(false).replace("uri=", ""));
+    response.put(TIMESTAMP, LocalDateTime.now());
+    response.put(STATUS, HttpStatus.PAYLOAD_TOO_LARGE.value());
+    response.put(ERROR, "Archivo demasiado grande");
+    response.put(MESSAGE, "El archivo excede el tamaño máximo permitido (10MB)");
+    response.put(ERROR_TYPE, "FILE_TOO_LARGE");
+    response.put(ERROR_CATEGORY, FILE_OPERATION);
+    response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
 
     logger.warn("Archivo demasiado grande en {}: {}", request.getDescription(false), ex.getMessage());
 
@@ -245,16 +262,17 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<Map<String, Object>> handleGenericException(
       Exception ex, WebRequest request) {
-
     Map<String, Object> response = new HashMap<>();
-    response.put("timestamp", LocalDateTime.now());
-    response.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-    response.put("error", "Error interno del servidor");
-    response.put("message", "Ha ocurrido un error inesperado. Por favor contacte al administrador.");
-    response.put("path", request.getDescription(false).replace("uri=", ""));
+    response.put(TIMESTAMP, LocalDateTime.now());
+    response.put(STATUS, HttpStatus.INTERNAL_SERVER_ERROR.value());
+    response.put(ERROR, "Error interno del servidor");
+    response.put(MESSAGE, "Ha ocurrido un error inesperado. Por favor contacte al administrador.");
+    response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
 
     // Log completo del error para debugging
-    logger.error("Error interno no controlado en {}: {}", request.getDescription(false), ex.getMessage(), ex);
+    if (logger.isErrorEnabled()) {
+      logger.error("Error interno no controlado en {}: {}", request.getDescription(false), ex.getMessage(), ex);
+    }
 
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
   }
