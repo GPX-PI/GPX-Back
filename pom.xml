@@ -28,8 +28,43 @@
     </scm>
     <properties>
         <java.version>17</java.version>
+        <!-- SonarCloud Configuration -->
         <sonar.organization>gpxpi</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.projectKey>gpxpi_spring-boot-gpx</sonar.projectKey>
+        
+        <!-- Test Coverage Configuration -->
+        <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.junit.reportPaths>target/surefire-reports,target/failsafe-reports</sonar.junit.reportPaths>
+        
+        <!-- Source and Test Directories -->
+        <sonar.sources>src/main/java</sonar.sources>
+        <sonar.tests>src/test/java</sonar.tests>
+        <sonar.java.binaries>target/classes</sonar.java.binaries>
+        <sonar.java.test.binaries>target/test-classes</sonar.java.test.binaries>
+        
+        <!-- Exclusions -->
+        <sonar.exclusions>
+            **/dto/**,
+            **/config/**,
+            **/exception/**,
+            **/constants/**,
+            **/GpxApplication.java,
+            **/*Test.java,
+            **/*Tests.java,
+            **/test/**
+        </sonar.exclusions>
+        
+        <!-- Test Exclusions -->
+        <sonar.test.exclusions>
+            **/*Test.java,
+            **/*Tests.java,
+            **/test/**
+        </sonar.test.exclusions>
+        
+        <!-- Code Quality Settings -->
+        <sonar.java.source>17</sonar.java.source>
+        <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
     </properties>
     <dependencies>
         <dependency>
@@ -375,6 +410,13 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+
+            <!-- SonarCloud Plugin -->
+            <plugin>
+                <groupId>org.sonarsource.scanner.maven</groupId>
+                <artifactId>sonar-maven-plugin</artifactId>
+                <version>3.10.0.2594</version>
             </plugin>
         </plugins>
     </build>
