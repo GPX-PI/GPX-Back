@@ -170,15 +170,13 @@ public class EventService {
 
         try {
             // Eliminar imagen anterior si existe
-            deleteOldFile(event.getPicture());
-
-            // Guardar nueva imagen
+            deleteOldFile(event.getPicture()); // Guardar nueva imagen
             String newPicturePath = saveFile(eventPhoto, "event");
             event.setPicture(newPicturePath);
 
             return eventRepository.save(event);
         } catch (Exception e) {
-            logger.error("Error uploading event image for event ID {}: {}", id, e.getMessage(), e);
+            // Relanzar con contexto específico para manejo en nivel superior
             throw new ImageUploadException(IMAGE_UPLOAD_ERROR_MSG + e.getMessage(), e);
         }
     }
@@ -250,14 +248,12 @@ public class EventService {
         if (originalFilename != null && originalFilename.contains(".")) {
             fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        String uniqueFilename = fileType + "_" + UUID.randomUUID().toString() + fileExtension;
-
-        // Guardar archivo
+        String uniqueFilename = fileType + "_" + UUID.randomUUID().toString() + fileExtension; // Guardar archivo
         Path filePath = Paths.get(UPLOADS_EVENTS_DIR + uniqueFilename);
         try {
             Files.write(filePath, file.getBytes());
         } catch (Exception e) {
-            logger.error("Error writing file to disk: {}", filePath, e);
+            // Relanzar con contexto específico para manejo en nivel superior
             throw new EventServiceException("Error saving file to disk: " + e.getMessage(), e);
         }
 

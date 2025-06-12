@@ -131,10 +131,8 @@ public class EventVehicleController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-    }
-
-    @PostMapping
-    public ResponseEntity<?> createEventVehicle(@RequestBody EventVehicle eventVehicle) {
+    }    @PostMapping
+    public ResponseEntity<Object> createEventVehicle(@RequestBody EventVehicle eventVehicle) {
         User authUser = getAuthenticatedUser();
         try {
             // Cargar el vehículo completo desde la base de datos

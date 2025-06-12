@@ -26,6 +26,40 @@ public class AsyncFileService {
   }
 
   /**
+   * Procesar imagen de forma síncrona (usado internamente por el batch)
+   */
+  private String processImageSynchronously(MultipartFile file, String targetDirectory) throws Exception {
+    logger.info("Procesando imagen: {}", file.getOriginalFilename());
+
+    // Validar archivo
+    FileValidator.ValidationResult validationResult = fileValidator.validateImageFile(file);
+    if (!validationResult.isValid()) {
+      throw new IllegalArgumentException(validationResult.getErrorMessage());
+    }
+
+    // Crear directorio si no existe
+    Path directory = Paths.get(targetDirectory);
+    if (!Files.exists(directory)) {
+      Files.createDirectories(directory);
+    }
+
+    // Generar nombre único
+    String originalFilename = file.getOriginalFilename();
+    if (originalFilename == null) {
+      originalFilename = "unnamed_file";
+    }
+    String uniqueFilename = System.currentTimeMillis() + "_" + System.nanoTime() + "_" +
+        originalFilename.replaceAll("[^a-zA-Z0-9.]", "_");
+
+    // Guardar archivo
+    Path targetPath = directory.resolve(uniqueFilename);
+    Files.copy(file.getInputStream(), targetPath);
+
+    logger.info("Imagen procesada exitosamente: {}", uniqueFilename);
+    return targetPath.toString();
+  }
+
+  /**
    * Procesar archivo de imagen de forma asíncrona
    */
   @Async("fileProcessingExecutor")
@@ -172,11 +206,10 @@ public class AsyncFileService {
     logger.info("Procesando batch de {} archivos", files.length);
 
     BatchProcessingResult result = new BatchProcessingResult();
-
     for (MultipartFile file : files) {
       try {
-        CompletableFuture<String> future = processImageAsync(file, targetDirectory);
-        String savedPath = future.get(); // Esperar resultado
+        // Procesar archivo directamente en lugar de usar async interno
+        String savedPath = processImageSynchronously(file, targetDirectory);
         result.addSuccess(file.getOriginalFilename(), savedPath);
       } catch (InterruptedException ie) {
         Thread.currentThread().interrupt();

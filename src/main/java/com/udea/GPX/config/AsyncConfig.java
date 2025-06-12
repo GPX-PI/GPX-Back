@@ -1,5 +1,7 @@
 package com.udea.gpx.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -13,6 +15,8 @@ import java.util.concurrent.Executor;
 @Configuration
 @EnableAsync
 public class AsyncConfig {
+
+  private static final Logger logger = LoggerFactory.getLogger(AsyncConfig.class);
 
   /**
    * Executor para operaciones de archivos (upload, procesamiento)
@@ -42,10 +46,9 @@ public class AsyncConfig {
     executor.setMaxPoolSize(3);
     executor.setQueueCapacity(25);
     executor.setThreadNamePrefix("Notification-");
-    executor.setRejectedExecutionHandler((r, ex) -> {
-      // Para notificaciones, es mejor loggear y continuar sin fallar
-      System.err.println("Notification task was rejected: " + r.toString());
-    });
+    executor.setRejectedExecutionHandler((r, ex) ->
+    // Para notificaciones, es mejor loggear y continuar sin fallar
+    logger.warn("Notification task was rejected: {}", r));
     executor.initialize();
     return executor;
   }

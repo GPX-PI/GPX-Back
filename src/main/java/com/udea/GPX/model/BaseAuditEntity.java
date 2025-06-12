@@ -35,7 +35,7 @@ public abstract class BaseAuditEntity {
   private String updatedBy;
 
   // Constructors
-  public BaseAuditEntity() {
+  protected BaseAuditEntity() {
   }
 
   // Getters and Setters

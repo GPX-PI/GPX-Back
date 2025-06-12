@@ -57,14 +57,8 @@ public class SanitizedValidator implements ConstraintValidator<Sanitized, String
       } // Si la sanitización no lanza excepción, el valor es válido
       return true;
 
-    } catch (IllegalArgumentException e) {
-      // Personalizar el mensaje de error
-      context.disableDefaultConstraintViolation();
-      context.buildConstraintViolationWithTemplate(e.getMessage())
-          .addConstraintViolation();
-      return false;
     } catch (Exception e) {
-      // Manejar cualquier otra excepción inesperada
+      // Personalizar el mensaje de error para cualquier excepción
       context.disableDefaultConstraintViolation();
       context.buildConstraintViolationWithTemplate(e.getMessage())
           .addConstraintViolation();

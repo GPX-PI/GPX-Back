@@ -123,11 +123,9 @@ public class EventController {
     public ResponseEntity<List<EventCategory>> getCategoriesByEventId(@PathVariable Long id) {
         List<EventCategory> categories = eventService.getCategoriesByEventId(id);
         return ResponseEntity.ok(categories);
-    }
-
-    // Endpoint para subir imagen de evento con archivo
+    }    // Endpoint para subir imagen de evento con archivo
     @PutMapping("/{id}/picture")
-    public ResponseEntity<?> updateEventPicture(
+    public ResponseEntity<Object> updateEventPicture(
             @PathVariable Long id,
             @RequestParam(value = "eventPhoto", required = false) MultipartFile eventPhoto,
             @RequestParam(value = "event", required = false) String eventJson) {

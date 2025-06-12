@@ -17,29 +17,29 @@ public final class InputSanitizer {
   // Patrones optimizados para prevenir ReDoS - sin backtracking exponencial
   private static final Pattern SEVERE_SQL_INJECTION_PATTERN = Pattern.compile(
       "(?i)\\b(drop\\s+table|truncate|delete\\s+from)\\b");
-      
+
   private static final Pattern SEVERE_XSS_ATTACK_PATTERN = Pattern.compile(
       "(?i)(data:text/html|data:[^,]*script)");
-      
+
   private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile(
       "(\\.\\./|\\.\\.\\\\/|%2e%2e%2f|%2e%2e%5c)");
 
   // Patrones adicionales para validaciones específicas
   private static final Pattern EMAIL_PATTERN = Pattern.compile(
       "^[A-Za-z0-9+_.\\-]+@[A-Za-z0-9\\-]+\\.[A-Za-z0-9\\-.]+$");
-      
+
   private static final Pattern NAME_PATTERN = Pattern.compile(
       "^[\\p{L}\\s'\\-]{1,100}$");
-      
+
   private static final Pattern URL_PATTERN = Pattern.compile(
       "^https?://[A-Za-z0-9.\\-]+(?:/[A-Za-z0-9._/\\-]*)?$");
-      
+
   private static final Pattern PHONE_PATTERN = Pattern.compile(
       "^[0-9\\s()\\+\\-]{1,20}$");
-      
+
   private static final Pattern IDENTIFICATION_PATTERN = Pattern.compile(
       "^[A-Za-z0-9_\\-]{1,50}$");
-      
+
   private static final Pattern NUMERIC_WITH_HYPHENS = Pattern.compile(
       "^[0-9\\-]+$");
 
@@ -55,7 +55,7 @@ public final class InputSanitizer {
     }
 
     String trimmed = input.trim();
-    
+
     // Límite de longitud para prevenir ataques
     if (trimmed.length() > 10000) {
       throw new IllegalArgumentException("Input demasiado largo");
@@ -65,7 +65,7 @@ public final class InputSanitizer {
     if (SEVERE_SQL_INJECTION_PATTERN.matcher(trimmed).find()) {
       throw new IllegalArgumentException("Input contiene patrones sospechosos de SQL injection");
     }
-    
+
     // Check for serious XSS attacks that should be rejected
     if (SEVERE_XSS_ATTACK_PATTERN.matcher(trimmed).find()) {
       throw new IllegalArgumentException("Input contiene patrones sospechosos de XSS");
@@ -81,15 +81,13 @@ public final class InputSanitizer {
     }
 
     // Clean/sanitize the content (remove tags, scripts, etc.)
-    String sanitized = trimmed
+    return trimmed
         .replaceAll("(?i)<script[^>]*+>.*?</script>", "")
         .replaceAll("<[^>]*+>", "")
         .replace("javascript:", "")
         .replace("vbscript:", "")
         .replaceAll("(?i)onload\\s*=", "")
         .replaceAll("(?i)onerror\\s*=", "");
-
-    return sanitized;
   }
 
   /**
@@ -102,11 +100,11 @@ public final class InputSanitizer {
     if (email == null) {
       return null;
     }
-    
+
     if (email.length() > 320) { // RFC 5321 limit
       throw new IllegalArgumentException("Email demasiado largo");
     }
-    
+
     String sanitized = sanitizeText(email.toLowerCase().trim());
 
     // Verificar que sanitized no sea null
@@ -132,7 +130,7 @@ public final class InputSanitizer {
     if (name == null) {
       return null;
     }
-    
+
     String sanitized = sanitizeText(name);
 
     // Verificar que sanitized no sea null
@@ -140,7 +138,8 @@ public final class InputSanitizer {
       throw new IllegalArgumentException("El nombre no puede ser procesado");
     }
 
-    // Solo permitir letras, espacios, guiones y apostrofes (incluye caracteres internacionales)
+    // Solo permitir letras, espacios, guiones y apostrofes (incluye caracteres
+    // internacionales)
     if (!NAME_PATTERN.matcher(sanitized).matches()) {
       throw new IllegalArgumentException("El nombre contiene caracteres no válidos");
     }
@@ -222,7 +221,8 @@ public final class InputSanitizer {
       throw new IllegalArgumentException("La identificación no puede ser procesada");
     }
 
-    // Allow alphanumeric with underscores and hyphens, but reject purely numeric with hyphens
+    // Allow alphanumeric with underscores and hyphens, but reject purely numeric
+    // with hyphens
     if (!IDENTIFICATION_PATTERN.matcher(sanitized).matches()) {
       throw new IllegalArgumentException("La identificación contiene caracteres no válidos");
     }

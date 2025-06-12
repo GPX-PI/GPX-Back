@@ -2,6 +2,7 @@ package com.udea.gpx.controller;
 
 import com.udea.gpx.dto.AuthResponseDTO;
 import com.udea.gpx.exception.InternalServerException;
+
 import com.udea.gpx.model.User;
 import com.udea.gpx.service.FileTransactionService;
 import com.udea.gpx.service.UserService;
@@ -166,9 +167,6 @@ public class UserController {
             try {
                 sanitized.put(key, sanitizeFieldValue(key.toLowerCase(), value));
             } catch (IllegalArgumentException e) {
-                // Log del intento de ataque y rechazar request
-                logger.warn("🚨 INTENTO DE ATAQUE DETECTADO - Campo: {}, Valor sospechoso detectado: {}",
-                        key, e.getMessage());
                 // Propagar la excepción con contexto adicional
                 throw new IllegalArgumentException(
                         "Campo '" + key + "' contiene contenido no válido: " + e.getMessage(), e);
@@ -322,7 +320,7 @@ public class UserController {
         }
     }
 
-    // Endpoint para actualizar datos del usuario con archivos
+    // Endpoint para actualizar datos del usuario with archivos
     @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
     public ResponseEntity<Object> updateUserWithFiles(
             @PathVariable Long id,
@@ -378,10 +376,13 @@ public class UserController {
             User updatedUser = userService.updateUserProfile(id, user);
             return ResponseEntity.ok(updatedUser);
         } catch (IllegalArgumentException e) {
+            // Registrar error de validación para seguimiento de seguridad
+            logger.warn("Error de validación en actualización de perfil de usuario {}: {}", id, e.getMessage());
             // Crear una respuesta más informativa para errores de validación
             return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage(), VALIDATION_ERROR));
         } catch (InternalServerException e) {
-            // Manejar errores internos específicamente
+            // Manejar errores internos específicos del servidor
+            logger.error("Error interno en actualización de perfil de usuario {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(INTERNAL_SERVER_ERROR_MSG, INTERNAL_ERROR));
         } catch (RuntimeException e) {
@@ -390,6 +391,8 @@ public class UserController {
             }
             return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage(), RUNTIME_ERROR));
         } catch (Exception e) {
+            // Manejar errores internos (incluyendo InternalServerException) y otros errores
+            // generales
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse(INTERNAL_SERVER_ERROR_MSG, INTERNAL_ERROR));
         }

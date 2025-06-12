@@ -206,7 +206,6 @@ class UserControllerTests {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void updateUserProfile_whenUserNotFound_shouldReturnNotFound() {
         Long userId = 1L;
         User user = TestDataBuilder.buildUser(userId, "Juan", false);
@@ -218,11 +217,14 @@ class UserControllerTests {
         ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }    @Test
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void updateUserProfile_whenInternalError_shouldReturnInternalServerError() {
         Long userId = 1L;
-        User user = TestDataBuilder.buildUser(userId, "Juan", false);        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         // Crear una excepción específica para errores internos
         InternalServerException customException = new InternalServerException("Error interno de sistema");
         doThrow(customException).when(userService).updateUserProfile(eq(userId), any(User.class));

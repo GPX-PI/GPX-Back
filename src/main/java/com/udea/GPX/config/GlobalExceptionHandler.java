@@ -250,9 +250,9 @@ public class GlobalExceptionHandler {
     response.put(ERROR_TYPE, "FILE_TOO_LARGE");
     response.put(ERROR_CATEGORY, FILE_OPERATION);
     response.put(PATH, request.getDescription(false).replace(URI_PREFIX, ""));
-
-    logger.warn("Archivo demasiado grande en {}: {}", request.getDescription(false), ex.getMessage());
-
+    if (logger.isErrorEnabled()) {
+      logger.warn("Archivo demasiado grande en {}: {}", request.getDescription(false), ex.getMessage());
+    }
     return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(response);
   }
 

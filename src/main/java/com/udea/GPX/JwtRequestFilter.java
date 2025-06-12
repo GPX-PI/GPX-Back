@@ -46,71 +46,127 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             @NonNull FilterChain chain)
             throws ServletException, IOException {
 
-        String requestPath = request.getRequestURI();
-
         // Excluir rutas OAuth2 del filtro JWT
-        if (requestPath.startsWith("/oauth2/") || requestPath.startsWith("/login/oauth2/")) {
+        if (shouldExcludeFromJwtProcessing(request)) {
             chain.doFilter(request, response);
             return;
         }
 
         // Si ya hay una autenticación OAuth2 válida, no interferir
-        Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
-        if (existingAuth != null && existingAuth.isAuthenticated() &&
-                !(existingAuth instanceof AnonymousAuthenticationToken)) {
-            // Es una autenticación OAuth2, preservarla
+        if (hasValidExistingAuthentication()) {
             chain.doFilter(request, response);
             return;
-        }
-
-        // Procesamiento JWT normal para el resto de rutas
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        String jwt = null;
-        Long userId = null;
-
-        // Solo procesar JWT si no hay autenticación previa
-        if (authHeader != null && authHeader.startsWith("Bearer ") &&
-                (existingAuth == null || !existingAuth.isAuthenticated() ||
-                        existingAuth.getPrincipal().equals("anonymousUser"))) {
-
-            jwt = authHeader.substring(7);
-
-            try {
-                userId = jwtUtil.extractUserId(jwt);
-            } catch (ExpiredJwtException e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            } catch (Exception e) {
-                // Token inválido, continuar sin autenticación
-                // Log security event for monitoring
-                log.debug("Token JWT inválido en request: {}", request.getRequestURI());
-            }
-        }
-
-        if (userId != null &&
-                (SecurityContextHolder.getContext().getAuthentication() == null ||
-                        !SecurityContextHolder.getContext().getAuthentication().isAuthenticated())) {
-
-            User user = userService.getUserById(userId).orElse(null);
-
-            if (user != null) {
-                boolean isTokenValid = jwtUtil.validateToken(jwt);
-                boolean isTokenBlacklisted = tokenService.isTokenBlacklisted(jwt);
-
-                if (isTokenValid && !isTokenBlacklisted) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            user, null, Collections.emptyList());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                } else if (isTokenBlacklisted) {
-                    // Token está en blacklist, enviar unauthorized
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    return;
-                }
+        } // Procesamiento JWT normal para el resto de rutas
+        String jwt = extractJwtFromRequest(request);
+        if (jwt != null) {
+            TokenProcessingResult result = processJwtToken(jwt, request, response);
+            if (result.shouldReturn()) {
+                return; // Si hay error crítico (token expirado/blacklisted), no continuar
             }
         }
 
         chain.doFilter(request, response);
+    }
+
+    private TokenProcessingResult processJwtToken(String jwt, HttpServletRequest request,
+            HttpServletResponse response) {
+        try {
+            Long userId = jwtUtil.extractUserId(jwt);
+            if (userId != null && authenticateUserWithJwt(userId, jwt, request, response)) {
+                return TokenProcessingResult.stopProcessing(); // Token blacklisted, response status ya fue seteado
+            }
+            return TokenProcessingResult.continueProcessing();
+        } catch (ExpiredJwtException e) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return TokenProcessingResult.stopProcessing();
+        } catch (Exception e) {
+            // Token inválido, continuar sin autenticación
+            log.debug("Token JWT inválido en request");
+            return TokenProcessingResult.continueProcessing();
+        }
+    }
+
+    private static class TokenProcessingResult {
+        private final boolean shouldReturn;
+
+        private TokenProcessingResult(boolean shouldReturn) {
+            this.shouldReturn = shouldReturn;
+        }
+
+        public boolean shouldReturn() {
+            return shouldReturn;
+        }
+
+        public static TokenProcessingResult stopProcessing() {
+            return new TokenProcessingResult(true);
+        }
+
+        public static TokenProcessingResult continueProcessing() {
+            return new TokenProcessingResult(false);
+        }
+    }
+
+    private boolean shouldExcludeFromJwtProcessing(HttpServletRequest request) {
+        String requestPath = request.getRequestURI();
+        return requestPath.startsWith("/oauth2/") || requestPath.startsWith("/login/oauth2/");
+    }
+
+    private boolean hasValidExistingAuthentication() {
+        Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+        return existingAuth != null && existingAuth.isAuthenticated() &&
+                !(existingAuth instanceof AnonymousAuthenticationToken);
+    }
+
+    private String extractJwtFromRequest(HttpServletRequest request) {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        Authentication existingAuth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authHeader != null && authHeader.startsWith("Bearer ") &&
+                (existingAuth == null || !existingAuth.isAuthenticated() ||
+                        existingAuth.getPrincipal().equals("anonymousUser"))) {
+            return authHeader.substring(7);
+        }
+        return null;
+    }
+
+    private boolean authenticateUserWithJwt(Long userId, String jwt, HttpServletRequest request,
+            HttpServletResponse response) {
+        if (!shouldAuthenticateUser()) {
+            return false;
+        }
+
+        User user = userService.getUserById(userId).orElse(null);
+        if (user == null) {
+            return false;
+        }
+
+        return processUserAuthentication(user, jwt, request, response);
+    }
+
+    private boolean shouldAuthenticateUser() {
+        Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
+        return currentAuth == null || !currentAuth.isAuthenticated();
+    }
+
+    private boolean processUserAuthentication(User user, String jwt, HttpServletRequest request,
+            HttpServletResponse response) {
+        boolean isTokenValid = jwtUtil.validateToken(jwt);
+        boolean isTokenBlacklisted = tokenService.isTokenBlacklisted(jwt);
+
+        if (isTokenValid && !isTokenBlacklisted) {
+            setAuthenticationInContext(user, request);
+            return false;
+        } else if (isTokenBlacklisted) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return true; // Indica que se envió respuesta de error
+        }
+        return false;
+    }
+
+    private void setAuthenticationInContext(User user, HttpServletRequest request) {
+        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                user, null, Collections.emptyList());
+        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authToken);
     }
 }

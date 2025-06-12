@@ -193,7 +193,7 @@ public class FileValidator {
    */
   private boolean containsMaliciousContent(MultipartFile file) throws IOException {
     byte[] content = file.getBytes();
-    String contentString = new String(content, "UTF-8");
+    String contentString = new String(content, java.nio.charset.StandardCharsets.UTF_8);
 
     // Buscar patrones maliciosos comunes
     String[] maliciousPatterns = {

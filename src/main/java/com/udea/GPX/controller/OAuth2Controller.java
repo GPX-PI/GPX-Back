@@ -18,6 +18,15 @@ import java.util.Map;
 @RequestMapping("/api/oauth2")
 public class OAuth2Controller {
 
+    // Constants for OAuth2 attributes
+    private static final String ATTR_EMAIL = "email";
+    private static final String ATTR_PICTURE = "picture";
+    private static final String ATTR_NAME = "name";
+    private static final String ATTR_SUB = "sub";
+
+    // Constants for response keys
+    private static final String RESPONSE_EMAIL = "email";
+
     private final OAuth2Service oauth2Service;
     private final JwtUtil jwtUtil;
     private final String frontendRedirectUrl;
@@ -79,12 +88,11 @@ public class OAuth2Controller {
         if (oauth2User == null) {
             return ResponseEntity.badRequest().build();
         }
-
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("name", oauth2User.getAttribute("name"));
-        userInfo.put("email", oauth2User.getAttribute("email"));
-        userInfo.put("picture", oauth2User.getAttribute("picture"));
-        userInfo.put("sub", oauth2User.getAttribute("sub"));
+        userInfo.put(ATTR_NAME, oauth2User.getAttribute(ATTR_NAME));
+        userInfo.put(ATTR_EMAIL, oauth2User.getAttribute(ATTR_EMAIL));
+        userInfo.put(ATTR_PICTURE, oauth2User.getAttribute(ATTR_PICTURE));
+        userInfo.put(ATTR_SUB, oauth2User.getAttribute(ATTR_SUB));
 
         return ResponseEntity.ok(userInfo);
     }
@@ -104,8 +112,8 @@ public class OAuth2Controller {
         response.put("userId", user.getId());
         response.put("firstName", user.getFirstName());
         response.put("lastName", user.getLastName());
-        response.put("email", user.getEmail());
-        response.put("picture", user.getPicture());
+        response.put(RESPONSE_EMAIL, user.getEmail());
+        response.put(ATTR_PICTURE, user.getPicture());
 
         return ResponseEntity.ok(response);
     }

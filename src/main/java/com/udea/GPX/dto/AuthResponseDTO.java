@@ -39,6 +39,8 @@ public class AuthResponseDTO {
   private String message;
 
   public AuthResponseDTO() {
+    // Constructor vacío necesario para la deserialización de objetos (por ejemplo,
+    // frameworks como Jackson)
   }
 
   // Getters y Setters

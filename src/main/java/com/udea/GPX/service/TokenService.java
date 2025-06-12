@@ -46,13 +46,12 @@ public class TokenService {
    * Genera un par de tokens (access + refresh)
    */
   public TokenPair generateTokenPair(Long userId, boolean isAdmin) {
-    logger.debug("🔍 TokenService.generateTokenPair - Generando tokens para usuario {}", userId);
-
-    // Generar access token
+    logger.debug("🔍 TokenService.generateTokenPair - Generando tokens para usuario {}", userId); // Generar access
+                                                                                                  // token
     String accessToken = jwtUtil.generateToken(userId, isAdmin);
 
     // Generar refresh token
-    String refreshToken = generateRefreshToken(userId, isAdmin);
+    String refreshToken = generateRefreshToken(userId);
 
     // Almacenar información del refresh token
     RefreshTokenInfo tokenInfo = new RefreshTokenInfo(userId, isAdmin,
@@ -73,13 +72,11 @@ public class TokenService {
     logger.debug("🔍 TokenService.generateTokenPairWithSession - Generando tokens para usuario {}", userId);
 
     // Verificar límite de sesiones concurrentes
-    enforceSessionLimits(userId);
-
-    // Generar access token
+    enforceSessionLimits(userId); // Generar access token
     String accessToken = jwtUtil.generateToken(userId, isAdmin);
 
     // Generar refresh token
-    String refreshToken = generateRefreshToken(userId, isAdmin);
+    String refreshToken = generateRefreshToken(userId);
 
     // Crear información de sesión
     String sessionId = UUID.randomUUID().toString();
@@ -250,12 +247,7 @@ public class TokenService {
     int removedSessions = 0;
 
     // Limpiar refresh tokens expirados
-    refreshTokenStore.entrySet().removeIf(entry -> {
-      if (now.isAfter(entry.getValue().getExpiresAt())) {
-        return true;
-      }
-      return false;
-    });
+    refreshTokenStore.entrySet().removeIf(entry -> now.isAfter(entry.getValue().getExpiresAt()));
 
     // Limpiar sesiones expiradas
     final int[] sessionsRemoved = { 0 }; // Array para hacerlo efectivamente final
@@ -347,7 +339,7 @@ public class TokenService {
     return false;
   }
 
-  private String generateRefreshToken(Long userId, boolean isAdmin) {
+  private String generateRefreshToken(Long userId) {
     return UUID.randomUUID().toString() + "-" + userId + "-" + System.currentTimeMillis();
   }
 
