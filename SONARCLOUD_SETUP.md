@@ -38,16 +38,19 @@ También actualiza el workflow `.github/workflows/sonarcloud.yml` con los valore
 ## Características Configuradas
 
 ### Cobertura de Código
+
 - **Reporte JaCoCo**: Configurado para generar reportes XML
 - **Ubicación**: `target/site/jacoco/jacoco.xml`
 - **Exclusiones**: Archivos de configuración, entidades, DTOs y excepciones
 
 ### Análisis de Calidad
+
 - **Quality Gate**: Configurado para esperar resultados
 - **Duplicación**: Mínimo 50 tokens para detectar duplicados
 - **Versión Java**: Java 17
 
 ### Exclusiones
+
 - `**/*Application.java` - Clase principal de Spring Boot
 - `**/config/**` - Clases de configuración
 - `**/entity/**` - Entidades JPA
@@ -57,6 +60,7 @@ También actualiza el workflow `.github/workflows/sonarcloud.yml` con los valore
 ## Workflows Configurados
 
 ### SonarCloud Analysis (`sonarcloud.yml`)
+
 - **Trigger**: Push a main/develop, Pull Requests
 - **Acciones**:
   1. Checkout del código
@@ -69,6 +73,7 @@ También actualiza el workflow `.github/workflows/sonarcloud.yml` con los valore
 ## Comandos Locales
 
 ### Ejecutar análisis local
+
 ```bash
 mvn clean test jacoco:report sonar:sonar \
   -Dsonar.projectKey=tu-organizacion_nombre-del-proyecto \
@@ -78,6 +83,7 @@ mvn clean test jacoco:report sonar:sonar \
 ```
 
 ### Solo generar cobertura
+
 ```bash
 mvn clean test jacoco:report
 ```
@@ -87,22 +93,25 @@ mvn clean test jacoco:report
 - **Cobertura de código**: Objetivo mínimo 80%
 - **Duplicación**: Máximo 3%
 - **Mantenibilidad**: Rating A
-- **Confiabilidad**: Rating A  
+- **Confiabilidad**: Rating A
 - **Seguridad**: Rating A
 - **Security Hotspots**: 100% revisados
 
 ## Solución de Problemas
 
 ### Error de autenticación
+
 - Verifica que el `SONAR_TOKEN` esté configurado correctamente
 - Asegúrate de que el token tenga permisos para el proyecto
 
 ### Fallo en Quality Gate
+
 - Revisa las métricas que fallan en el dashboard de SonarCloud
 - Ajusta el código según las recomendaciones
 - Considera ajustar las configuraciones si son demasiado estrictas
 
 ### Problemas de cobertura
+
 - Verifica que JaCoCo esté generando el reporte correctamente
 - Revisa las exclusiones en `sonar-project.properties`
 - Asegúrate de que los tests se ejecuten antes del análisis

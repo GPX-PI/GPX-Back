@@ -1,4 +1,4 @@
-name: SonarCloud Analysis
+name: SonarCloud Analysis (Alternative)
 
 on:
   push:
@@ -12,32 +12,34 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: "17"
           distribution: "temurin"
 
       - name: Cache Maven packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
       - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      - name: Run tests and generate coverage
+      - name: Run tests and generate coverage report
         env:
           DATABASE_URL: jdbc:h2:mem:testdb
           DATABASE_USERNAME: sa
@@ -57,33 +59,24 @@ jobs:
         run: |
           mvn clean test jacoco:report
 
-      - name: Run SonarCloud Scan
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          DATABASE_URL: jdbc:h2:mem:testdb
-          DATABASE_USERNAME: sa
-          DATABASE_PASSWORD: password
-          JWT_SECRET: test-secret-key-for-testing-purposes-only
-          JWT_EXPIRATION: 86400000
-          JWT_REFRESH_EXPIRATION: 604800000
-          OAUTH2_GOOGLE_CLIENT_ID: test-client-id
-          OAUTH2_GOOGLE_CLIENT_SECRET: test-client-secret
-          OAUTH2_GOOGLE_REDIRECT_URI: http://localhost:8080/oauth2/callback/google
-          EMAIL_USERNAME: test@example.com
-          EMAIL_PASSWORD: test-password
-          AWS_ACCESS_KEY_ID: test-key
-          AWS_SECRET_ACCESS_KEY: test-secret
-          AWS_REGION: us-east-1
-          AWS_S3_BUCKET: test-bucket
+      - name: Verify coverage report
         run: |
-          mvn sonar:sonar \
-            -Dsonar.projectKey=your-organization_your-project-key \
-            -Dsonar.organization=your-organization \
-            -Dsonar.host.url=https://sonarcloud.io
+          if [ -f "target/site/jacoco/jacoco.xml" ]; then
+            echo "✅ JaCoCo XML report found"
+            ls -la target/site/jacoco/
+          else
+            echo "❌ JaCoCo XML report not found"
+            find target -name "*.xml" -type f | grep -i jacoco || echo "No JaCoCo XML files found"
+            exit 1
+          fi
 
-      - name: Quality Gate Check
-        uses: sonarqube-quality-gate-action@master
-        timeout-minutes: 5
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=your-organization_your-project-key
+            -Dsonar.organization=your-organization
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml

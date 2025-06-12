@@ -43,16 +43,9 @@
         <sonar.java.binaries>target/classes</sonar.java.binaries>
         <sonar.java.test.binaries>target/test-classes</sonar.java.test.binaries>
         
-        <!-- Exclusions -->
+        <!-- Exclusions (minimal - only truly necessary) -->
         <sonar.exclusions>
-            **/dto/**,
-            **/config/**,
-            **/exception/**,
-            **/constants/**,
-            **/GpxApplication.java,
-            **/*Test.java,
-            **/*Tests.java,
-            **/test/**
+            **/GpxApplication.java
         </sonar.exclusions>
         
         <!-- Test Exclusions -->
@@ -284,6 +277,12 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <formats>
+                                <format>XML</format>
+                                <format>HTML</format>
+                            </formats>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>jacoco-check</id>
