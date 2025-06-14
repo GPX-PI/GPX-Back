@@ -43,7 +43,7 @@ public class StageResultController {
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } catch (IllegalArgumentException e) {
             logger.error("Invalid data provided for stage result creation: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.badRequest().header("Error-Message", e.getMessage()).build();
         } catch (RuntimeException e) {
             logger.error("Unexpected error creating stage result: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -63,7 +63,7 @@ public class StageResultController {
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             logger.error("Invalid data provided for stage result update: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            return ResponseEntity.badRequest().header("Error-Message", e.getMessage()).build();
         } catch (RuntimeException e) {
             logger.error("Unexpected error updating stage result with ID {}: {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

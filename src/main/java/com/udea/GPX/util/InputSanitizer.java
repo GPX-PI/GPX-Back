@@ -32,7 +32,7 @@ public final class InputSanitizer {
       "^[\\p{L}\\s'\\-]{1,100}$");
 
   private static final Pattern URL_PATTERN = Pattern.compile(
-      "^https?://[A-Za-z0-9.\\-]+(?:/[A-Za-z0-9._/\\-]*)?$");
+      "^https?://[A-Za-z0-9.\\-]+(?:[/][A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=%\\-]*)?$");
 
   private static final Pattern PHONE_PATTERN = Pattern.compile(
       "^[0-9\\s()\\+\\-]{1,20}$");
@@ -42,6 +42,10 @@ public final class InputSanitizer {
 
   private static final Pattern NUMERIC_WITH_HYPHENS = Pattern.compile(
       "^[0-9\\-]+$");
+
+  // Patrón para campos sociales: permite URLs completas o usernames/texto plano
+  private static final Pattern SOCIAL_FIELD_PATTERN = Pattern.compile(
+      "^(?:https?://[A-Za-z0-9.\\-]+(?:[/][A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=%\\-]*)?|[A-Za-z0-9._@\\-/]{1,200})$");
 
   /**
    * Sanitiza texto removiendo caracteres peligrosos
@@ -230,6 +234,38 @@ public final class InputSanitizer {
     // Reject purely numeric strings with hyphens (like SSN format)
     if (NUMERIC_WITH_HYPHENS.matcher(sanitized).matches() && sanitized.contains("-")) {
       throw new IllegalArgumentException("La identificación contiene caracteres no válidos");
+    }
+
+    return sanitized;
+  }
+
+  /**
+   * Sanitiza campos de redes sociales
+   * Permite tanto URLs completas como usernames/texto plano
+   * 
+   * @param socialField campo social de entrada (URL o username)
+   * @return campo social sanitizado
+   */
+  public static String sanitizeSocialField(String socialField) {
+    if (socialField == null) {
+      return null;
+    }
+
+    if (socialField.length() > 200) { // Límite razonable para URLs y usernames
+      throw new IllegalArgumentException("Campo social demasiado largo");
+    }
+
+    String sanitized = sanitizeText(socialField);
+
+    // Verificar que sanitized no sea null
+    if (sanitized == null) {
+      throw new IllegalArgumentException("El campo social no puede ser procesado");
+    }
+
+    // Para campos sociales, hacer validaciones flexibles
+    // Permitir tanto URLs como usernames simples
+    if (!SOCIAL_FIELD_PATTERN.matcher(sanitized).matches()) {
+      throw new IllegalArgumentException("Campo social contiene caracteres no válidos");
     }
 
     return sanitized;

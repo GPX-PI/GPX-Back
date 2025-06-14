@@ -58,7 +58,10 @@ public class ApiDocController {
 
                 endpoints.put("users", Arrays.asList(
                                 "GET /api/users/{id} - Obtener usuario",
-                                "PUT /api/users/{id} - Actualizar usuario",
+                                "PUT /api/users/{id}/profile - Actualizar perfil (solo datos)",
+                                "PUT /api/users/{id}/picture - Actualizar foto de perfil (URL)",
+                                "PUT /api/users/{id}/insurance - Actualizar seguro (URL)",
+                                "DELETE /api/users/{id}/insurance - Eliminar seguro",
                                 "GET /api/users/paginated - Listar usuarios"));
 
                 endpoints.put("events", Arrays.asList(
@@ -66,6 +69,8 @@ public class ApiDocController {
                                 "POST /api/events - Crear evento",
                                 "GET /api/events/{id} - Obtener evento",
                                 "PUT /api/events/{id} - Actualizar evento",
+                                "PUT /api/events/{id}/picture - Actualizar imagen evento (URL)",
+                                "DELETE /api/events/{id}/picture - Eliminar imagen evento",
                                 "GET /api/events/current - Eventos actuales",
                                 "GET /api/events/past - Eventos pasados"));
 
@@ -152,7 +157,7 @@ public class ApiDocController {
                 services.put("event-service", ACTIVE_STATUS);
                 services.put("vehicle-service", ACTIVE_STATUS);
                 services.put("stage-service", ACTIVE_STATUS);
-                services.put("file-service", ACTIVE_STATUS);
+                services.put("url-validation", ACTIVE_STATUS);
                 status.put("services", services);
 
                 return ResponseEntity.ok(status);

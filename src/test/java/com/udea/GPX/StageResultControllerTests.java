@@ -126,11 +126,12 @@ class StageResultControllerTests {
         when(stageResultService.createResult(createDTO)).thenReturn(sr);
 
         // Act
-        ResponseEntity<StageResult> response = stageResultController.createResult(createDTO);
+        ResponseEntity<?> response = stageResultController.createResult(createDTO);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        StageResult responseBody = response.getBody();
+        assertTrue(response.getBody() instanceof StageResult);
+        StageResult responseBody = (StageResult) response.getBody();
         assertNotNull(responseBody);
         assertEquals(sr, responseBody);
     }
@@ -144,10 +145,11 @@ class StageResultControllerTests {
         CreateStageResultDTO createDTO = new CreateStageResultDTO();
 
         // Act
-        ResponseEntity<StageResult> response = stageResultController.createResult(createDTO);
+        ResponseEntity<?> response = stageResultController.createResult(createDTO);
 
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
     @Test
@@ -161,11 +163,12 @@ class StageResultControllerTests {
         when(stageResultService.updateResultFromDTO(1L, updateDTO)).thenReturn(sr);
 
         // Act
-        ResponseEntity<StageResult> response = stageResultController.updateResult(1L, updateDTO);
+        ResponseEntity<?> response = stageResultController.updateResult(1L, updateDTO);
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        StageResult responseBody = response.getBody();
+        assertTrue(response.getBody() instanceof StageResult);
+        StageResult responseBody = (StageResult) response.getBody();
         assertNotNull(responseBody);
         assertEquals(sr, responseBody);
     }
@@ -179,10 +182,46 @@ class StageResultControllerTests {
         UpdateStageResultDTO updateDTO = new UpdateStageResultDTO();
 
         // Act
-        ResponseEntity<StageResult> response = stageResultController.updateResult(1L, updateDTO);
+        ResponseEntity<?> response = stageResultController.updateResult(1L, updateDTO);
 
         // Assert
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void aplicarPenalizacion_whenAdmin_shouldReturnOK() {
+        // Arrange
+        User adminUser = buildUser(1L, true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        StageResult sr = buildStageResult(1L);
+        when(stageResultService.aplicarPenalizacion(eq(1L), any(), any(), any())).thenReturn(sr);
+
+        // Act
+        ResponseEntity<?> response = stageResultController.aplicarPenalizacion(1L, "PT60S", "PT30S", null);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertInstanceOf(StageResult.class, response.getBody());
+        StageResult responseBody = (StageResult) response.getBody();
+        assertNotNull(responseBody);
+        assertEquals(sr, responseBody);
+    }
+
+    @Test
+    void aplicarPenalizacion_whenNotAdmin_shouldReturnForbidden() {
+        // Arrange
+        User nonAdminUser = buildUser(1L, false);
+        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+
+        // Act
+        ResponseEntity<?> response = stageResultController.aplicarPenalizacion(1L, "PT60S", "PT30S", null);
+
+        // Assert
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
     @Test
@@ -192,13 +231,14 @@ class StageResultControllerTests {
         when(authentication.getPrincipal()).thenReturn(adminUser);
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
         UpdateStageResultDTO updateDTO = new UpdateStageResultDTO();
-        when(stageResultService.updateResultFromDTO(eq(1L), eq(updateDTO))).thenThrow(new IllegalArgumentException());
+        when(stageResultService.updateResultFromDTO(1L, updateDTO)).thenThrow(new IllegalArgumentException());
 
         // Act
-        ResponseEntity<StageResult> response = stageResultController.updateResult(1L, updateDTO);
+        ResponseEntity<?> response = stageResultController.updateResult(1L, updateDTO);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNull(response.getBody());
     }
 
     @Test
@@ -289,68 +329,5 @@ class StageResultControllerTests {
         assertNotNull(responseBody);
         assertEquals(1, responseBody.size());
         assertEquals(dto, responseBody.get(0));
-    }
-
-    @Test
-    void aplicarPenalizacion_whenAdmin_shouldReturnOK() {
-        // Arrange
-        User adminUser = buildUser(1L, true);
-        when(authentication.getPrincipal()).thenReturn(adminUser);
-        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        StageResult sr = buildStageResult(1L);
-        when(stageResultService.aplicarPenalizacion(eq(1L), any(), any(), any())).thenReturn(sr);
-
-        // Act
-        ResponseEntity<StageResult> response = stageResultController.aplicarPenalizacion(1L, "PT60S", "PT30S", null);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        StageResult responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals(sr, responseBody);
-    }
-
-    @Test
-    void aplicarPenalizacion_whenNotAdmin_shouldReturnForbidden() {
-        // Arrange
-        User nonAdminUser = buildUser(1L, false);
-        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
-        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
-
-        // Act
-        ResponseEntity<StageResult> response = stageResultController.aplicarPenalizacion(1L, "PT60S", "PT30S", null);
-
-        // Assert
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    @Test
-    void updateElapsedTimesForEvent_whenAdmin_shouldReturnOK() {
-        // Arrange
-        User adminUser = buildUser(1L, true);
-        when(authentication.getPrincipal()).thenReturn(adminUser);
-        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        doNothing().when(stageResultService).updateElapsedTimesForEvent(1L);
-
-        // Act
-        ResponseEntity<Void> response = stageResultController.updateElapsedTimesForEvent(1L);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
-
-    @Test
-    void updateElapsedTimesForEvent_whenNotAdmin_shouldReturnForbidden() {
-        // Arrange
-        User nonAdminUser = buildUser(1L, false);
-        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
-        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
-
-        // Act
-        ResponseEntity<Void> response = stageResultController.updateElapsedTimesForEvent(1L);
-
-        // Assert
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 }

@@ -10,6 +10,7 @@ import com.udea.gpx.model.StageResult;
 import com.udea.gpx.model.Vehicle;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IStageResultRepository extends JpaRepository<StageResult, Long> {
 
@@ -96,4 +97,22 @@ public interface IStageResultRepository extends JpaRepository<StageResult, Long>
                         "     OR sr.penaltySpeed IS NOT NULL " +
                         "     OR sr.discountClaim IS NOT NULL)")
         List<StageResult> findByEventIdWithPenalties(@Param("eventId") Long eventId);
+
+        /**
+         * Verifica si ya existe un resultado para el vehículo en la etapa específica
+         */
+        @Query("SELECT COUNT(sr) > 0 FROM StageResult sr " +
+                        "WHERE sr.vehicle.id = :vehicleId " +
+                        "AND sr.stage.id = :stageId")
+        boolean existsByVehicleIdAndStageId(@Param("vehicleId") Long vehicleId,
+                        @Param("stageId") Long stageId);
+
+        /**
+         * Encuentra un resultado específico por vehículo y etapa (para edición)
+         */
+        @Query("SELECT sr FROM StageResult sr " +
+                        "WHERE sr.vehicle.id = :vehicleId " +
+                        "AND sr.stage.id = :stageId")
+        Optional<StageResult> findByVehicleIdAndStageId(@Param("vehicleId") Long vehicleId,
+                        @Param("stageId") Long stageId);
 }

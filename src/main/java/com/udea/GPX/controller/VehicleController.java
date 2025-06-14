@@ -3,7 +3,6 @@ package com.udea.gpx.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import com.udea.gpx.dto.VehicleRequestDTO;
 import com.udea.gpx.model.Category;
 import com.udea.gpx.model.User;
@@ -14,14 +13,11 @@ import com.udea.gpx.service.CategoryService;
 import com.udea.gpx.service.UserService;
 import com.udea.gpx.service.VehicleService;
 import com.udea.gpx.util.AuthUtils;
-
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.dao.DataIntegrityViolationException;
-
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +32,6 @@ public class VehicleController {
     private final CategoryService categoryService;
     private final IEventVehicleRepository eventVehicleRepository;
     private final IStageResultRepository stageResultRepository;
-    private final HttpServletRequest request;
     private final AuthUtils authUtils;
 
     // Constants for response keys
@@ -51,14 +46,12 @@ public class VehicleController {
             CategoryService categoryService,
             IEventVehicleRepository eventVehicleRepository,
             IStageResultRepository stageResultRepository,
-            HttpServletRequest request,
             AuthUtils authUtils) {
         this.vehicleService = vehicleService;
         this.userService = userService;
         this.categoryService = categoryService;
         this.eventVehicleRepository = eventVehicleRepository;
         this.stageResultRepository = stageResultRepository;
-        this.request = request;
         this.authUtils = authUtils;
     }
 
@@ -68,6 +61,11 @@ public class VehicleController {
      */
     private User getAuthenticatedUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
+        }
+
         Object principal = auth.getPrincipal();
 
         if (principal instanceof User user) {
@@ -80,13 +78,11 @@ public class VehicleController {
                 User user = userService.findByEmail(email);
                 if (user != null) {
                     return user;
-                } else {
-                    throw new RuntimeException("Usuario OAuth2 no encontrado en la base de datos");
                 }
             }
         }
 
-        throw new RuntimeException("Usuario no autenticado correctamente");
+        return null;
     }
 
     @GetMapping
@@ -118,8 +114,15 @@ public class VehicleController {
     }
 
     @PostMapping
-    public ResponseEntity<Vehicle> createVehicle(@Valid @RequestBody VehicleRequestDTO vehicleData) {
+    public ResponseEntity<Object> createVehicle(@Valid @RequestBody VehicleRequestDTO vehicleData) {
         User authUser = getAuthenticatedUser();
+
+        if (authUser == null) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put(KEY_ERROR, "No autorizado");
+            errorResponse.put(KEY_MESSAGE, "Usuario no autenticado");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
 
         try {
             Vehicle vehicle = new Vehicle();
@@ -131,14 +134,20 @@ public class VehicleController {
             // Manejar categoryId
             Category category = categoryService.getCategoryById(vehicleData.getCategoryId());
             if (category == null) {
-                return ResponseEntity.badRequest().build();
+                Map<String, String> errorResponse = new HashMap<>();
+                errorResponse.put(KEY_ERROR, "Categoría no válida");
+                errorResponse.put(KEY_MESSAGE, "La categoría especificada no existe");
+                return ResponseEntity.badRequest().body(errorResponse);
             }
             vehicle.setCategory(category);
 
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(vehicleService.createVehicle(vehicle));
+            Vehicle createdVehicle = vehicleService.createVehicle(vehicle);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdVehicle);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put(KEY_ERROR, "Error al crear vehículo");
+            errorResponse.put(KEY_MESSAGE, "Ocurrió un error interno: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }
 

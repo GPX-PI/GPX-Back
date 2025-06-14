@@ -101,10 +101,14 @@ class ApiDocControllerTest {
         List<String> userEndpoints = (List<String>) endpoints.get("users");
 
         assertThat(userEndpoints).isNotNull();
-        assertThat(userEndpoints).hasSize(3);
-        assertThat(userEndpoints).contains("GET /api/users/{id} - Obtener usuario");
-        assertThat(userEndpoints).contains("PUT /api/users/{id} - Actualizar usuario");
-        assertThat(userEndpoints).contains("GET /api/users/paginated - Listar usuarios");
+        assertThat(userEndpoints).hasSize(6);
+        assertThat(userEndpoints).contains(
+                "GET /api/users/{id} - Obtener usuario",
+                "PUT /api/users/{id}/profile - Actualizar perfil (solo datos)",
+                "PUT /api/users/{id}/picture - Actualizar foto de perfil (URL)",
+                "PUT /api/users/{id}/insurance - Actualizar seguro (URL)",
+                "DELETE /api/users/{id}/insurance - Eliminar seguro",
+                "GET /api/users/paginated - Listar usuarios");
     }
 
     @Test
@@ -119,13 +123,16 @@ class ApiDocControllerTest {
         List<String> eventEndpoints = (List<String>) endpoints.get("events");
 
         assertThat(eventEndpoints).isNotNull();
-        assertThat(eventEndpoints).hasSize(6);
-        assertThat(eventEndpoints).contains("GET /api/events - Listar eventos");
-        assertThat(eventEndpoints).contains("POST /api/events - Crear evento");
-        assertThat(eventEndpoints).contains("GET /api/events/{id} - Obtener evento");
-        assertThat(eventEndpoints).contains("PUT /api/events/{id} - Actualizar evento");
-        assertThat(eventEndpoints).contains("GET /api/events/current - Eventos actuales");
-        assertThat(eventEndpoints).contains("GET /api/events/past - Eventos pasados");
+        assertThat(eventEndpoints).hasSize(8);
+        assertThat(eventEndpoints).contains(
+                "GET /api/events - Listar eventos",
+                "POST /api/events - Crear evento",
+                "GET /api/events/{id} - Obtener evento",
+                "PUT /api/events/{id} - Actualizar evento",
+                "PUT /api/events/{id}/picture - Actualizar imagen evento (URL)",
+                "DELETE /api/events/{id}/picture - Eliminar imagen evento",
+                "GET /api/events/current - Eventos actuales",
+                "GET /api/events/past - Eventos pasados");
     }
 
     // ========== GET EXAMPLES TESTS ==========
@@ -236,7 +243,7 @@ class ApiDocControllerTest {
                 "event-service",
                 "vehicle-service",
                 "stage-service",
-                "file-service");
+                "url-validation");
 
         // Todos los servicios deben estar activos
         services.values().forEach(serviceStatus -> assertThat(serviceStatus).isEqualTo("active"));

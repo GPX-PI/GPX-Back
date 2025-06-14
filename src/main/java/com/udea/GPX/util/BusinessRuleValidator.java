@@ -142,16 +142,6 @@ public class BusinessRuleValidator {
       throw new IllegalArgumentException("La fecha y hora del resultado es obligatoria");
     }
 
-    // No permitir timestamps futuros
-    if (timestamp.isAfter(LocalDateTime.now())) {
-      throw new IllegalArgumentException("No se pueden registrar resultados con fecha futura");
-    }
-
-    // No permitir timestamps muy antiguos (más de 2 años)
-    if (timestamp.isBefore(LocalDateTime.now().minusYears(2))) {
-      throw new IllegalArgumentException("No se pueden registrar resultados con fecha anterior a 2 años");
-    }
-
     // Validar que el timestamp esté dentro del rango del evento
     if (event != null) {
       LocalDate timestampDate = timestamp.toLocalDate();

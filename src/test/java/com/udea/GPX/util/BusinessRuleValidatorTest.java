@@ -237,27 +237,17 @@ class BusinessRuleValidatorTest {
   }
 
   @Test
-  @DisplayName("validateStageResultTimestamp - Debe lanzar excepción si timestamp es futuro")
-  void validateStageResultTimestamp_shouldThrowExceptionIfTimestampIsFuture() {
-    // Given
-    LocalDateTime futureTimestamp = LocalDateTime.now().plusHours(1);
+  @DisplayName("validateStageResultTimestamp - Debe permitir timestamp futuro si está dentro del evento")
+  void validateStageResultTimestamp_shouldAllowFutureTimestampIfWithinEvent() {
+    // Given - Crear un evento futuro
+    Event futureEvent = TestDataBuilder.buildEvent(13L, "Future Event");
+    futureEvent.setStartDate(LocalDate.now().plusDays(1));
+    futureEvent.setEndDate(LocalDate.now().plusDays(3));
+    LocalDateTime futureTimestamp = futureEvent.getStartDate().atTime(14, 30);
 
-    // When & Then
-    assertThatThrownBy(() -> validator.validateStageResultTimestamp(futureTimestamp, validEvent))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("No se pueden registrar resultados con fecha futura");
-  }
-
-  @Test
-  @DisplayName("validateStageResultTimestamp - Debe lanzar excepción si timestamp es muy antiguo")
-  void validateStageResultTimestamp_shouldThrowExceptionIfTimestampIsVeryOld() {
-    // Given
-    LocalDateTime veryOldTimestamp = LocalDateTime.now().minusYears(3);
-
-    // When & Then
-    assertThatThrownBy(() -> validator.validateStageResultTimestamp(veryOldTimestamp, validEvent))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("No se pueden registrar resultados con fecha anterior a 2 años");
+    // When & Then - No debe lanzar excepción
+    assertThatCode(() -> validator.validateStageResultTimestamp(futureTimestamp, futureEvent))
+        .doesNotThrowAnyException();
   }
 
   @Test

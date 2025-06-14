@@ -40,7 +40,7 @@ class JwtPropertiesTest {
             long defaultExpiration = jwtProperties.getExpirationSeconds();
 
             // Then
-            assertEquals(3600L, defaultExpiration); // 1 hour
+            assertEquals(36000L, defaultExpiration); // 10 hours
         }
 
         @Test

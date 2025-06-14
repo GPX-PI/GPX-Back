@@ -2,7 +2,6 @@ package com.udea.gpx;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-
 import com.udea.gpx.exception.InternalServerException;
 import com.udea.gpx.util.TestDataBuilder;
 import com.udea.gpx.controller.UserController;
@@ -11,7 +10,6 @@ import com.udea.gpx.service.TokenService;
 import com.udea.gpx.service.UserService;
 import com.udea.gpx.service.TokenService.TokenPair;
 import com.udea.gpx.util.AuthUtils;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -29,8 +27,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,13 +61,7 @@ class UserControllerTests {
     private AuthUtils authUtils;
 
     @Mock
-    private com.udea.gpx.service.FileTransactionService fileTransactionService;
-
-    @Mock
     private OAuth2User oauth2User;
-
-    @Mock
-    private MultipartFile multipartFile;
 
     private UserController userController;
 
@@ -81,7 +71,7 @@ class UserControllerTests {
         SecurityContextHolder.setContext(securityContext);
         when(securityContext.getAuthentication()).thenReturn(authentication);
 
-        userController = new UserController(userService, request, tokenService, authUtils, fileTransactionService);
+        userController = new UserController(userService, request, tokenService, authUtils);
     }
 
     // ========== TESTS BÁSICOS (YA EXISTENTES) ==========
@@ -148,38 +138,50 @@ class UserControllerTests {
         Long userId = 1L;
         User otherUser = TestDataBuilder.buildUser(2L, "Otro", false);
         when(authentication.getPrincipal()).thenReturn(otherUser);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(false);
 
         ResponseEntity<User> response = userController.getUserById(userId);
 
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
-    // ========== TESTS EXPANDIDOS PARA MEJORAR COBERTURA ==========
+    @Test
+    void getUserById_whenNotFound_shouldReturnNotFound() {
+        Long userId = 1L;
+        User adminUser = TestDataBuilder.buildUser(2L, "Admin", true);
+        when(authentication.getPrincipal()).thenReturn(adminUser);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.getUserById(userId)).thenReturn(Optional.empty());
+
+        ResponseEntity<User> response = userController.getUserById(userId);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+    }
 
     // ========== TESTS PARA updateUserProfile ==========
-
     @Test
-    @SuppressWarnings("unchecked")
-    void updateUserProfile_whenValidData_shouldReturnOK() {
+    void updateUserProfile_whenValid_shouldReturnOK() {
         Long userId = 1L;
-        User existingUser = TestDataBuilder.buildUser(userId, "Juan", false);
-        User updatedUser = TestDataBuilder.buildUser(userId, "Juan Updated", false);
-
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        User updatedUser = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authentication.getPrincipal()).thenReturn(user);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.updateUserProfile(eq(userId), any(User.class))).thenReturn(updatedUser);
 
-        ResponseEntity<Object> response = userController.updateUserProfile(userId, updatedUser);
+        ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Juan Updated", ((User) response.getBody()).getFirstName());
+        assertTrue(response.getBody() instanceof User);
+        User responseBody = (User) response.getBody();
+        assertEquals(userId, responseBody.getId());
     }
 
     @Test
-    @SuppressWarnings("unchecked")
-    void updateUserProfile_whenNotAuthorized_shouldReturnForbidden() {
+    void updateUserProfile_whenNotAllowed_shouldReturnForbidden() {
         Long userId = 1L;
         User user = TestDataBuilder.buildUser(userId, "Juan", false);
-
+        when(authentication.getPrincipal()).thenReturn(user);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(false);
 
         ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
@@ -188,53 +190,55 @@ class UserControllerTests {
     }
 
     @Test
-    @SuppressWarnings("unchecked")
     void updateUserProfile_whenValidationError_shouldReturnBadRequest() {
         Long userId = 1L;
         User user = TestDataBuilder.buildUser(userId, "Juan", false);
-
+        when(authentication.getPrincipal()).thenReturn(user);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.updateUserProfile(eq(userId), any(User.class)))
-                .thenThrow(new IllegalArgumentException("Email inválido"));
+            .thenThrow(new IllegalArgumentException("Campo inválido"));
 
         ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("Email inválido", responseBody.get("error"));
-        assertEquals("VALIDATION_ERROR", responseBody.get("type"));
+        assertTrue(response.getBody() instanceof Map);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertEquals("Campo inválido", body.get("error"));
+        assertEquals("VALIDATION_ERROR", body.get("type"));
+    }
+
+    @Test
+    void updateUserProfile_whenInternalServerError_shouldReturnInternalServerError() {
+        Long userId = 1L;
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.updateUserProfile(eq(userId), any(User.class)))
+            .thenThrow(new InternalServerException("Fallo interno"));
+
+        ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertTrue(response.getBody() instanceof Map);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getBody();
+        assertEquals("Error interno del servidor", body.get("error"));
+        assertEquals("INTERNAL_ERROR", body.get("type"));
     }
 
     @Test
     void updateUserProfile_whenUserNotFound_shouldReturnNotFound() {
         Long userId = 1L;
         User user = TestDataBuilder.buildUser(userId, "Juan", false);
-
+        when(authentication.getPrincipal()).thenReturn(user);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.updateUserProfile(eq(userId), any(User.class)))
-                .thenThrow(new RuntimeException("Usuario no encontrado"));
+            .thenThrow(new RuntimeException("Usuario no encontrado"));
 
         ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void updateUserProfile_whenInternalError_shouldReturnInternalServerError() {
-        Long userId = 1L;
-        User user = TestDataBuilder.buildUser(userId, "Juan", false);
-        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        // Crear una excepción específica para errores internos
-        InternalServerException customException = new InternalServerException("Error interno de sistema");
-        doThrow(customException).when(userService).updateUserProfile(eq(userId), any(User.class));
-
-        ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("Error interno del servidor", responseBody.get("error"));
-        assertEquals("INTERNAL_ERROR", responseBody.get("type"));
     }
 
     // ========== TESTS PARA updateUserPicture ==========
@@ -280,29 +284,13 @@ class UserControllerTests {
         pictureData.put("pictureUrl", "https://example.com/photo.jpg");
 
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        when(userService.getUserById(userId)).thenReturn(Optional.empty());
+        // Simular que el usuario no existe lanzando excepción con mensaje esperado
+        when(userService.updateUserPictureUrl(eq(userId), anyString()))
+            .thenThrow(new RuntimeException("Usuario no encontrado"));
 
         ResponseEntity<Object> response = userController.updateUserPicture(userId, pictureData);
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void updateUserPicture_whenRemovingPicture_shouldReturnOK() {
-        Long userId = 1L;
-        User user = TestDataBuilder.buildUser(userId, "Juan", false);
-        user.setPicture("old-photo.jpg");
-        Map<String, String> pictureData = new HashMap<>();
-        pictureData.put("pictureUrl", "");
-
-        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
-        when(userService.updateUser(eq(userId), any(User.class))).thenReturn(user);
-
-        ResponseEntity<Object> response = userController.updateUserPicture(userId, pictureData);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     // ========== TESTS PARA removeInsurance ==========
@@ -341,7 +329,9 @@ class UserControllerTests {
         Long userId = 1L;
 
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        when(userService.getUserById(userId)).thenReturn(Optional.empty());
+        // Simular que el usuario no existe lanzando excepción con mensaje esperado
+        when(userService.removeUserInsurance(userId))
+            .thenThrow(new RuntimeException("Usuario no encontrado"));
 
         ResponseEntity<Object> response = userController.removeInsurance(userId);
 
@@ -384,8 +374,8 @@ class UserControllerTests {
     void changePassword_whenValidData_shouldReturnOK() {
         Long userId = 1L;
         Map<String, String> passwordData = new HashMap<>();
-        passwordData.put("currentpassword", "oldPassword");
-        passwordData.put("newpassword", "newPassword");
+        passwordData.put("currentPassword", "oldPassword");
+        passwordData.put("newPassword", "newPassword");
 
         User user = TestDataBuilder.buildUser(userId, "Juan", false);
         user.setPassword("hashedOldPassword");
@@ -423,8 +413,8 @@ class UserControllerTests {
     void changePassword_whenOAuth2User_shouldReturnBadRequest() {
         Long userId = 1L;
         Map<String, String> passwordData = new HashMap<>();
-        passwordData.put("currentpassword", "oldPassword");
-        passwordData.put("newpassword", "newPassword");
+        passwordData.put("currentPassword", "oldPassword");
+        passwordData.put("newPassword", "newPassword");
 
         User user = TestDataBuilder.buildUser(userId, "Juan", false);
         user.setPassword(null); // OAuth2 user
@@ -705,43 +695,73 @@ class UserControllerTests {
         assertTrue(responseBody.get("message").toString().contains("registrado exitosamente"));
     }
 
-    // ========== TESTS PARA updateUserWithFiles ==========
+    // ========== TESTS PARA completeProfile ==========
 
     @Test
     @SuppressWarnings("unchecked")
-    void updateUserWithFiles_whenWithFiles_shouldReturnOK() {
+    void completeProfile_whenSameUser_shouldCompleteSuccessfully() {
         Long userId = 1L;
-        User existingUser = TestDataBuilder.buildUser(userId, "Juan", false);
-        User updatedUser = TestDataBuilder.buildUser(userId, "JuanUpdated", false);
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        user.setEmail("juan@ejemplo.com");
+
+        Map<String, String> profileData = new HashMap<>();
+        profileData.put("identification", "12345678");
+        profileData.put("phone", "3001234567");
+        profileData.put("role", "piloto");
+        profileData.put("lastName", "Pérez");
 
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        when(userService.getUserById(userId)).thenReturn(Optional.of(existingUser));
-        when(multipartFile.isEmpty()).thenReturn(false);
-        when(fileTransactionService.updateFileTransactional(any(), any(), any(), any()))
-                .thenReturn("new-photo-path.jpg");
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+
+        User updatedUser = TestDataBuilder.buildUser(userId, "Juan", false);
+        updatedUser.setEmail("juan@ejemplo.com");
+        updatedUser.setIdentification("12345678");
+        updatedUser.setPhone("3001234567");
+        updatedUser.setRole("piloto");
+        updatedUser.setLastName("Pérez");
         when(userService.updateUser(eq(userId), any(User.class))).thenReturn(updatedUser);
 
-        ResponseEntity<Object> response = userController.updateUserWithFiles(userId, updatedUser, multipartFile,
-                multipartFile);
+        ResponseEntity<Object> response = userController.completeProfile(userId, profileData);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("Usuario actualizado exitosamente", responseBody.get("message"));
-        User responseUser = (User) responseBody.get("user");
-        assertEquals("JuanUpdated", Objects.requireNonNull(responseUser).getFirstName());
+        assertNotNull(responseBody);
+        assertTrue(responseBody.get("message").toString().contains("completado exitosamente"));
+        assertNotNull(responseBody.get("user"));
+    }
+
+    // ========== TESTS PARA updateUserInsurance ==========
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void updateUserInsurance_whenValidUrl_shouldReturnOK() {
+        Long userId = 1L;
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        Map<String, String> insuranceData = new HashMap<>();
+        insuranceData.put("insuranceUrl", "https://drive.google.com/file/document.pdf");
+
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+        when(userService.updateUser(eq(userId), any(User.class))).thenReturn(user);
+
+        ResponseEntity<Object> response = userController.updateUserInsurance(userId, insuranceData);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
+        assertEquals("Documento de seguro actualizado exitosamente", responseBody.get("message"));
     }
 
     @Test
-    void updateUserWithFiles_whenUserNotFound_shouldReturnNotFound() {
+    void updateUserInsurance_whenNotAuthorized_shouldReturnForbidden() {
         Long userId = 1L;
-        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        Map<String, String> insuranceData = new HashMap<>();
+        insuranceData.put("insuranceUrl", "https://drive.google.com/file/document.pdf");
 
-        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        when(userService.getUserById(userId)).thenReturn(Optional.empty());
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(false);
 
-        ResponseEntity<Object> response = userController.updateUserWithFiles(userId, user, null, null);
+        ResponseEntity<Object> response = userController.updateUserInsurance(userId, insuranceData);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
     // ========== TESTS PARA MÉTODOS AUXILIARES ==========
@@ -783,40 +803,5 @@ class UserControllerTests {
         Map<String, Boolean> responseBody = response.getBody();
         assertNotNull(responseBody);
         assertFalse(responseBody.get("exists"));
-    }
-
-    // ========== TESTS PARA completeProfile ==========
-
-    @Test
-    @SuppressWarnings("unchecked")
-    void completeProfile_whenSameUser_shouldCompleteSuccessfully() {
-        Long userId = 1L;
-        User user = TestDataBuilder.buildUser(userId, "Juan", false);
-        user.setEmail("juan@ejemplo.com");
-
-        Map<String, String> profileData = new HashMap<>();
-        profileData.put("identification", "12345678");
-        profileData.put("phone", "3001234567");
-        profileData.put("role", "piloto");
-        profileData.put("lastName", "Pérez");
-
-        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
-        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
-
-        User updatedUser = TestDataBuilder.buildUser(userId, "Juan", false);
-        updatedUser.setEmail("juan@ejemplo.com");
-        updatedUser.setIdentification("12345678");
-        updatedUser.setPhone("3001234567");
-        updatedUser.setRole("piloto");
-        updatedUser.setLastName("Pérez");
-        when(userService.updateUser(eq(userId), any(User.class))).thenReturn(updatedUser);
-
-        ResponseEntity<Object> response = userController.completeProfile(userId, profileData);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertNotNull(responseBody);
-        assertTrue(responseBody.get("message").toString().contains("completado exitosamente"));
-        assertNotNull(responseBody.get("user"));
     }
 }

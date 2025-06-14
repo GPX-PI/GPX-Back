@@ -25,7 +25,23 @@ import static org.assertj.core.api.Assertions.assertThat;
  * ✅ TestDataBuilder para datos de prueba
  * ✅ Configuración mínima y funcional
  */
-@SpringBootTest(classes = TestConfig.class)
+@SpringBootTest(classes = TestConfig.class, properties = {
+    "spring.profiles.active=test",
+    "spring.jpa.hibernate.ddl-auto=create-drop",
+    "jwt.secret=test-secret-key-for-junit-tests-only-not-for-production-use",
+    "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL",
+    "spring.datasource.driver-class-name=org.h2.Driver",
+    "spring.datasource.username=sa",
+    "spring.datasource.password=password",
+    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+    "spring.jpa.show-sql=false",
+    "spring.security.oauth2.client.registration.google.client-id=test-client-id",
+    "spring.security.oauth2.client.registration.google.client-secret=test-client-secret",
+    "app.oauth2.frontend-redirect-url=http://localhost:3000/",
+    "cors.allowed-origins=http://localhost:3000",
+    "spring.servlet.multipart.max-file-size=10MB",
+    "spring.servlet.multipart.max-request-size=10MB"
+})
 @ActiveProfiles("test")
 @DisplayName("🚀 Simple Integration Test")
 class SimpleIntegrationTest {

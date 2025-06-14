@@ -5,7 +5,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.udea.gpx.model.Event;
 import com.udea.gpx.model.EventCategory;
@@ -15,14 +14,9 @@ import com.udea.gpx.util.BusinessRuleValidator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Dedicated exceptions for EventService
@@ -62,10 +56,6 @@ public class EventService {
 
     // String constants to eliminate duplicated literals
     private static final String EVENT_NOT_FOUND_MSG = "Evento no encontrado";
-    private static final String IMAGE_UPLOAD_ERROR_MSG = "Error al subir la imagen del evento: ";
-    private static final String ONLY_IMAGE_FILES_MSG = "Solo se permiten archivos de imagen";
-    private static final String FILE_SIZE_LIMIT_MSG = "El archivo no puede ser mayor a 5MB";
-    private static final String UPLOADS_EVENTS_DIR = "uploads/events/";
 
     private final IEventRepository eventRepository;
     private final IEventCategoryRepository eventCategoryRepository;
@@ -145,12 +135,6 @@ public class EventService {
 
     @CacheEvict(value = { "events", "currentEvents", "pastEvents", "eventCategories" }, allEntries = true)
     public void deleteEvent(Long id) {
-        // Antes de eliminar, eliminar la imagen si existe
-        Optional<Event> eventOpt = eventRepository.findById(id);
-        if (eventOpt.isPresent()) {
-            Event event = eventOpt.get();
-            deleteOldFile(event.getPicture());
-        }
         eventRepository.deleteById(id);
     }
 
@@ -162,35 +146,16 @@ public class EventService {
                 .toList();
     }
 
-    // Métodos para manejo de imágenes
-
-    public Event updateEventPicture(Long id, MultipartFile eventPhoto) throws ImageUploadException {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG));
-
-        try {
-            // Eliminar imagen anterior si existe
-            deleteOldFile(event.getPicture()); // Guardar nueva imagen
-            String newPicturePath = saveFile(eventPhoto, "event");
-            event.setPicture(newPicturePath);
-
-            return eventRepository.save(event);
-        } catch (Exception e) {
-            // Relanzar con contexto específico para manejo en nivel superior
-            throw new ImageUploadException(IMAGE_UPLOAD_ERROR_MSG + e.getMessage(), e);
-        }
-    }
+    // ========== MÉTODOS PARA GESTIÓN DE URLs DE IMÁGENES ==========
 
     public Event updateEventPictureUrl(Long id, String pictureUrl) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG));
 
-        // Eliminar archivo anterior si no es una URL externa
-        deleteOldFile(event.getPicture());
-
         // Actualizar con la nueva URL (puede ser externa o null para eliminar)
         event.setPicture(pictureUrl != null && !pictureUrl.trim().isEmpty() ? pictureUrl : null);
 
+        logger.debug("Actualizando URL de imagen del evento {}: {}", id, pictureUrl);
         return eventRepository.save(event);
     }
 
@@ -198,65 +163,8 @@ public class EventService {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG));
 
-        // Eliminar archivo actual si existe
-        deleteOldFile(event.getPicture());
         event.setPicture(null);
-
+        logger.debug("Removiendo imagen del evento {}", id);
         return eventRepository.save(event);
-    }
-
-    // Métodos auxiliares para manejo de archivos
-
-    private void deleteOldFile(String oldFilePath) {
-        if (oldFilePath != null && !oldFilePath.trim().isEmpty() && !oldFilePath.startsWith("http")) {
-            try {
-                Path path = Paths.get(oldFilePath);
-                Files.deleteIfExists(path);
-                logger.debug("Archivo anterior eliminado: {}", oldFilePath);
-            } catch (Exception e) {
-                logger.error("Error al eliminar archivo anterior: {}", oldFilePath, e);
-                // No lanzar excepción para no interrumpir el flujo principal
-            }
-        }
-    }
-
-    private String saveFile(MultipartFile file, String fileType) throws EventServiceException {
-        if (file.isEmpty()) {
-            throw new EventServiceException("El archivo está vacío");
-        }
-
-        // Verificar tipo de archivo
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new InvalidFileTypeException(ONLY_IMAGE_FILES_MSG);
-        }
-
-        // Verificar tamaño (máximo 5MB)
-        if (file.getSize() > 5 * 1024 * 1024) {
-            throw new FileSizeExceededException(FILE_SIZE_LIMIT_MSG);
-        }
-
-        // Crear directorio si no existe
-        File uploadDir = new File(UPLOADS_EVENTS_DIR);
-        if (!uploadDir.exists()) {
-            uploadDir.mkdirs();
-        }
-
-        // Generar nombre único para el archivo
-        String originalFilename = file.getOriginalFilename();
-        String fileExtension = "";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
-        }
-        String uniqueFilename = fileType + "_" + UUID.randomUUID().toString() + fileExtension; // Guardar archivo
-        Path filePath = Paths.get(UPLOADS_EVENTS_DIR + uniqueFilename);
-        try {
-            Files.write(filePath, file.getBytes());
-        } catch (Exception e) {
-            // Relanzar con contexto específico para manejo en nivel superior
-            throw new EventServiceException("Error saving file to disk: " + e.getMessage(), e);
-        }
-
-        return filePath.toString();
     }
 }

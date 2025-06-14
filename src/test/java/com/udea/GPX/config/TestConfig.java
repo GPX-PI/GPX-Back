@@ -78,6 +78,46 @@ public class TestConfig {
     registry.add("spring.docker.compose.enabled", () -> "false");
   }
 
+  // =================== CONFIGURACIÓN COMPLETA PARA TESTS ===================
+
+  /**
+   * Configuración adicional para tests cuando falta application.properties
+   */
+  @DynamicPropertySource
+  static void configureAdditionalProperties(DynamicPropertyRegistry registry) {
+    // JWT
+    registry.add("jwt.secret", () -> "test-secret-key-for-junit-tests-only-not-for-production-use");
+    registry.add("jwt.expiration-seconds", () -> "3600");
+    registry.add("jwt.refresh-expiration-seconds", () -> "604800");
+    registry.add("jwt.max-concurrent-sessions", () -> "5");
+    registry.add("jwt.allow-refresh-token-rotation", () -> "true");
+    registry.add("jwt.enable-blacklist", () -> "true");
+    registry.add("jwt.session-timeout-seconds", () -> "7200");
+    registry.add("jwt.max-session-duration-seconds", () -> "28800");
+
+    // OAuth2
+    registry.add("spring.security.oauth2.client.registration.google.client-id", () -> "test-client-id");
+    registry.add("spring.security.oauth2.client.registration.google.client-secret", () -> "test-client-secret");
+    registry.add("spring.security.oauth2.client.registration.google.scope", () -> "openid,profile,email");
+    registry.add("app.oauth2.frontend-redirect-url", () -> "http://localhost:3000/");
+
+    // CORS
+    registry.add("cors.allowed-origins", () -> "http://localhost:3000");
+
+    // GPX Event Limits
+    registry.add("gpx.event.limits.default-max-vehicles", () -> "100");
+    registry.add("gpx.event.limits.max-days-for-registration", () -> "365");
+    registry.add("gpx.event.limits.min-days-before-start", () -> "1");
+    registry.add("gpx.event.limits.enforce-capacity-limits", () -> "true");
+
+    // Server port
+    registry.add("server.port", () -> "8080");
+
+    // Multipart
+    registry.add("spring.servlet.multipart.max-file-size", () -> "10MB");
+    registry.add("spring.servlet.multipart.max-request-size", () -> "10MB");
+  }
+
   // =================== MOCKS PARA TESTS UNITARIOS ===================
 
   @Bean

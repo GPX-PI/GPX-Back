@@ -162,26 +162,38 @@ public class UserService {
 
     private void updateSocialFields(User user, User updatedUser) {
         if (updatedUser.getWikiloc() != null) {
-            user.setWikiloc(InputSanitizer.sanitizeUrl(updatedUser.getWikiloc()));
+            user.setWikiloc(InputSanitizer.sanitizeSocialField(updatedUser.getWikiloc()));
         }
         if (updatedUser.getTerrapirata() != null) {
-            user.setTerrapirata(InputSanitizer.sanitizeUrl(updatedUser.getTerrapirata()));
+            user.setTerrapirata(InputSanitizer.sanitizeSocialField(updatedUser.getTerrapirata()));
         }
         if (updatedUser.getInstagram() != null) {
-            user.setInstagram(InputSanitizer.sanitizeUrl(updatedUser.getInstagram()));
+            user.setInstagram(InputSanitizer.sanitizeSocialField(updatedUser.getInstagram()));
         }
         if (updatedUser.getFacebook() != null) {
-            user.setFacebook(InputSanitizer.sanitizeUrl(updatedUser.getFacebook()));
+            user.setFacebook(InputSanitizer.sanitizeSocialField(updatedUser.getFacebook()));
         }
     }
 
     private void updateFileFields(User user, User updatedUser) {
-        if (updatedUser.getInsurance() != null) {
-            user.setInsurance(updatedUser.getInsurance()); // Archivos no se sanitizan
+        // Para archivos, siempre actualizar (incluye null para eliminar)
+        if (updatedUser.getInsurance() != null || hasFieldBeenExplicitlySet("insurance", updatedUser)) {
+            user.setInsurance(updatedUser.getInsurance()); // Archivos no se sanitizan, permite null
         }
-        if (updatedUser.getPicture() != null) {
-            user.setPicture(updatedUser.getPicture()); // Archivos no se sanitizan
+        if (updatedUser.getPicture() != null || hasFieldBeenExplicitlySet("picture", updatedUser)) {
+            user.setPicture(updatedUser.getPicture()); // Archivos no se sanitizan, permite null
         }
+    }
+
+    /**
+     * Método auxiliar para verificar si un campo ha sido establecido explícitamente
+     * Esta es una implementación simple - en un caso real podrías usar anotaciones
+     * o un DTO específico
+     */
+    private boolean hasFieldBeenExplicitlySet(String fieldName, User user) {
+        // Por simplicidad, siempre retornar true para permitir la actualización a null
+        // En una implementación más robusta, usarías un DTO o flag específico
+        return true;
     }
 
     public User updateUserProfile(Long id, User updatedUser) {
@@ -285,6 +297,78 @@ public class UserService {
         // Hashear y guardar nueva contraseña
         user.setPassword(passwordService.hashPassword(newPassword));
         userRepository.save(user);
+    }
+
+    // ========== MÉTODOS PARA GESTIÓN DE URLs DE ARCHIVOS (igual que EventService)
+    // ==========
+
+    /**
+     * Actualiza la URL de la foto de perfil del usuario
+     * NO aplica sanitización - igual que EventService.updateEventPictureUrl()
+     */
+    public User updateUserPictureUrl(Long id, String pictureUrl) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(AppConstants.Messages.USUARIO_NO_ENCONTRADO));
+
+        // Validaciones de seguridad adicionales
+        if (pictureUrl != null && !pictureUrl.trim().isEmpty()) {
+            String trimmedUrl = pictureUrl.trim();
+
+            // Límite de longitud para prevenir ataques
+            if (trimmedUrl.length() > 2048) {
+                throw new IllegalArgumentException("URL demasiado larga (máximo 2048 caracteres)");
+            }
+
+            // Log para auditoría de seguridad
+            logger.info("Actualizando URL de imagen del usuario {}: {}", id, trimmedUrl);
+            user.setPicture(trimmedUrl);
+        } else {
+            user.setPicture(null);
+            logger.info("Eliminando imagen del usuario {}", id);
+        }
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Actualiza la URL del documento de seguro del usuario
+     * NO aplica sanitización - consistente con updateUserPictureUrl()
+     */
+    public User updateUserInsuranceUrl(Long id, String insuranceUrl) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(AppConstants.Messages.USUARIO_NO_ENCONTRADO));
+
+        // Validaciones de seguridad adicionales
+        if (insuranceUrl != null && !insuranceUrl.trim().isEmpty()) {
+            String trimmedUrl = insuranceUrl.trim();
+
+            // Límite de longitud para prevenir ataques
+            if (trimmedUrl.length() > 2048) {
+                throw new IllegalArgumentException("URL demasiado larga (máximo 2048 caracteres)");
+            }
+
+            // Log para auditoría de seguridad
+            logger.info("Actualizando URL de seguro del usuario {}: {}", id, trimmedUrl);
+            user.setInsurance(trimmedUrl);
+        } else {
+            user.setInsurance(null);
+            logger.info("Eliminando seguro del usuario {}", id);
+        }
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Elimina el documento de seguro del usuario
+     * Método específico para eliminar el seguro - más directo y confiable
+     */
+    public User removeUserInsurance(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(AppConstants.Messages.USUARIO_NO_ENCONTRADO));
+
+        logger.info("Eliminando documento de seguro del usuario {}", id);
+        user.setInsurance(null);
+        return userRepository.save(user);
     }
 
 }

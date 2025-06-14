@@ -31,11 +31,15 @@ public class AdminRequiredAspect {
     @Around("@annotation(requireAdmin)")
     public Object checkAdminAccess(ProceedingJoinPoint joinPoint, RequireAdmin requireAdmin) throws Throwable {
         if (!authUtils.isCurrentUserAdmin()) {
-            String methodName = joinPoint.getSignature().getName();
-            String className = joinPoint.getTarget().getClass().getSimpleName();
-
+            String methodName = "unknown";
+            String className = "unknown";
+            if (joinPoint.getSignature() != null) {
+                methodName = joinPoint.getSignature().getName();
+            }
+            if (joinPoint.getTarget() != null) {
+                className = joinPoint.getTarget().getClass().getSimpleName();
+            }
             logger.warn("Unauthorized access attempt to admin method {}.{}", className, methodName);
-
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(requireAdmin.message());
         }

@@ -12,4 +12,10 @@ public interface IStageRepository extends JpaRepository<Stage, Long> {
     Optional<Stage> findByEventAndOrderNumber(Event event, int i);
 
     List<Stage> findByEventAndOrderNumberBetween(Event event, int stageStart, int stageEnd);
+
+    List<Stage> findByEventId(Long eventId);
+
+    Optional<Stage> findByEventIdAndOrderNumber(Long eventId, Integer orderNumber);
+
+    boolean existsByEventIdAndOrderNumber(Long eventId, Integer orderNumber);
 }

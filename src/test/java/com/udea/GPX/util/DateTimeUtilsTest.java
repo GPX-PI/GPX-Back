@@ -30,7 +30,7 @@ class DateTimeUtilsTest {
 
     // Then
     assertThat(today).isNotNull();
-    assertThat(today).isEqualTo(LocalDate.now());
+    assertThat(today).isEqualTo(LocalDate.now(ZoneId.of("UTC")));
   }
 
   @Test
@@ -126,9 +126,9 @@ class DateTimeUtilsTest {
   @DisplayName("isPastDate - Debe validar fechas en el pasado")
   void isPastDate_shouldValidatePastDates() {
     // Given
-    LocalDate pastDate = LocalDate.now().minusDays(1);
-    LocalDate futureDate = LocalDate.now().plusDays(1);
-    LocalDate today = LocalDate.now();
+    LocalDate pastDate = LocalDate.now(ZoneId.of("UTC")).minusDays(1);
+    LocalDate futureDate = LocalDate.now(ZoneId.of("UTC")).plusDays(1);
+    LocalDate today = LocalDate.now(ZoneId.of("UTC"));
 
     // When & Then
     assertThat(DateTimeUtils.isPastDate(pastDate)).isTrue();
@@ -154,9 +154,9 @@ class DateTimeUtilsTest {
   @DisplayName("isFutureDate - Debe validar fechas en el futuro")
   void isFutureDate_shouldValidateFutureDates() {
     // Given
-    LocalDate futureDate = LocalDate.now().plusDays(1);
-    LocalDate pastDate = LocalDate.now().minusDays(1);
-    LocalDate today = LocalDate.now();
+    LocalDate futureDate = LocalDate.now(ZoneId.of("UTC")).plusDays(1);
+    LocalDate pastDate = LocalDate.now(ZoneId.of("UTC")).minusDays(1);
+    LocalDate today = LocalDate.now(ZoneId.of("UTC"));
 
     // When & Then
     assertThat(DateTimeUtils.isFutureDate(futureDate)).isTrue();
@@ -346,11 +346,11 @@ class DateTimeUtilsTest {
   }
 
   @Test
-  @DisplayName("nowUTC debe retornar timestamp actual UTC")
+  @DisplayName("nowUTC - Debe ser consistente con hora UTC")
   void testNowUTC() {
-    LocalDateTime before = LocalDateTime.now().minusSeconds(1);
+    LocalDateTime before = LocalDateTime.now(ZoneId.of("UTC")).minusSeconds(1);
     LocalDateTime current = DateTimeUtils.nowUTC();
-    LocalDateTime after = LocalDateTime.now().plusSeconds(1);
+    LocalDateTime after = LocalDateTime.now(ZoneId.of("UTC")).plusSeconds(1);
 
     assertThat(current).isNotNull();
     assertThat(current.isAfter(before)).isTrue();

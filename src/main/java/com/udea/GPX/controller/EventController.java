@@ -7,19 +7,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.udea.gpx.model.Event;
 import com.udea.gpx.model.EventCategory;
 import com.udea.gpx.service.EventService;
-import com.udea.gpx.service.FileTransactionService;
 import com.udea.gpx.util.AuthUtils;
-
 import jakarta.validation.Valid;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,19 +28,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class EventController {
     private final EventService eventService;
     private final AuthUtils authUtils;
-    private final FileTransactionService fileTransactionService;
 
-    // Constants for response keys
-    private static final String KEY_ERROR = "error";
-    private static final String KEY_ERROR_TYPE = "errorType";
-    private static final String KEY_MESSAGE = "message";
-    private static final String KEY_EVENT = "event";
-
-    public EventController(EventService eventService, AuthUtils authUtils,
-            FileTransactionService fileTransactionService) {
+    public EventController(EventService eventService, AuthUtils authUtils) {
         this.eventService = eventService;
         this.authUtils = authUtils;
-        this.fileTransactionService = fileTransactionService;
     }
 
     @GetMapping
@@ -61,7 +46,6 @@ public class EventController {
                     "asc", "desc" })) @RequestParam(defaultValue = "asc") String sortDir) {
 
         Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
-
         Pageable pageable = PageRequest.of(page, size, sort);
         return ResponseEntity.ok(eventService.getAllEvents(pageable));
     }
@@ -123,46 +107,17 @@ public class EventController {
     public ResponseEntity<List<EventCategory>> getCategoriesByEventId(@PathVariable Long id) {
         List<EventCategory> categories = eventService.getCategoriesByEventId(id);
         return ResponseEntity.ok(categories);
-    }    // Endpoint para subir imagen de evento con archivo
-    @PutMapping("/{id}/picture")
-    public ResponseEntity<Object> updateEventPicture(
-            @PathVariable Long id,
-            @RequestParam(value = "eventPhoto", required = false) MultipartFile eventPhoto,
-            @RequestParam(value = "event", required = false) String eventJson) {
-        if (!authUtils.isCurrentUserAdmin()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        if (eventPhoto == null || eventPhoto.isEmpty()) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put(KEY_ERROR, "Archivo de imagen requerido");
-            errorResponse.put(KEY_ERROR_TYPE, "VALIDATION_ERROR");
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
-
-        // Obtener evento actual
-        Optional<Event> eventOpt = eventService.getEventById(id);
-        if (eventOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Event currentEvent = eventOpt.get();
-
-        // Actualizar imagen usando el servicio transaccional
-        String newPicturePath = fileTransactionService.updateFileTransactional(
-                eventPhoto, currentEvent.getPicture(), "image", "uploads/events/"); // Actualizar evento en base de
-                                                                                    // datos
-        Event updatedEvent = eventService.updateEventPictureUrl(id, newPicturePath);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put(KEY_MESSAGE, "Imagen de evento actualizada exitosamente");
-        response.put(KEY_EVENT, updatedEvent);
-
-        return ResponseEntity.ok(response);
     }
 
-    // Endpoint para actualizar imagen de evento con URL
+    // ========== SOLO GESTIÓN DE URLs DE IMÁGENES ==========
+
     @PutMapping(value = "/{id}/picture", consumes = "application/json")
+    @Operation(summary = "Actualizar imagen del evento", description = "Actualiza la URL de la imagen del evento")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ApiResponse(responseCode = "200", description = "Imagen actualizada exitosamente")
+    @ApiResponse(responseCode = "403", description = "Acceso denegado - Solo administradores")
+    @ApiResponse(responseCode = "400", description = "URL de imagen inválida")
+    @ApiResponse(responseCode = "404", description = "Evento no encontrado")
     public ResponseEntity<Event> updateEventPictureUrl(
             @PathVariable Long id,
             @RequestBody JsonNode requestBody) {
@@ -173,6 +128,12 @@ public class EventController {
 
         try {
             String pictureUrl = requestBody.get("pictureUrl").asText();
+
+            // Validar URL de imagen
+            if (pictureUrl != null && !pictureUrl.trim().isEmpty() && !isValidImageUrl(pictureUrl)) {
+                return ResponseEntity.badRequest().build();
+            }
+
             Event updatedEvent = eventService.updateEventPictureUrl(id, pictureUrl);
             return ResponseEntity.ok(updatedEvent);
         } catch (RuntimeException e) {
@@ -182,8 +143,12 @@ public class EventController {
         }
     }
 
-    // Endpoint para eliminar imagen de evento
     @DeleteMapping("/{id}/picture")
+    @Operation(summary = "Eliminar imagen del evento", description = "Elimina la imagen del evento")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ApiResponse(responseCode = "200", description = "Imagen eliminada exitosamente")
+    @ApiResponse(responseCode = "403", description = "Acceso denegado - Solo administradores")
+    @ApiResponse(responseCode = "404", description = "Evento no encontrado")
     public ResponseEntity<Event> removeEventPicture(@PathVariable Long id) {
         if (!authUtils.isCurrentUserAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -197,5 +162,37 @@ public class EventController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    // ========== MÉTODOS AUXILIARES ==========
+
+    /**
+     * Valida que la URL sea una imagen válida de fuentes permitidas
+     */
+    private boolean isValidImageUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return true; // Permitir vacío para eliminar imagen
+        }
+
+        // Debe ser HTTPS
+        if (!url.startsWith("https://")) {
+            return false;
+        }
+
+        // Debe contener una extensión de imagen válida o ser de servicios conocidos
+        String lowerUrl = url.toLowerCase();
+        return lowerUrl.matches(".*\\.(jpg|jpeg|png|webp|gif)(\\?.*)?$") ||
+                lowerUrl.contains("imgur.com") ||
+                lowerUrl.contains("cloudinary.com") ||
+                lowerUrl.contains("drive.google.com") ||
+                lowerUrl.contains("dropbox.com") ||
+                lowerUrl.contains("unsplash.com") ||
+                lowerUrl.contains("plus.unsplash.com") ||
+                lowerUrl.contains("pexels.com") ||
+                lowerUrl.contains("googleusercontent.com") ||
+                lowerUrl.contains("lh3.googleusercontent.com") ||
+                lowerUrl.contains("lh4.googleusercontent.com") ||
+                lowerUrl.contains("lh5.googleusercontent.com") ||
+                lowerUrl.contains("lh6.googleusercontent.com");
     }
 }

@@ -17,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -257,14 +256,12 @@ class EventServiceTest {
   @DisplayName("deleteEvent - Debe eliminar evento existente")
   void deleteEvent_shouldDeleteExistingEvent() {
     // Given
-    when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent));
     doNothing().when(eventRepository).deleteById(1L);
 
     // When
     eventService.deleteEvent(1L);
 
     // Then
-    verify(eventRepository).findById(1L);
     verify(eventRepository).deleteById(1L);
   }
 
@@ -302,8 +299,9 @@ class EventServiceTest {
     List<EventCategory> result = eventService.getCategoriesByEventId(1L);
 
     // Then
-    assertThat(result).hasSize(2);
-    assertThat(result).containsExactly(category1, category2);
+    assertThat(result)
+        .hasSize(2)
+        .containsExactly(category1, category2);
     verify(eventCategoryRepository).findAll();
   }
 
@@ -394,32 +392,5 @@ class EventServiceTest {
     assertThatThrownBy(() -> eventService.removeEventPicture(999L))
         .isInstanceOf(RuntimeException.class)
         .hasMessageContaining("Evento no encontrado");
-  }
-
-  // ========== UPDATE EVENT PICTURE TESTS ==========
-
-  @Test
-  @DisplayName("updateEventPicture - Debe lanzar excepción si evento no existe")
-  void updateEventPicture_shouldThrowExceptionIfEventNotFound() {
-    // Given
-    MultipartFile mockFile = mock(MultipartFile.class);
-    when(eventRepository.findById(999L)).thenReturn(Optional.empty());
-
-    // When & Then
-    assertThatThrownBy(() -> eventService.updateEventPicture(999L, mockFile))
-        .isInstanceOf(RuntimeException.class)
-        .hasMessageContaining("Evento no encontrado");
-  }
-
-  @Test
-  @DisplayName("updateEventPicture - Debe lanzar excepción por error en guardado")
-  void updateEventPicture_shouldThrowExceptionOnSaveError() {
-    // Given
-    MultipartFile mockFile = mock(MultipartFile.class);
-    when(mockFile.isEmpty()).thenReturn(true);
-    when(eventRepository.findById(1L)).thenReturn(Optional.of(testEvent)); // When & Then
-    assertThatThrownBy(() -> eventService.updateEventPicture(1L, mockFile))
-        .isInstanceOf(ImageUploadException.class)
-        .hasMessageContaining("Error al subir la imagen del evento");
   }
 }

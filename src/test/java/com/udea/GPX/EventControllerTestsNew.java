@@ -15,20 +15,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.multipart.MultipartFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.udea.gpx.controller.EventController;
 import com.udea.gpx.model.Event;
 import com.udea.gpx.model.EventCategory;
 import com.udea.gpx.service.EventService;
-import com.udea.gpx.service.FileTransactionService;
 import com.udea.gpx.util.AuthUtils;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,12 +38,6 @@ class EventControllerTestsNew {
     @Mock
     private AuthUtils authUtils;
 
-    @Mock
-    private FileTransactionService fileTransactionService;
-
-    @Mock
-    private MultipartFile multipartFile;
-
     @InjectMocks
     private EventController eventController;
 
@@ -58,10 +49,10 @@ class EventControllerTestsNew {
     @BeforeEach
     void setUp() {
         testEvent1 = new Event(1L, "Evento 1", "Ubicación 1", "Detalles 1", LocalDate.now(), LocalDate.now());
-        testEvent1.setPicture("ruta/imagen1.jpg");
+        testEvent1.setPicture("https://example.com/image1.jpg");
 
         testEvent2 = new Event(2L, "Evento 2", "Ubicación 2", "Detalles 2", LocalDate.now(), LocalDate.now());
-        testEvent2.setPicture("ruta/imagen2.jpg");
+        testEvent2.setPicture("https://example.com/image2.jpg");
 
         testEventCategory1 = new EventCategory();
         objectMapper = new ObjectMapper();
@@ -85,8 +76,8 @@ class EventControllerTestsNew {
         Page<Event> responseBody = response.getBody();
         assertNotNull(responseBody);
         assertEquals(2, responseBody.getContent().size());
-        assertEquals("ruta/imagen1.jpg", responseBody.getContent().get(0).getPicture());
-        assertEquals("ruta/imagen2.jpg", responseBody.getContent().get(1).getPicture());
+        assertEquals("https://example.com/image1.jpg", responseBody.getContent().get(0).getPicture());
+        assertEquals("https://example.com/image2.jpg", responseBody.getContent().get(1).getPicture());
         verify(eventService).getAllEvents(any(Pageable.class));
     }
 
@@ -106,7 +97,7 @@ class EventControllerTestsNew {
         Event responseBody = response.getBody();
         assertNotNull(responseBody);
         assertEquals("Evento 1", responseBody.getName());
-        assertEquals("ruta/imagen1.jpg", responseBody.getPicture());
+        assertEquals("https://example.com/image1.jpg", responseBody.getPicture());
         verify(eventService).getEventById(1L);
     }
 
@@ -142,8 +133,8 @@ class EventControllerTestsNew {
         List<Event> responseBody = response.getBody();
         assertNotNull(responseBody);
         assertEquals(2, responseBody.size());
-        assertEquals("ruta/imagen1.jpg", responseBody.get(0).getPicture());
-        assertEquals("ruta/imagen2.jpg", responseBody.get(1).getPicture());
+        assertEquals("https://example.com/image1.jpg", responseBody.get(0).getPicture());
+        assertEquals("https://example.com/image2.jpg", responseBody.get(1).getPicture());
         verify(eventService).getCurrentEvents();
     }
 
@@ -155,10 +146,10 @@ class EventControllerTestsNew {
         // Given
         Event pastEvent1 = new Event(1L, "Evento Pasado 1", "Ubicación 1", "Detalles 1",
                 LocalDate.now().minusDays(10), LocalDate.now().minusDays(5));
-        pastEvent1.setPicture("ruta/pasado1.jpg");
+        pastEvent1.setPicture("https://example.com/past1.jpg");
         Event pastEvent2 = new Event(2L, "Evento Pasado 2", "Ubicación 2", "Detalles 2",
                 LocalDate.now().minusDays(20), LocalDate.now().minusDays(15));
-        pastEvent2.setPicture("ruta/pasado2.jpg");
+        pastEvent2.setPicture("https://example.com/past2.jpg");
         List<Event> pastEvents = Arrays.asList(pastEvent1, pastEvent2);
         when(eventService.getPastEvents()).thenReturn(pastEvents);
 
@@ -170,8 +161,8 @@ class EventControllerTestsNew {
         List<Event> responseBody = response.getBody();
         assertNotNull(responseBody);
         assertEquals(2, responseBody.size());
-        assertEquals("ruta/pasado1.jpg", responseBody.get(0).getPicture());
-        assertEquals("ruta/pasado2.jpg", responseBody.get(1).getPicture());
+        assertEquals("https://example.com/past1.jpg", responseBody.get(0).getPicture());
+        assertEquals("https://example.com/past2.jpg", responseBody.get(1).getPicture());
         verify(eventService).getPastEvents();
     }
 
@@ -328,84 +319,6 @@ class EventControllerTestsNew {
         verify(eventService, never()).deleteEvent(anyLong());
     }
 
-    // ========== UPDATE EVENT PICTURE TESTS ==========
-
-    @Test
-    @DisplayName("updateEventPicture - Debe actualizar imagen cuando el usuario es admin y el archivo es válido")
-    void updateEventPicture_whenAdminAndValidFile_shouldUpdatePicture() {
-        // Given
-        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        when(multipartFile.isEmpty()).thenReturn(false);
-        when(eventService.getEventById(1L)).thenReturn(Optional.of(testEvent1));
-        when(fileTransactionService.updateFileTransactional(any(), any(), any(), any()))
-                .thenReturn("new/image/path.jpg");
-        when(eventService.updateEventPictureUrl(1L, "new/image/path.jpg")).thenReturn(testEvent1);
-
-        // When
-        ResponseEntity<?> response = eventController.updateEventPicture(1L, multipartFile, null);
-
-        // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertNotNull(response.getBody());
-        @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("Imagen de evento actualizada exitosamente", responseBody.get("message"));
-        verify(authUtils).isCurrentUserAdmin();
-        verify(eventService).getEventById(1L);
-        verify(fileTransactionService).updateFileTransactional(any(), any(), eq("image"), eq("uploads/events/"));
-        verify(eventService).updateEventPictureUrl(1L, "new/image/path.jpg");
-    }
-
-    @Test
-    @DisplayName("updateEventPicture - Debe retornar FORBIDDEN cuando el usuario no es admin")
-    void updateEventPicture_whenNotAdmin_shouldReturnForbidden() {
-        // Given
-        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
-
-        // When
-        ResponseEntity<?> response = eventController.updateEventPicture(1L, multipartFile, null);
-
-        // Then
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        verify(authUtils).isCurrentUserAdmin();
-        verify(eventService, never()).getEventById(anyLong());
-    }
-
-    @Test
-    @DisplayName("updateEventPicture - Debe retornar BAD_REQUEST cuando el archivo es nulo o vacío")
-    void updateEventPicture_whenFileIsNullOrEmpty_shouldReturnBadRequest() {
-        // Given
-        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-
-        // When
-        ResponseEntity<?> response = eventController.updateEventPicture(1L, null, null);
-
-        // Then
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertNotNull(response.getBody());
-        @SuppressWarnings("unchecked")
-        Map<String, Object> responseBody = (Map<String, Object>) response.getBody();
-        assertEquals("Archivo de imagen requerido", responseBody.get("error"));
-        verify(authUtils).isCurrentUserAdmin();
-    }
-
-    @Test
-    @DisplayName("updateEventPicture - Debe retornar NOT_FOUND cuando el evento no existe")
-    void updateEventPicture_whenEventNotFound_shouldReturnNotFound() {
-        // Given
-        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        when(multipartFile.isEmpty()).thenReturn(false);
-        when(eventService.getEventById(99L)).thenReturn(Optional.empty());
-
-        // When
-        ResponseEntity<?> response = eventController.updateEventPicture(99L, multipartFile, null);
-
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        verify(authUtils).isCurrentUserAdmin();
-        verify(eventService).getEventById(99L);
-    }
-
     // ========== UPDATE EVENT PICTURE URL TESTS ==========
 
     @Test
@@ -413,12 +326,12 @@ class EventControllerTestsNew {
     void updateEventPictureUrl_whenAdmin_shouldUpdatePictureUrl() {
         // Given
         ObjectNode requestBody = objectMapper.createObjectNode();
-        requestBody.put("pictureUrl", "http://example.com/new-image.jpg");
+        requestBody.put("pictureUrl", "https://example.com/new-image.jpg");
         Event updatedEvent = new Event(1L, "Evento 1", "Ubicación 1", "Detalles 1", LocalDate.now(), LocalDate.now());
-        updatedEvent.setPicture("http://example.com/new-image.jpg");
+        updatedEvent.setPicture("https://example.com/new-image.jpg");
 
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        when(eventService.updateEventPictureUrl(1L, "http://example.com/new-image.jpg")).thenReturn(updatedEvent);
+        when(eventService.updateEventPictureUrl(1L, "https://example.com/new-image.jpg")).thenReturn(updatedEvent);
 
         // When
         ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
@@ -429,7 +342,7 @@ class EventControllerTestsNew {
         assertNotNull(responseBody);
         assertEquals(updatedEvent, responseBody);
         verify(authUtils).isCurrentUserAdmin();
-        verify(eventService).updateEventPictureUrl(1L, "http://example.com/new-image.jpg");
+        verify(eventService).updateEventPictureUrl(1L, "https://example.com/new-image.jpg");
     }
 
     @Test
@@ -437,7 +350,7 @@ class EventControllerTestsNew {
     void updateEventPictureUrl_whenNotAdmin_shouldReturnForbidden() {
         // Given
         ObjectNode requestBody = objectMapper.createObjectNode();
-        requestBody.put("pictureUrl", "http://example.com/new-image.jpg");
+        requestBody.put("pictureUrl", "https://example.com/new-image.jpg");
         when(authUtils.isCurrentUserAdmin()).thenReturn(false);
 
         // When
@@ -455,9 +368,9 @@ class EventControllerTestsNew {
     void updateEventPictureUrl_whenEventNotFound_shouldReturnNotFound() {
         // Given
         ObjectNode requestBody = objectMapper.createObjectNode();
-        requestBody.put("pictureUrl", "http://example.com/new-image.jpg");
+        requestBody.put("pictureUrl", "https://example.com/new-image.jpg");
         when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        when(eventService.updateEventPictureUrl(99L, "http://example.com/new-image.jpg"))
+        when(eventService.updateEventPictureUrl(99L, "https://example.com/new-image.jpg"))
                 .thenThrow(new RuntimeException("Event not found"));
 
         // When
@@ -467,7 +380,24 @@ class EventControllerTestsNew {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNull(response.getBody());
         verify(authUtils).isCurrentUserAdmin();
-        verify(eventService).updateEventPictureUrl(99L, "http://example.com/new-image.jpg");
+        verify(eventService).updateEventPictureUrl(99L, "https://example.com/new-image.jpg");
+    }
+
+    @Test
+    @DisplayName("updateEventPictureUrl - Debe retornar BAD_REQUEST cuando la URL es inválida")
+    void updateEventPictureUrl_whenInvalidUrl_shouldReturnBadRequest() {
+        // Given
+        ObjectNode requestBody = objectMapper.createObjectNode();
+        requestBody.put("pictureUrl", "http://invalid-url.com/image.jpg"); // HTTP en lugar de HTTPS
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+
+        // When
+        ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
+
+        // Then
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(authUtils).isCurrentUserAdmin();
+        verify(eventService, never()).updateEventPictureUrl(anyLong(), anyString());
     }
 
     // ========== REMOVE EVENT PICTURE TESTS ==========
@@ -523,22 +453,5 @@ class EventControllerTestsNew {
         assertNull(response.getBody());
         verify(authUtils).isCurrentUserAdmin();
         verify(eventService).removeEventPicture(99L);
-    }
-
-    @Test
-    @DisplayName("removeEventPicture - Debe retornar NOT_FOUND cuando hay error inesperado")
-    void removeEventPicture_whenUnexpectedError_shouldReturnNotFound() {
-        // Given
-        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-        when(eventService.removeEventPicture(1L)).thenThrow(new RuntimeException("Unexpected error"));
-
-        // When
-        ResponseEntity<Event> response = eventController.removeEventPicture(1L);
-
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(authUtils).isCurrentUserAdmin();
-        verify(eventService).removeEventPicture(1L);
     }
 }

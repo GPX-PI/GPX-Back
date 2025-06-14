@@ -47,8 +47,12 @@ public class StageController {
         if (!authUser.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(stageService.createStage(stage));
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(stageService.createStage(stage));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     @PutMapping("/{id}")
@@ -60,6 +64,8 @@ public class StageController {
         try {
             Stage updatedStage = stageService.updateStage(id, stage);
             return ResponseEntity.ok(updatedStage);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

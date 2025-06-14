@@ -106,10 +106,11 @@ public class SecurityConfig {
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                         .requireCsrfProtectionMatcher(createCsrfRequestMatcher())
-                        .ignoringRequestMatchers("/api/**") // Deshabilitar CSRF para API REST
+                        .ignoringRequestMatchers("/api/**", "/oauth2/**", "/login/**") // Deshabilitar CSRF para API
+                                                                                       // REST y OAuth2
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Cambio importante
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) // Cambio importante
                         .invalidSessionUrl("/login")
                         .sessionConcurrency(concurrency -> concurrency
                                 .maximumSessions(1)))

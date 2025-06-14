@@ -2,9 +2,7 @@ package com.udea.gpx.controller;
 
 import com.udea.gpx.dto.AuthResponseDTO;
 import com.udea.gpx.exception.InternalServerException;
-
 import com.udea.gpx.model.User;
-import com.udea.gpx.service.FileTransactionService;
 import com.udea.gpx.service.UserService;
 import com.udea.gpx.util.InputSanitizer;
 import com.udea.gpx.service.TokenService;
@@ -17,9 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
-import org.springframework.web.multipart.MultipartFile;
-import java.io.File;
-import java.nio.file.Files;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
@@ -62,14 +58,12 @@ public class UserController {
     private static final String FACEBOOK_FIELD = "facebook";
     private static final String PICTURE_FIELD = "picture";
     private static final String PASSWORD_FIELD = "password";
-    private static final String CURRENTPASSWORD_FIELD = "currentpassword";
-    private static final String NEWPASSWORD_FIELD = "newpassword";
-
+    private static final String CURRENTPASSWORD_FIELD = "currentPassword";
+    private static final String NEWPASSWORD_FIELD = "newPassword";
     // Error type constants
     private static final String VALIDATION_ERROR = "VALIDATION_ERROR";
     private static final String RUNTIME_ERROR = "RUNTIME_ERROR";
     private static final String INTERNAL_ERROR = "INTERNAL_ERROR";
-
     // Response field constants
     private static final String MESSAGE_FIELD = "message";
     private static final String USER_FIELD = "user";
@@ -90,17 +84,6 @@ public class UserController {
     private static final String USER_NOT_FOUND_MSG = "Usuario no encontrado";
     private static final String INTERNAL_SERVER_ERROR_MSG = "Error interno del servidor";
     private static final String INVALID_INPUT_DATA_MSG = "Datos de entrada inválidos: ";
-
-    // Upload directories
-    private static final String UPLOADS_PROFILES_DIR = "uploads/profiles/";
-    private static final String UPLOADS_INSURANCE_DIR = "uploads/insurance/";
-
-    // Additional field constants
-    private static final String ROLE_FIELD = "role";
-    private static final String PICTURE_URL_FIELD = "pictureUrl";
-    private static final String INSURANCE_FIELD = "insurance";
-
-    // Common error messages
     private static final String INVALID_CREDENTIALS_MSG = "Credenciales incorrectas";
 
     // Additional response field constants used in methods
@@ -127,22 +110,22 @@ public class UserController {
     // Additional field constants
     private static final String GOOGLE_ID_FIELD = "googleId";
     private static final String SUB_FIELD = "sub";
+    private static final String ROLE_FIELD = "role";
+    private static final String PICTURE_URL_FIELD = "pictureUrl";
+    private static final String INSURANCE_URL_FIELD = "insuranceUrl";
 
     private final UserService userService;
     private final HttpServletRequest request;
     private final TokenService tokenService;
     private final AuthUtils authUtils;
-    private final FileTransactionService fileTransactionService;
 
     // Constructor injection instead of field injection
     public UserController(UserService userService, HttpServletRequest request,
-            TokenService tokenService, AuthUtils authUtils,
-            FileTransactionService fileTransactionService) {
+            TokenService tokenService, AuthUtils authUtils) {
         this.userService = userService;
         this.request = request;
         this.tokenService = tokenService;
         this.authUtils = authUtils;
-        this.fileTransactionService = fileTransactionService;
     }
 
     /**
@@ -191,8 +174,13 @@ public class UserController {
                 return trimmedValue.isEmpty() ? trimmedValue : InputSanitizer.sanitizePhone(value);
             case IDENTIFICATION_FIELD:
                 return trimmedValue.isEmpty() ? trimmedValue : InputSanitizer.sanitizeIdentification(value);
-            case WIKILOC_FIELD, TERRAPIRATA_FIELD, INSTAGRAM_FIELD, FACEBOOK_FIELD, PICTURE_FIELD:
-                return trimmedValue.isEmpty() ? trimmedValue : InputSanitizer.sanitizeUrl(value);
+            case WIKILOC_FIELD, TERRAPIRATA_FIELD, INSTAGRAM_FIELD, FACEBOOK_FIELD:
+                return trimmedValue.isEmpty() ? trimmedValue : InputSanitizer.sanitizeSocialField(value);
+            case PICTURE_FIELD:
+                // Para URLs de imagen no usar InputSanitizer.sanitizeUrl porque es muy
+                // restrictivo
+                // En su lugar usar solo sanitizeText + validación específica de imagen
+                return trimmedValue.isEmpty() ? trimmedValue : InputSanitizer.sanitizeText(value);
             case PASSWORD_FIELD, CURRENTPASSWORD_FIELD, NEWPASSWORD_FIELD:
                 return InputSanitizer.sanitizeText(value);
             default:
@@ -278,93 +266,14 @@ public class UserController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Método auxiliar para validar y sanitizar rutas de archivos
-     * Previene ataques de path traversal
-     */
-    private boolean isValidFilePath(String filePath) {
-        if (filePath == null || filePath.trim().isEmpty()) {
-            return false;
-        }
+    // ========== GESTIÓN DE PERFIL SOLO CON URLs ==========
 
-        // Normalizar la ruta para prevenir path traversal
-        String normalizedPath = filePath.replace("\\", "/");
-
-        // Verificar que no contenga secuencias peligrosas
-        if (normalizedPath.contains("../") || normalizedPath.contains("..\\") ||
-                normalizedPath.startsWith("/") || normalizedPath.contains("://")) {
-            logger.warn("🚨 Intento de path traversal detectado: {}", filePath);
-            return false;
-        }
-
-        return true;
-    }
-
-    private void deleteOldFile(String oldFilePath) {
-        if (oldFilePath != null && !oldFilePath.trim().isEmpty() && !oldFilePath.startsWith("http")) {
-            // Validar la ruta antes de procesarla
-            if (!isValidFilePath(oldFilePath)) {
-                logger.warn("🚨 Ruta de archivo sospechosa rechazada: {}", oldFilePath);
-                return;
-            }
-
-            try {
-                File oldFile = new File(oldFilePath);
-                if (oldFile.exists()) {
-                    Files.delete(oldFile.toPath());
-                    logger.debug("Archivo anterior eliminado: {}", oldFilePath);
-                }
-            } catch (Exception e) {
-                logger.error("Error al eliminar archivo anterior: {}", oldFilePath, e);
-            }
-        }
-    }
-
-    // Endpoint para actualizar datos del usuario with archivos
-    @PutMapping(value = "/{id}", consumes = { "multipart/form-data" })
-    public ResponseEntity<Object> updateUserWithFiles(
-            @PathVariable Long id,
-            @RequestPart("user") User user,
-            @RequestPart(value = "profilePhoto", required = false) MultipartFile profilePhoto,
-            @RequestPart(value = "insurance", required = false) MultipartFile insurance) {
-
-        if (!authUtils.isCurrentUserOrAdmin(id)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        // Obtener el usuario actual para acceder a las rutas de archivos anteriores
-        Optional<User> currentUserOpt = userService.getUserById(id);
-        if (currentUserOpt.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        User currentUser = currentUserOpt.get();
-
-        // Procesar archivos usando el servicio transaccional
-        if (profilePhoto != null && !profilePhoto.isEmpty()) {
-            String profilePhotoPath = fileTransactionService.updateFileTransactional(
-                    profilePhoto, currentUser.getPicture(), PICTURE_FIELD, UPLOADS_PROFILES_DIR);
-            user.setPicture(profilePhotoPath);
-        }
-
-        if (insurance != null && !insurance.isEmpty()) {
-            String insurancePath = fileTransactionService.updateFileTransactional(
-                    insurance, currentUser.getInsurance(), INSURANCE_FIELD, UPLOADS_INSURANCE_DIR);
-            user.setInsurance(insurancePath);
-        }
-
-        // Actualizar usuario en base de datos
-        User updatedUser = userService.updateUser(id, user);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put(MESSAGE_FIELD, "Usuario actualizado exitosamente");
-        response.put(USER_FIELD, updatedUser);
-
-        return ResponseEntity.ok(response);
-    }
-
-    // Endpoint para actualizar solo datos del usuario (sin archivos)
     @PutMapping(value = "/{id}/profile", consumes = { "application/json" })
+    @Operation(summary = "Actualizar perfil", description = "Actualiza los datos del perfil del usuario (sin archivos)")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ApiResponse(responseCode = "200", description = "Perfil actualizado exitosamente")
+    @ApiResponse(responseCode = "403", description = "Acceso denegado")
+    @ApiResponse(responseCode = "400", description = "Datos inválidos")
     public ResponseEntity<Object> updateUserProfile(
             @PathVariable Long id,
             @RequestBody User user) {
@@ -399,6 +308,11 @@ public class UserController {
     }
 
     @PutMapping("/{id}/picture")
+    @Operation(summary = "Actualizar foto de perfil", description = "Actualiza la URL de la foto de perfil del usuario")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ApiResponse(responseCode = "200", description = "Foto actualizada exitosamente")
+    @ApiResponse(responseCode = "403", description = "Acceso denegado")
+    @ApiResponse(responseCode = "400", description = "URL inválida")
     public ResponseEntity<Object> updateUserPicture(
             @PathVariable Long id,
             @RequestBody Map<String, String> pictureData) {
@@ -406,74 +320,99 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
-            // 🛡️ SANITIZACIÓN DE URL DE IMAGEN
-            Map<String, String> sanitizedData = sanitizeUserInputMap(pictureData);
+            // 🛡️ SIN SANITIZACIÓN ADICIONAL PARA URLs DE IMAGEN (igual que
+            // EventController)
+            String newPictureUrl = pictureData.get(PICTURE_URL_FIELD);
 
-            Optional<User> userOpt = userService.getUserById(id);
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
+            // Validar URL si se proporciona (MISMA LÓGICA QUE EventController)
+            if (newPictureUrl != null && !newPictureUrl.trim().isEmpty() && !isValidImageUrl(newPictureUrl)) {
+                return ResponseEntity.badRequest()
+                        .body(createErrorResponse("URL de imagen inválida", VALIDATION_ERROR));
             }
 
-            User user = userOpt.get();
-            String newPictureUrl = sanitizedData.get(PICTURE_URL_FIELD);
-
-            // Si se proporciona una URL nueva
-            if (newPictureUrl != null) {
-                // Eliminar archivo anterior si no es una URL externa
-                deleteOldFile(user.getPicture());
-
-                // Actualizar con la nueva URL (puede ser externa o null para eliminar)
-                user.setPicture(newPictureUrl.trim().isEmpty() ? null : newPictureUrl);
-            } else {
-                // Si no se proporciona URL, eliminar foto actual
-                deleteOldFile(user.getPicture());
-                user.setPicture(null);
-            }
-
-            User updatedUser = userService.updateUser(id, user);
+            // Usar método específico SIN sanitización (igual que
+            // EventService.updateEventPictureUrl)
+            User updatedUser = userService.updateUserPictureUrl(id, newPictureUrl);
 
             Map<String, Object> response = new HashMap<>();
             response.put(MESSAGE_FIELD, "Foto de perfil actualizada exitosamente");
             response.put(USER_FIELD, updatedUser);
 
             return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            // Error de sanitización - entrada maliciosa detectada
-            logger.warn("🚨 Intento de actualizar foto con URL maliciosa detectada: {}", e.getMessage());
-            return ResponseEntity.badRequest()
-                    .body(createErrorResponse("URL de imagen inválida: " + e.getMessage(), VALIDATION_ERROR));
         } catch (Exception e) {
             logger.error("Error al actualizar la foto de perfil: {}", e.getMessage(), e);
+            if (e.getMessage() != null && e.getMessage().contains(USER_NOT_FOUND_MSG)) {
+                return ResponseEntity.notFound().build();
+            }
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse("Error al actualizar la foto de perfil: " + e.getMessage(),
                             INTERNAL_ERROR));
         }
     }
 
+    @PutMapping("/{id}/insurance")
+    @Operation(summary = "Actualizar seguro", description = "Actualiza la URL del documento de seguro del usuario")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ApiResponse(responseCode = "200", description = "Seguro actualizado exitosamente")
+    @ApiResponse(responseCode = "403", description = "Acceso denegado")
+    @ApiResponse(responseCode = "400", description = "URL inválida")
+    public ResponseEntity<Object> updateUserInsurance(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> insuranceData) {
+        if (!authUtils.isCurrentUserOrAdmin(id)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        try {
+            // 🛡️ SIN SANITIZACIÓN ADICIONAL PARA URLs DE DOCUMENTO (consistente con
+            // imagen)
+            String newInsuranceUrl = insuranceData.get(INSURANCE_URL_FIELD);
+
+            // Validar URL si se proporciona
+            if (newInsuranceUrl != null && !newInsuranceUrl.trim().isEmpty() && !isValidDocumentUrl(newInsuranceUrl)) {
+                return ResponseEntity.badRequest()
+                        .body(createErrorResponse("URL de documento inválida", VALIDATION_ERROR));
+            }
+
+            // Usar método específico SIN sanitización (consistente con
+            // updateUserPictureUrl)
+            User updatedUser = userService.updateUserInsuranceUrl(id, newInsuranceUrl);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put(MESSAGE_FIELD, "Documento de seguro actualizado exitosamente");
+            response.put(USER_FIELD, updatedUser);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error al actualizar el documento de seguro: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Error al actualizar el documento de seguro: " + e.getMessage(),
+                            INTERNAL_ERROR));
+        }
+    }
+
     @DeleteMapping("/{id}/insurance")
+    @Operation(summary = "Eliminar seguro", description = "Elimina el documento de seguro del usuario")
+    @SecurityRequirement(name = "Bearer Authentication")
+    @ApiResponse(responseCode = "200", description = "Seguro eliminado exitosamente")
+    @ApiResponse(responseCode = "403", description = "Acceso denegado")
     public ResponseEntity<Object> removeInsurance(@PathVariable Long id) {
         if (!authUtils.isCurrentUserOrAdmin(id)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         try {
-            Optional<User> userOpt = userService.getUserById(id);
-            if (userOpt.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            User user = userOpt.get();
-
-            // Eliminar archivo actual si existe
-            deleteOldFile(user.getInsurance());
-            user.setInsurance(null);
-
-            User updatedUser = userService.updateUser(id, user);
+            // Usar método específico para eliminar seguro (más confiable)
+            User updatedUser = userService.removeUserInsurance(id);
 
             Map<String, Object> response = new HashMap<>();
             response.put(MESSAGE_FIELD, "Documento de seguro eliminado exitosamente");
             response.put(USER_FIELD, updatedUser);
 
             return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains(USER_NOT_FOUND_MSG)) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.badRequest().body(createErrorResponse(e.getMessage(), RUNTIME_ERROR));
         } catch (Exception e) {
             logger.error("Error al eliminar el documento de seguro para el usuario {}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -969,5 +908,59 @@ public class UserController {
 
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
         }
+    }
+
+    // ========== MÉTODOS AUXILIARES ==========
+
+    /**
+     * Valida que la URL sea una imagen válida de fuentes permitidas
+     */
+    private boolean isValidImageUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return true; // Permitir vacío para eliminar imagen
+        }
+
+        // Debe ser HTTPS
+        if (!url.startsWith("https://")) {
+            return false;
+        }
+
+        // Debe contener una extensión de imagen válida o ser de servicios conocidos
+        String lowerUrl = url.toLowerCase();
+        return lowerUrl.matches(".*\\.(jpg|jpeg|png|webp|gif)(\\?.*)?$") ||
+                lowerUrl.contains("imgur.com") ||
+                lowerUrl.contains("cloudinary.com") ||
+                lowerUrl.contains("drive.google.com") ||
+                lowerUrl.contains("dropbox.com") ||
+                lowerUrl.contains("unsplash.com") ||
+                lowerUrl.contains("plus.unsplash.com") ||
+                lowerUrl.contains("pexels.com") ||
+                lowerUrl.contains("googleusercontent.com") ||
+                lowerUrl.contains("lh3.googleusercontent.com") ||
+                lowerUrl.contains("lh4.googleusercontent.com") ||
+                lowerUrl.contains("lh5.googleusercontent.com") ||
+                lowerUrl.contains("lh6.googleusercontent.com");
+    }
+
+    /**
+     * Valida que la URL sea un documento válido de fuentes permitidas
+     */
+    private boolean isValidDocumentUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return true; // Permitir vacío para eliminar documento
+        }
+
+        // Debe ser HTTPS
+        if (!url.startsWith("https://")) {
+            return false;
+        }
+
+        // Debe contener una extensión de documento válida o ser de servicios conocidos
+        String lowerUrl = url.toLowerCase();
+        return lowerUrl.matches(".*\\.(pdf|doc|docx|jpg|jpeg|png)(\\?.*)?$") ||
+                lowerUrl.contains("drive.google.com") ||
+                lowerUrl.contains("dropbox.com") ||
+                lowerUrl.contains("onedrive.com") ||
+                lowerUrl.contains("docs.google.com");
     }
 }

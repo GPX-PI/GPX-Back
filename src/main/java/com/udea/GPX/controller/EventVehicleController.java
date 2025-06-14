@@ -44,6 +44,11 @@ public class EventVehicleController {
      */
     private User getAuthenticatedUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
+        }
+
         Object principal = auth.getPrincipal();
 
         if (principal instanceof User user) {
@@ -56,18 +61,19 @@ public class EventVehicleController {
                 User user = userService.findByEmail(email);
                 if (user != null) {
                     return user;
-                } else {
-                    throw new RuntimeException("Usuario OAuth2 no encontrado en la base de datos");
                 }
             }
         }
 
-        throw new RuntimeException("Usuario no autenticado correctamente");
+        return null;
     }
 
     @GetMapping
     public ResponseEntity<List<EventVehicle>> getAllEventVehicles() {
         User authUser = getAuthenticatedUser();
+        if (authUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
         if (!authUser.isAdmin()) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
         }
@@ -77,6 +83,9 @@ public class EventVehicleController {
     @GetMapping("/{id}")
     public ResponseEntity<EventVehicle> getEventVehicleById(@PathVariable Long id) {
         User authUser = getAuthenticatedUser();
+        if (authUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+        }
         EventVehicle ev = eventVehicleService.getEventVehicleById(id).orElse(null);
         if (ev == null) {
             return ResponseEntity.notFound().build();
@@ -131,9 +140,19 @@ public class EventVehicleController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
-    }    @PostMapping
+    }
+
+    @PostMapping
     public ResponseEntity<Object> createEventVehicle(@RequestBody EventVehicle eventVehicle) {
         User authUser = getAuthenticatedUser();
+
+        if (authUser == null) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put(KEY_ERROR, "No autorizado");
+            errorResponse.put(KEY_MESSAGE, "Usuario no autenticado");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        }
+
         try {
             // Cargar el vehículo completo desde la base de datos
             Long vehicleId = eventVehicle.getVehicleId().getId();
@@ -176,7 +195,13 @@ public class EventVehicleController {
             // Establecer el vehículo completo en el EventVehicle
             eventVehicle.setVehicleId(vehicle);
             EventVehicle savedEventVehicle = eventVehicleService.createEventVehicle(eventVehicle);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(savedEventVehicle);
+        } catch (IllegalArgumentException e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put(KEY_ERROR, "Validación fallida");
+            errorResponse.put(KEY_MESSAGE, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put(KEY_ERROR, "Error al procesar inscripción");
@@ -188,6 +213,9 @@ public class EventVehicleController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEventVehicle(@PathVariable Long id) {
         User authUser = getAuthenticatedUser();
+        if (authUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         EventVehicle ev = eventVehicleService.getEventVehicleById(id).orElse(null);
         if (ev == null) {
             return ResponseEntity.notFound().build();

@@ -6,8 +6,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -21,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("ParticipantDTO Tests")
 class ParticipantDTOTest {
-    private static final Logger logger = LoggerFactory.getLogger(ParticipantDTOTest.class);
 
     private Validator validator;
     private ParticipantDTO participantDTO;
@@ -351,35 +348,24 @@ class ParticipantDTOTest {
         @DisplayName("UserName Validation")
         class UserNameValidation {
 
+            @ParameterizedTest
+            @ValueSource(strings = { "", "   " })
+            @DisplayName("Null, empty, or blank userName should fail validation")
+            void testInvalidUserNames(String userName) {
+                setValidParticipantData();
+                participantDTO.setUserName(userName);
+
+                Set<ConstraintViolation<ParticipantDTO>> violations = validator.validate(participantDTO);
+                assertFalse(violations.isEmpty());
+                assertTrue(violations.stream()
+                        .anyMatch(v -> v.getMessage().equals("El nombre del usuario es obligatorio")));
+            }
+
             @Test
             @DisplayName("Null userName should fail validation")
             void testNullUserName() {
                 setValidParticipantData();
                 participantDTO.setUserName(null);
-
-                Set<ConstraintViolation<ParticipantDTO>> violations = validator.validate(participantDTO);
-                assertFalse(violations.isEmpty());
-                assertTrue(violations.stream()
-                        .anyMatch(v -> v.getMessage().equals("El nombre del usuario es obligatorio")));
-            }
-
-            @Test
-            @DisplayName("Empty userName should fail validation")
-            void testEmptyUserName() {
-                setValidParticipantData();
-                participantDTO.setUserName("");
-
-                Set<ConstraintViolation<ParticipantDTO>> violations = validator.validate(participantDTO);
-                assertFalse(violations.isEmpty());
-                assertTrue(violations.stream()
-                        .anyMatch(v -> v.getMessage().equals("El nombre del usuario es obligatorio")));
-            }
-
-            @Test
-            @DisplayName("Blank userName should fail validation")
-            void testBlankUserName() {
-                setValidParticipantData();
-                participantDTO.setUserName("   ");
 
                 Set<ConstraintViolation<ParticipantDTO>> violations = validator.validate(participantDTO);
                 assertFalse(violations.isEmpty());

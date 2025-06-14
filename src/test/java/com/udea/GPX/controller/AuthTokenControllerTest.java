@@ -129,6 +129,8 @@ class AuthTokenControllerTest {
         verify(tokenService).refreshAccessToken("invalid-refresh-token");
     }
 
+    // ========== LOGOUT TESTS ==========
+
     @Test
     @DisplayName("logout - Debe hacer logout exitosamente")
     void logout_shouldLogoutSuccessfully() {
@@ -147,6 +149,24 @@ class AuthTokenControllerTest {
         assertThat(responseBody.get("message")).isEqualTo("Logout exitoso");
 
         verify(tokenService).invalidateToken("valid-jwt-token");
+    }
+
+    @Test
+    @DisplayName("logout - Debe invalidar token exitosamente")
+    void logout_shouldInvalidateTokenSuccessfully() {
+        // Given
+        when(request.getHeader("Authorization")).thenReturn("Bearer valid-token");
+        doNothing().when(tokenService).invalidateToken(anyString());
+
+        // When
+        ResponseEntity<Map<String, Object>> response = authTokenController.logout(request);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("message")).isEqualTo("Logout exitoso");
+
+        verify(tokenService).invalidateToken("valid-token");
     }
 
     @Test
@@ -169,13 +189,106 @@ class AuthTokenControllerTest {
     }
 
     @Test
-    @DisplayName("verifyToken - Debe verificar token válido")
-    void verifyToken_shouldVerifyValidToken() {
+    @DisplayName("logout - Debe fallar cuando no hay token de autorización")
+    void logout_shouldFailWhenNoAuthorizationToken() {
+        // Given
+        when(request.getHeader("Authorization")).thenReturn(null);
+
+        // When
+        ResponseEntity<Map<String, Object>> response = authTokenController.logout(request);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("error")).isEqualTo("Token no encontrado");
+
+        verify(tokenService, never()).invalidateToken(any());
+    }
+
+    @Test
+    @DisplayName("logout - Debe fallar cuando el formato del token es incorrecto")
+    void logout_shouldFailWhenTokenFormatIsIncorrect() {
+        // Given
+        when(request.getHeader("Authorization")).thenReturn("InvalidFormat");
+
+        // When
+        ResponseEntity<Map<String, Object>> response = authTokenController.logout(request);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("error")).isEqualTo("Token no encontrado");
+
+        verify(tokenService, never()).invalidateToken(any());
+    }
+
+    // ========== LOGOUT ALL TESTS ==========
+
+    @Test
+    @DisplayName("logoutAll - Debe invalidar todos los tokens exitosamente")
+    void logoutAll_shouldInvalidateAllTokensSuccessfully() {
+        // Given
+        Map<String, Object> requestData = new HashMap<>();
+        requestData.put("userId", 123L);
+
+        doNothing().when(tokenService).invalidateAllUserTokens(anyLong());
+
+        // When
+        ResponseEntity<Map<String, Object>> response = authTokenController.logoutAll(requestData);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("message")).isEqualTo("Todas las sesiones cerradas exitosamente");
+
+        verify(tokenService).invalidateAllUserTokens(123L);
+    }
+
+    @Test
+    @DisplayName("logoutAll - Debe fallar cuando no se proporciona userId")
+    void logoutAll_shouldFailWhenUserIdIsNotProvided() {
+        // Given
+        Map<String, Object> requestData = new HashMap<>();
+
+        // When
+        ResponseEntity<Map<String, Object>> response = authTokenController.logoutAll(requestData);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("error")).isEqualTo("ID de usuario requerido");
+
+        verify(tokenService, never()).invalidateAllUserTokens(anyLong());
+    }
+
+    @Test
+    @DisplayName("logoutAll - Debe fallar cuando userId no es un número válido")
+    void logoutAll_shouldFailWhenUserIdIsNotValid() {
+        // Given
+        Map<String, Object> requestData = new HashMap<>();
+        requestData.put("userId", "not-a-number");
+
+        // When
+        ResponseEntity<Map<String, Object>> response = authTokenController.logoutAll(requestData);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("error")).isEqualTo("ID de usuario inválido");
+
+        verify(tokenService, never()).invalidateAllUserTokens(anyLong());
+    }
+
+    // ========== VERIFY TOKEN TESTS ==========
+
+    @Test
+    @DisplayName("verifyToken - Debe verificar token válido exitosamente")
+    void verifyToken_shouldVerifyValidTokenSuccessfully() {
         // Given
         Map<String, String> requestData = new HashMap<>();
-        requestData.put("token", "valid-jwt-token");
+        requestData.put("token", "valid-token");
 
-        when(tokenService.isTokenBlacklisted("valid-jwt-token")).thenReturn(false);
+        when(tokenService.isTokenBlacklisted("valid-token")).thenReturn(false);
 
         // When
         ResponseEntity<Map<String, Object>> response = authTokenController.verifyToken(requestData);
@@ -183,17 +296,38 @@ class AuthTokenControllerTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("valid")).isEqualTo(true);
+        assertThat(response.getBody().get("blacklisted")).isEqualTo(false);
 
-        Map<String, Object> responseBody = response.getBody();
-        assertThat(responseBody.get("valid")).isEqualTo(true);
-        assertThat(responseBody.get("blacklisted")).isEqualTo(false);
-
-        verify(tokenService).isTokenBlacklisted("valid-jwt-token");
+        verify(tokenService).isTokenBlacklisted("valid-token");
     }
 
     @Test
+    @DisplayName("verifyToken - Debe verificar token en blacklist")
+    void verifyToken_shouldVerifyBlacklistedToken() {
+        // Given
+        Map<String, String> requestData = new HashMap<>();
+        requestData.put("token", "blacklisted-token");
+
+        when(tokenService.isTokenBlacklisted("blacklisted-token")).thenReturn(true);
+
+        // When
+        ResponseEntity<Map<String, Object>> response = authTokenController.verifyToken(requestData);
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("valid")).isEqualTo(false);
+        assertThat(response.getBody().get("blacklisted")).isEqualTo(true);
+
+        verify(tokenService).isTokenBlacklisted("blacklisted-token");
+    }
+
+    // ========== CLEANUP TOKENS TESTS ==========
+
+    @Test
     @DisplayName("cleanupTokens - Debe limpiar tokens expirados exitosamente")
-    void cleanupTokens_shouldCleanupSuccessfully() {
+    void cleanupTokens_shouldCleanupExpiredTokensSuccessfully() {
         // Given
         doNothing().when(tokenService).cleanupExpiredTokens();
 
@@ -203,9 +337,24 @@ class AuthTokenControllerTest {
         // Then
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).containsEntry("message", "Limpieza de tokens completada");
 
-        Map<String, Object> responseBody = response.getBody();
-        assertThat(responseBody.get("message")).isEqualTo("Limpieza de tokens completada");
+        verify(tokenService).cleanupExpiredTokens();
+    }
+
+    @Test
+    @DisplayName("cleanupTokens - Debe manejar errores durante la limpieza")
+    void cleanupTokens_shouldHandleErrorsDuringCleanup() {
+        // Given
+        doThrow(new RuntimeException("Error durante limpieza")).when(tokenService).cleanupExpiredTokens();
+
+        // When
+        ResponseEntity<Map<String, Object>> response = authTokenController.cleanupTokens();
+
+        // Then
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody()).containsEntry("error", "Error durante limpieza");
 
         verify(tokenService).cleanupExpiredTokens();
     }

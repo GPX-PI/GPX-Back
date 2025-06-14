@@ -118,120 +118,6 @@ class VehicleControllerTests {
     }
 
     @Test
-    void getAllVehicles_whenAdmin_shouldReturnOK() {
-        // Arrange
-        User adminUser = buildUser(1L, true);
-        when(authentication.getPrincipal()).thenReturn(adminUser);
-        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
-
-        List<Vehicle> vehicles = Arrays.asList(
-                buildVehicle(1L, 10L, false),
-                buildVehicle(2L, 20L, false));
-        when(vehicleService.getAllVehicles()).thenReturn(vehicles);
-
-        // Act
-        ResponseEntity<List<Vehicle>> response = vehicleController.getAllVehicles();
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        List<Vehicle> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals(2, responseBody.size());
-    }
-
-    @Test
-    void getAllVehicles_whenNotAdmin_shouldReturnForbidden() {
-        // Arrange
-        User nonAdminUser = buildUser(1L, false);
-        when(authentication.getPrincipal()).thenReturn(nonAdminUser);
-        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
-
-        // Act
-        ResponseEntity<List<Vehicle>> response = vehicleController.getAllVehicles();
-
-        // Assert
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    @Test
-    void getVehicleById_whenAdmin_shouldReturnOK() {
-        // Arrange
-        Long vehicleId = 1L;
-        User adminUser = buildUser(99L, true);
-        Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
-
-        when(authentication.getPrincipal()).thenReturn(adminUser);
-        when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(true);
-
-        // Act
-        ResponseEntity<Vehicle> response = vehicleController.getVehicleById(vehicleId);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        Vehicle responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals(vehicleId, responseBody.getId());
-    }
-
-    @Test
-    void getVehicleById_whenOwner_shouldReturnOK() {
-        // Arrange
-        Long vehicleId = 1L;
-        User ownerUser = buildUser(10L, false);
-        Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
-
-        when(authentication.getPrincipal()).thenReturn(ownerUser);
-        when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(true);
-
-        // Act
-        ResponseEntity<Vehicle> response = vehicleController.getVehicleById(vehicleId);
-
-        // Assert
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        Vehicle responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals(vehicleId, responseBody.getId());
-    }
-
-    @Test
-    void getVehicleById_whenNotOwnerNorAdmin_shouldReturnForbidden() {
-        // Arrange
-        Long vehicleId = 1L;
-        User otherUser = buildUser(20L, false);
-        Vehicle vehicle = buildVehicle(vehicleId, 10L, false);
-
-        when(authentication.getPrincipal()).thenReturn(otherUser);
-        when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.of(vehicle));
-        when(authUtils.isCurrentUserOrAdmin(10L)).thenReturn(false);
-
-        // Act
-        ResponseEntity<Vehicle> response = vehicleController.getVehicleById(vehicleId);
-
-        // Assert
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
-    }
-
-    @Test
-    void getVehicleById_whenNotFound_shouldReturnNotFound() {
-        // Arrange
-        Long vehicleId = 1L;
-        User adminUser = buildUser(99L, true);
-
-        when(authentication.getPrincipal()).thenReturn(adminUser);
-        when(vehicleService.getVehicleById(vehicleId)).thenReturn(Optional.empty());
-
-        // Act
-        ResponseEntity<Vehicle> response = vehicleController.getVehicleById(vehicleId);
-
-        // Assert
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-    }
-
-    @Test
     void createVehicle_shouldReturnCreated() {
         // Arrange
         User ownerUser = buildUser(10L, false);
@@ -239,16 +125,19 @@ class VehicleControllerTests {
         VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
         Category category = buildCategory(1L);
 
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(ownerUser);
         when(categoryService.getCategoryById(1L)).thenReturn(category);
         when(vehicleService.createVehicle(any(Vehicle.class))).thenReturn(createdVehicle);
 
         // Act
-        ResponseEntity<Vehicle> response = vehicleController.createVehicle(vehicleDTO);
+        ResponseEntity<Object> response = vehicleController.createVehicle(vehicleDTO);
 
         // Assert
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        Vehicle responseBody = response.getBody();
+        assertTrue(response.getBody() instanceof Vehicle);
+        Vehicle responseBody = (Vehicle) response.getBody();
         assertNotNull(responseBody);
         assertEquals(createdVehicle.getId(), responseBody.getId());
     }
@@ -259,14 +148,20 @@ class VehicleControllerTests {
         User ownerUser = buildUser(10L, false);
         VehicleRequestDTO vehicleDTO = buildVehicleRequestDTO(1L);
 
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(authentication.isAuthenticated()).thenReturn(true);
         when(authentication.getPrincipal()).thenReturn(ownerUser);
         when(categoryService.getCategoryById(1L)).thenReturn(null);
 
         // Act
-        ResponseEntity<Vehicle> response = vehicleController.createVehicle(vehicleDTO);
+        ResponseEntity<Object> response = vehicleController.createVehicle(vehicleDTO);
 
         // Assert
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertTrue(response.getBody() instanceof java.util.Map);
+        @SuppressWarnings("unchecked")
+        java.util.Map<String, String> body = (java.util.Map<String, String>) response.getBody();
+        assertEquals("Categoría no válida", body.get("error"));
     }
 
     @Test

@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 public class JwtProperties {
 
   private String secret = "tu-clave-secreta-super-larga-y-segura-para-jwt-tokens";
-  private long expirationSeconds = 3600; // 1 hora por defecto
+  private long expirationSeconds = 36000; // 10 horas por defecto
   private long refreshExpirationSeconds = 604800; // 7 días por defecto
   private int maxConcurrentSessions = 5; // Máximo de sesiones concurrentes
   private boolean allowRefreshTokenRotation = true; // Rotar refresh tokens

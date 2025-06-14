@@ -1,0 +1,105 @@
+package com.udea.gpx.controller;
+
+import com.udea.gpx.model.User;
+import com.udea.gpx.model.Vehicle;
+import com.udea.gpx.repository.IEventVehicleRepository;
+import com.udea.gpx.repository.IStageResultRepository;
+import com.udea.gpx.service.CategoryService;
+import com.udea.gpx.service.UserService;
+import com.udea.gpx.service.VehicleService;
+import com.udea.gpx.util.AuthUtils;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import java.util.List;
+import java.util.Collections;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("VehicleController Tests")
+class VehicleControllerTest {
+    @Mock
+    private VehicleService vehicleService;
+    @Mock
+    private UserService userService;
+    @Mock
+    private CategoryService categoryService;
+    @Mock
+    private IEventVehicleRepository eventVehicleRepository;
+    @Mock
+    private IStageResultRepository stageResultRepository;
+    @Mock
+    private AuthUtils authUtils;
+    @InjectMocks
+    private VehicleController controller;
+
+    @Test
+    @DisplayName("Controller should be instantiated")
+    void shouldInstantiateController() {
+        assertThat(controller).isNotNull();
+    }
+
+    @Test
+    @DisplayName("getAllVehicles - Forbidden for non-admin")
+    void getAllVehicles_forbidden() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(false);
+        ResponseEntity<?> response = controller.getAllVehicles();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("getAllVehicles - Success for admin")
+    void getAllVehicles_success() {
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        List<Vehicle> list = Collections.singletonList(new Vehicle());
+        when(vehicleService.getAllVehicles()).thenReturn(list);
+        ResponseEntity<?> response = controller.getAllVehicles();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(list);
+    }
+
+    @Test
+    @DisplayName("getVehicleById - Not found")
+    void getVehicleById_notFound() {
+        when(vehicleService.getVehicleById(anyLong())).thenReturn(Optional.empty());
+        ResponseEntity<Vehicle> response = controller.getVehicleById(1L);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("getVehicleById - Forbidden for non-owner")
+    void getVehicleById_forbidden() {
+        Vehicle vehicle = mock(Vehicle.class);
+        User user = mock(User.class);
+        when(vehicle.getUser()).thenReturn(user);
+        when(user.getId()).thenReturn(2L);
+        when(vehicleService.getVehicleById(anyLong())).thenReturn(Optional.of(vehicle));
+        when(authUtils.isCurrentUserOrAdmin(any())).thenReturn(false);
+        ResponseEntity<Vehicle> response = controller.getVehicleById(1L);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+    }
+
+    @Test
+    @DisplayName("getVehicleById - Success for owner or admin")
+    void getVehicleById_success() {
+        Vehicle vehicle = new Vehicle();
+        User user = new User();
+        user.setId(1L);
+        vehicle.setUser(user);
+        when(vehicleService.getVehicleById(anyLong())).thenReturn(Optional.of(vehicle));
+        when(authUtils.isCurrentUserOrAdmin(any())).thenReturn(true);
+        ResponseEntity<Vehicle> response = controller.getVehicleById(1L);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(vehicle);
+    }
+}

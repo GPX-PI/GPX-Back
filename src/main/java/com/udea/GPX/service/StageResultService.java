@@ -49,6 +49,13 @@ public class StageResultService {
 
     @Transactional
     public StageResult createResult(CreateStageResultDTO createDTO) {
+        // Verificar si ya existe un resultado para este vehículo en esta etapa
+        if (stageResultRepository.existsByVehicleIdAndStageId(createDTO.getVehicleId(), createDTO.getStageId())) {
+            throw new IllegalArgumentException(
+                    "Ya existe un resultado registrado para este participante en esta etapa. " +
+                            "Use la función de edición para modificar el resultado existente.");
+        }
+
         // Buscar stage y vehicle
         Stage stage = stageRepository.findById(createDTO.getStageId())
                 .orElseThrow(() -> new RuntimeException("Etapa no encontrada con ID: " + createDTO.getStageId()));
@@ -69,6 +76,11 @@ public class StageResultService {
         result.setLatitude(createDTO.getLatitude());
         result.setLongitude(createDTO.getLongitude());
 
+        // Inicializar todas las penalizaciones en cero por defecto
+        result.setPenaltyWaypoint(Duration.ZERO);
+        result.setPenaltySpeed(Duration.ZERO);
+        result.setDiscountClaim(Duration.ZERO);
+
         return stageResultRepository.save(result);
     }
 
@@ -87,6 +99,26 @@ public class StageResultService {
     @Transactional
     public StageResult updateResultFromDTO(Long id, UpdateStageResultDTO updateDTO) {
         return stageResultRepository.findById(id).map(result -> {
+
+            // Si se está cambiando el vehículo o la etapa, verificar duplicados
+            if ((updateDTO.getStageId() != null && !result.getStage().getId().equals(updateDTO.getStageId())) ||
+                    (updateDTO.getVehicleId() != null
+                            && !result.getVehicle().getId().equals(updateDTO.getVehicleId()))) {
+
+                Long newVehicleId = updateDTO.getVehicleId() != null ? updateDTO.getVehicleId()
+                        : result.getVehicle().getId();
+                Long newStageId = updateDTO.getStageId() != null ? updateDTO.getStageId() : result.getStage().getId();
+
+                // Verificar si ya existe otro resultado para la nueva combinación
+                // vehículo-etapa
+                Optional<StageResult> existingResult = stageResultRepository.findByVehicleIdAndStageId(newVehicleId,
+                        newStageId);
+                if (existingResult.isPresent() && !existingResult.get().getId().equals(id)) {
+                    throw new IllegalArgumentException(
+                            "Ya existe un resultado registrado para este participante en esta etapa.");
+                }
+            }
+
             updateStageIfDifferent(result, updateDTO);
             updateVehicleIfDifferent(result, updateDTO);
             validateBusinessRules(result, updateDTO);
