@@ -31,7 +31,7 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
 
-                boolean isProduction = "prod".equals(activeProfile);
+                boolean isProduction = "prod".equals(activeProfile) || "render".equals(activeProfile);
                 boolean isTest = "test".equals(activeProfile);
 
                 String[] allowedOrigins = determineAllowedOrigins(isProduction, isTest);

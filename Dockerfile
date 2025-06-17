@@ -62,7 +62,7 @@ USER spring:spring
 COPY --from=build --chown=spring:spring /app/target/*.jar app.jar
 
 # Variables de entorno por defecto
-ENV SPRING_PROFILES_ACTIVE=prod
+ENV SPRING_PROFILES_ACTIVE=render
 ENV JAVA_OPTS="-Xmx512m -Xms256m"
 ENV SERVER_PORT=8080
 
