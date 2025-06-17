@@ -66,12 +66,11 @@ public class StageService {
     private void validateUniqueOrderNumber(Long eventId, Integer orderNumber, Long excludeStageId) {
         Optional<Stage> existingStage = stageRepository.findByEventIdAndOrderNumber(eventId, orderNumber);
 
-        if (existingStage.isPresent()) {
-            // Si estamos actualizando, permitir el mismo orderNumber para la misma etapa
-            if (excludeStageId == null || !existingStage.get().getId().equals(excludeStageId)) {
-                throw new IllegalArgumentException(
-                        String.format("Ya existe una etapa con el número de orden %d en este evento", orderNumber));
-            }
+        // Si estamos actualizando, permitir el mismo orderNumber para la misma etapa
+        if (existingStage.isPresent()
+                && (excludeStageId == null || !existingStage.get().getId().equals(excludeStageId))) {
+            throw new IllegalArgumentException(
+                    String.format("Ya existe una etapa con el número de orden %d en este evento", orderNumber));
         }
     }
 
@@ -80,4 +79,3 @@ public class StageService {
     }
 
 }
-

@@ -169,7 +169,9 @@ public class StageResultController {
         try {
             return Duration.parse(durationString);
         } catch (Exception e) {
-            logger.warn("Failed to parse duration '{}', using Duration.ZERO", durationString);
+            // NOSONAR - S5145: Log seguro - no se expone el durationString del usuario
+            // Log seguro - no exponer datos controlados por el usuario
+            logger.warn("Failed to parse duration, using Duration.ZERO");
             return Duration.ZERO;
         }
     }

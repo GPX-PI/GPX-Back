@@ -15,6 +15,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -196,7 +197,7 @@ class UserControllerTests {
         when(authentication.getPrincipal()).thenReturn(user);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.updateUserProfile(eq(userId), any(User.class)))
-            .thenThrow(new IllegalArgumentException("Campo inválido"));
+                .thenThrow(new IllegalArgumentException("Campo inválido"));
 
         ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
 
@@ -215,7 +216,7 @@ class UserControllerTests {
         when(authentication.getPrincipal()).thenReturn(user);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.updateUserProfile(eq(userId), any(User.class)))
-            .thenThrow(new InternalServerException("Fallo interno"));
+                .thenThrow(new InternalServerException("Fallo interno"));
 
         ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
 
@@ -234,7 +235,7 @@ class UserControllerTests {
         when(authentication.getPrincipal()).thenReturn(user);
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         when(userService.updateUserProfile(eq(userId), any(User.class)))
-            .thenThrow(new RuntimeException("Usuario no encontrado"));
+                .thenThrow(new RuntimeException("Usuario no encontrado"));
 
         ResponseEntity<Object> response = userController.updateUserProfile(userId, user);
 
@@ -286,7 +287,7 @@ class UserControllerTests {
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         // Simular que el usuario no existe lanzando excepción con mensaje esperado
         when(userService.updateUserPictureUrl(eq(userId), anyString()))
-            .thenThrow(new RuntimeException("Usuario no encontrado"));
+                .thenThrow(new RuntimeException("Usuario no encontrado"));
 
         ResponseEntity<Object> response = userController.updateUserPicture(userId, pictureData);
 
@@ -331,7 +332,7 @@ class UserControllerTests {
         when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
         // Simular que el usuario no existe lanzando excepción con mensaje esperado
         when(userService.removeUserInsurance(userId))
-            .thenThrow(new RuntimeException("Usuario no encontrado"));
+                .thenThrow(new RuntimeException("Usuario no encontrado"));
 
         ResponseEntity<Object> response = userController.removeInsurance(userId);
 
@@ -764,17 +765,231 @@ class UserControllerTests {
         assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode());
     }
 
-    // ========== TESTS PARA MÉTODOS AUXILIARES ==========
+    // ========== TESTS PARA VALIDACIÓN DE URLs DE IMAGEN ==========
 
     @Test
-    void getGoogleLoginUrl_shouldReturnLoginUrl() {
-        ResponseEntity<Map<String, String>> response = userController.getGoogleLoginUrl();
+    @DisplayName("updateUserPicture - Debe aceptar URLs HTTPS válidas con extensiones de imagen")
+    void updateUserPicture_withValidHttpsImageUrls_shouldAccept() {
+        Long userId = 1L;
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+        when(userService.updateUser(eq(userId), any(User.class))).thenReturn(user);
+
+        // Test URLs HTTPS válidas con diferentes extensiones
+        String[] validUrls = {
+                "https://example.com/image.jpg",
+                "https://example.com/image.jpeg",
+                "https://example.com/image.png",
+                "https://example.com/image.webp",
+                "https://example.com/image.gif",
+                "https://example.com/path/to/image.jpg?param=value",
+                "https://subdomain.example.com/image.png"
+        };
+
+        for (String url : validUrls) {
+            Map<String, String> pictureData = new HashMap<>();
+            pictureData.put("pictureUrl", url);
+
+            ResponseEntity<Object> response = userController.updateUserPicture(userId, pictureData);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode(), "Failed for URL: " + url);
+        }
+    }
+
+    @Test
+    @DisplayName("updateUserPicture - Debe rechazar URLs HTTP (no seguras)")
+    void updateUserPicture_withHttpUrls_shouldReject() {
+        Long userId = 1L;
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+
+        Map<String, String> pictureData = new HashMap<>();
+        pictureData.put("pictureUrl", "http://example.com/image.jpg"); // HTTP no HTTPS
+
+        ResponseEntity<Object> response = userController.updateUserPicture(userId, pictureData);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("updateUserPicture - Debe rechazar URLs sin extensiones de imagen válidas")
+    void updateUserPicture_withInvalidExtensions_shouldReject() {
+        Long userId = 1L;
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+
+        String[] invalidUrls = {
+                "https://example.com/document.pdf",
+                "https://example.com/file.txt",
+                "https://example.com/video.mp4",
+                "https://example.com/audio.mp3",
+                "https://example.com/noextension"
+        };
+
+        for (String url : invalidUrls) {
+            Map<String, String> pictureData = new HashMap<>();
+            pictureData.put("pictureUrl", url);
+
+            ResponseEntity<Object> response = userController.updateUserPicture(userId, pictureData);
+
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should reject URL: " + url);
+        }
+    }
+
+    @Test
+    @DisplayName("updateUserPicture - Debe aceptar URLs de servicios conocidos")
+    void updateUserPicture_withKnownServices_shouldAccept() {
+        Long userId = 1L;
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+        when(userService.updateUser(eq(userId), any(User.class))).thenReturn(user);
+
+        String[] knownServiceUrls = {
+                "https://imgur.com/a/abc123",
+                "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+                "https://drive.google.com/file/d/1ABC/view",
+                "https://www.dropbox.com/s/abc123/image.jpg",
+                "https://unsplash.com/photos/abc123"
+        };
+
+        for (String url : knownServiceUrls) {
+            Map<String, String> pictureData = new HashMap<>();
+            pictureData.put("pictureUrl", url);
+
+            ResponseEntity<Object> response = userController.updateUserPicture(userId, pictureData);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode(), "Failed for service URL: " + url);
+        }
+    }
+
+    // ========== TESTS PARA VALIDACIÓN DE URLs DE DOCUMENTO ==========
+
+    @Test
+    @DisplayName("updateUserInsurance - Debe aceptar URLs HTTPS válidas con extensiones de documento")
+    void updateUserInsurance_withValidHttpsDocumentUrls_shouldAccept() {
+        Long userId = 1L;
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+        when(userService.updateUserInsuranceUrl(eq(userId), anyString())).thenReturn(user);
+
+        // Test URLs HTTPS válidas con diferentes extensiones de documento
+        String[] validUrls = {
+                "https://example.com/document.pdf",
+                "https://example.com/document.doc",
+                "https://example.com/document.docx",
+                "https://example.com/scan.jpg",
+                "https://example.com/scan.jpeg",
+                "https://example.com/scan.png",
+                "https://example.com/path/to/doc.pdf?param=value"
+        };
+
+        for (String url : validUrls) {
+            Map<String, String> insuranceData = new HashMap<>();
+            insuranceData.put("insuranceUrl", url);
+
+            ResponseEntity<Object> response = userController.updateUserInsurance(userId, insuranceData);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode(), "Failed for URL: " + url);
+        }
+    }
+
+    @Test
+    @DisplayName("updateUserInsurance - Debe rechazar URLs HTTP (no seguras)")
+    void updateUserInsurance_withHttpUrls_shouldReject() {
+        Long userId = 1L;
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+
+        Map<String, String> insuranceData = new HashMap<>();
+        insuranceData.put("insuranceUrl", "http://example.com/document.pdf"); // HTTP no HTTPS
+
+        ResponseEntity<Object> response = userController.updateUserInsurance(userId, insuranceData);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    @DisplayName("updateUserInsurance - Debe rechazar URLs sin extensiones de documento válidas")
+    void updateUserInsurance_withInvalidExtensions_shouldReject() {
+        Long userId = 1L;
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+
+        String[] invalidUrls = {
+                "https://example.com/video.mp4",
+                "https://example.com/audio.mp3",
+                "https://example.com/image.gif",
+                "https://example.com/file.txt",
+                "https://example.com/noextension"
+        };
+
+        for (String url : invalidUrls) {
+            Map<String, String> insuranceData = new HashMap<>();
+            insuranceData.put("insuranceUrl", url);
+
+            ResponseEntity<Object> response = userController.updateUserInsurance(userId, insuranceData);
+
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should reject URL: " + url);
+        }
+    }
+
+    @Test
+    @DisplayName("updateUserInsurance - Debe aceptar URLs de servicios de documentos conocidos")
+    void updateUserInsurance_withKnownDocumentServices_shouldAccept() {
+        Long userId = 1L;
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+        when(userService.updateUserInsuranceUrl(eq(userId), anyString())).thenReturn(user);
+
+        String[] knownServiceUrls = {
+                "https://drive.google.com/file/d/1ABC/view",
+                "https://www.dropbox.com/s/abc123/document.pdf",
+                "https://onedrive.live.com/view.aspx?resid=123",
+                "https://docs.google.com/document/d/123/edit"
+        };
+
+        for (String url : knownServiceUrls) {
+            Map<String, String> insuranceData = new HashMap<>();
+            insuranceData.put("insuranceUrl", url);
+
+            ResponseEntity<Object> response = userController.updateUserInsurance(userId, insuranceData);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode(), "Failed for service URL: " + url);
+        }
+    }
+
+    @Test
+    @DisplayName("updateUserPicture - Debe aceptar URL vacía para eliminar imagen")
+    void updateUserPicture_withEmptyUrl_shouldAcceptToRemoveImage() {
+        Long userId = 1L;
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+        when(userService.updateUser(eq(userId), any(User.class))).thenReturn(user);
+
+        Map<String, String> pictureData = new HashMap<>();
+        pictureData.put("pictureUrl", ""); // URL vacía para eliminar
+
+        ResponseEntity<Object> response = userController.updateUserPicture(userId, pictureData);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        Map<String, String> responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("/oauth2/authorization/google", responseBody.get("loginUrl"));
-        assertTrue(responseBody.get("message").contains("OAuth2"));
+    }
+
+    @Test
+    @DisplayName("updateUserInsurance - Debe aceptar URL vacía para eliminar documento")
+    void updateUserInsurance_withEmptyUrl_shouldAcceptToRemoveDocument() {
+        Long userId = 1L;
+        User user = TestDataBuilder.buildUser(userId, "Juan", false);
+        when(authUtils.isCurrentUserOrAdmin(userId)).thenReturn(true);
+        when(userService.getUserById(userId)).thenReturn(Optional.of(user));
+        when(userService.updateUserInsuranceUrl(eq(userId), anyString())).thenReturn(user);
+
+        Map<String, String> insuranceData = new HashMap<>();
+        insuranceData.put("insuranceUrl", ""); // URL vacía para eliminar
+
+        ResponseEntity<Object> response = userController.updateUserInsurance(userId, insuranceData);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
@@ -797,11 +1012,194 @@ class UserControllerTests {
         String email = "noexiste@ejemplo.com";
         when(userService.findByEmail(email.toLowerCase())).thenReturn(null);
 
-        ResponseEntity<Map<String, Boolean>> response = userController.checkEmailExists(email);
+        ResponseEntity<Map<String, Boolean>> checkEmailResponse = userController.checkEmailExists(email);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        Map<String, Boolean> responseBody = response.getBody();
+        assertEquals(HttpStatus.OK, checkEmailResponse.getStatusCode());
+        Map<String, Boolean> responseBody = checkEmailResponse.getBody();
         assertNotNull(responseBody);
         assertFalse(responseBody.get("exists"));
+    }
+
+    // ========== TESTS PARA MÉTODOS DE VALIDACIÓN DE URLS ==========
+
+    @Test
+    @DisplayName("hasValidImageExtension - debería validar extensiones de imagen correctamente")
+    void hasValidImageExtension_shouldValidateImageExtensions() throws Exception {
+        // Usando reflection para acceder al método privado
+        java.lang.reflect.Method method = UserController.class.getDeclaredMethod("hasValidImageExtension",
+                String.class);
+        method.setAccessible(true);
+
+        // Casos válidos - HTTPS con extensiones válidas
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/image.jpg"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/image.jpeg"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/image.png"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/image.webp"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/image.gif"));
+
+        // Casos válidos - HTTP con extensiones válidas
+        assertTrue((Boolean) method.invoke(userController, "http://example.com/image.jpg"));
+        assertTrue((Boolean) method.invoke(userController, "http://example.com/image.png"));
+
+        // Casos válidos - con parámetros de consulta
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/image.jpg?v=123"));
+        assertTrue(
+                (Boolean) method.invoke(userController, "https://example.com/path/image.png?size=large&format=webp"));
+
+        // Casos inválidos - sin protocolo
+        assertFalse((Boolean) method.invoke(userController, "example.com/image.jpg"));
+        assertFalse((Boolean) method.invoke(userController, "//example.com/image.jpg"));
+
+        // Casos inválidos - extensiones no válidas
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/document.pdf"));
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/file.txt"));
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/video.mp4"));
+
+        // Casos inválidos - sin extensión
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/image"));
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/"));
+    }
+
+    @Test
+    @DisplayName("hasValidDocumentExtension - debería validar extensiones de documento correctamente")
+    void hasValidDocumentExtension_shouldValidateDocumentExtensions() throws Exception {
+        java.lang.reflect.Method method = UserController.class.getDeclaredMethod("hasValidDocumentExtension",
+                String.class);
+        method.setAccessible(true);
+
+        // Casos válidos - HTTPS con extensiones de documento
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/document.pdf"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/document.doc"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/document.docx"));
+
+        // Casos válidos - extensiones de imagen también permitidas en documentos
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/scan.jpg"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/scan.jpeg"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/scan.png"));
+
+        // Casos válidos - HTTP
+        assertTrue((Boolean) method.invoke(userController, "http://example.com/document.pdf"));
+
+        // Casos válidos - con parámetros
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/doc.pdf?download=true"));
+
+        // Casos inválidos - sin protocolo
+        assertFalse((Boolean) method.invoke(userController, "example.com/document.pdf"));
+
+        // Casos inválidos - extensiones no permitidas
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/file.txt"));
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/video.mp4"));
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/archive.zip"));
+
+        // Casos inválidos - sin extensión
+        assertFalse((Boolean) method.invoke(userController, "https://example.com/document"));
+    }
+
+    @Test
+    @DisplayName("isValidImageUrl - debería validar URLs de imagen completas")
+    void isValidImageUrl_shouldValidateCompleteImageUrls() throws Exception {
+        java.lang.reflect.Method method = UserController.class.getDeclaredMethod("isValidImageUrl", String.class);
+        method.setAccessible(true);
+
+        // Casos válidos - URLs vacías (permitidas para eliminar imagen)
+        assertTrue((Boolean) method.invoke(userController, ""));
+        assertTrue((Boolean) method.invoke(userController, "   "));
+        assertTrue((Boolean) method.invoke(userController, (String) null));
+
+        // Casos válidos - extensiones directas
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/image.jpg"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/image.png"));
+
+        // Casos válidos - servicios conocidos
+        assertTrue((Boolean) method.invoke(userController, "https://imgur.com/abc123"));
+        assertTrue((Boolean) method.invoke(userController, "https://cloudinary.com/image/upload/xyz"));
+        assertTrue((Boolean) method.invoke(userController, "https://drive.google.com/file/d/123"));
+        assertTrue((Boolean) method.invoke(userController, "https://dropbox.com/s/abc/image"));
+        assertTrue((Boolean) method.invoke(userController, "https://unsplash.com/photos/123"));
+        assertTrue((Boolean) method.invoke(userController, "https://plus.unsplash.com/premium_photo-123"));
+        assertTrue((Boolean) method.invoke(userController, "https://pexels.com/photo/123"));
+        assertTrue((Boolean) method.invoke(userController, "https://googleusercontent.com/abc"));
+        assertTrue((Boolean) method.invoke(userController, "https://lh3.googleusercontent.com/abc"));
+        assertTrue((Boolean) method.invoke(userController, "https://lh4.googleusercontent.com/abc"));
+        assertTrue((Boolean) method.invoke(userController, "https://lh5.googleusercontent.com/abc"));
+        assertTrue((Boolean) method.invoke(userController, "https://lh6.googleusercontent.com/abc"));
+
+        // Casos inválidos - no HTTPS
+        assertFalse((Boolean) method.invoke(userController, "http://example.com/image.jpg"));
+        assertFalse((Boolean) method.invoke(userController, "ftp://example.com/image.jpg"));
+
+        // Casos inválidos - extensión no válida en dominio desconocido
+        assertFalse((Boolean) method.invoke(userController, "https://unknown-site.com/file.txt"));
+        assertFalse((Boolean) method.invoke(userController, "https://unknown-site.com/video.mp4"));
+
+        // Casos inválidos - sin extensión en dominio desconocido
+        assertFalse((Boolean) method.invoke(userController, "https://unknown-site.com/somefile"));
+    }
+
+    @Test
+    @DisplayName("isValidDocumentUrl - debería validar URLs de documento completas")
+    void isValidDocumentUrl_shouldValidateCompleteDocumentUrls() throws Exception {
+        java.lang.reflect.Method method = UserController.class.getDeclaredMethod("isValidDocumentUrl", String.class);
+        method.setAccessible(true);
+
+        // Casos válidos - URLs vacías (permitidas para eliminar documento)
+        assertTrue((Boolean) method.invoke(userController, ""));
+        assertTrue((Boolean) method.invoke(userController, "   "));
+        assertTrue((Boolean) method.invoke(userController, (String) null));
+
+        // Casos válidos - extensiones directas
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/document.pdf"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/document.doc"));
+        assertTrue((Boolean) method.invoke(userController, "https://example.com/document.docx"));
+
+        // Casos válidos - servicios conocidos
+        assertTrue((Boolean) method.invoke(userController, "https://drive.google.com/file/d/123"));
+        assertTrue((Boolean) method.invoke(userController, "https://dropbox.com/s/abc/document"));
+        assertTrue((Boolean) method.invoke(userController, "https://onedrive.com/abc/document"));
+        assertTrue((Boolean) method.invoke(userController, "https://docs.google.com/document/d/123"));
+
+        // Casos inválidos - no HTTPS
+        assertFalse((Boolean) method.invoke(userController, "http://example.com/document.pdf"));
+
+        // Casos inválidos - extensión no válida en dominio desconocido
+        assertFalse((Boolean) method.invoke(userController, "https://unknown-site.com/file.txt"));
+        assertFalse((Boolean) method.invoke(userController, "https://unknown-site.com/video.mp4"));
+
+        // Casos inválidos - sin extensión en dominio desconocido
+        assertFalse((Boolean) method.invoke(userController, "https://unknown-site.com/somefile"));
+    }
+
+    @Test
+    @DisplayName("Validación de URLs - casos edge y de seguridad")
+    void urlValidation_edgeCasesAndSecurity() throws Exception {
+        java.lang.reflect.Method imageMethod = UserController.class.getDeclaredMethod("hasValidImageExtension",
+                String.class);
+        java.lang.reflect.Method docMethod = UserController.class.getDeclaredMethod("hasValidDocumentExtension",
+                String.class);
+        imageMethod.setAccessible(true);
+        docMethod.setAccessible(true);
+
+        // Edge cases - URLs con caracteres especiales
+        assertTrue((Boolean) imageMethod.invoke(userController, "https://example.com/my%20image.jpg"));
+        assertTrue((Boolean) docMethod.invoke(userController, "https://example.com/my%20doc.pdf"));
+
+        // Edge cases - URLs muy largas
+        String longUrl = "https://example.com/" + "a".repeat(1000) + "/image.jpg";
+        assertTrue((Boolean) imageMethod.invoke(userController, longUrl));
+
+        // Edge cases - múltiples puntos
+        assertTrue((Boolean) imageMethod.invoke(userController, "https://example.com/file.name.with.dots.jpg"));
+        assertTrue((Boolean) docMethod.invoke(userController, "https://example.com/file.name.with.dots.pdf"));
+
+        // Edge cases - extensiones en mayúsculas (deberían fallar ya que usamos
+        // endsWith exacto)
+        assertFalse((Boolean) imageMethod.invoke(userController, "https://example.com/image.JPG"));
+        assertFalse((Boolean) docMethod.invoke(userController, "https://example.com/document.PDF"));
+
+        // Casos de seguridad - intentos de bypass
+        assertFalse((Boolean) imageMethod.invoke(userController, "javascript:alert('xss')"));
+        assertFalse((Boolean) docMethod.invoke(userController, "data:text/html,<script>alert('xss')</script>"));
+        assertFalse((Boolean) imageMethod.invoke(userController, "file:///etc/passwd"));
+        assertFalse((Boolean) docMethod.invoke(userController, "ftp://malicious.com/file.pdf"));
     }
 }

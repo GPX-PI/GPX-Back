@@ -177,23 +177,12 @@ public class UserService {
 
     private void updateFileFields(User user, User updatedUser) {
         // Para archivos, siempre actualizar (incluye null para eliminar)
-        if (updatedUser.getInsurance() != null || hasFieldBeenExplicitlySet("insurance", updatedUser)) {
+        if (updatedUser.getInsurance() != null) {
             user.setInsurance(updatedUser.getInsurance()); // Archivos no se sanitizan, permite null
         }
-        if (updatedUser.getPicture() != null || hasFieldBeenExplicitlySet("picture", updatedUser)) {
+        if (updatedUser.getPicture() != null) {
             user.setPicture(updatedUser.getPicture()); // Archivos no se sanitizan, permite null
         }
-    }
-
-    /**
-     * Método auxiliar para verificar si un campo ha sido establecido explícitamente
-     * Esta es una implementación simple - en un caso real podrías usar anotaciones
-     * o un DTO específico
-     */
-    private boolean hasFieldBeenExplicitlySet(String fieldName, User user) {
-        // Por simplicidad, siempre retornar true para permitir la actualización a null
-        // En una implementación más robusta, usarías un DTO o flag específico
-        return true;
     }
 
     public User updateUserProfile(Long id, User updatedUser) {
@@ -234,7 +223,7 @@ public class UserService {
                 try {
                     userRepository.save(user);
                 } catch (Exception e) {
-                    logger.warn("Error al actualizar authProvider para email {}: {}", email, e.getMessage());
+                    logger.warn("Error al actualizar authProvider para usuario por email: {}", e.getMessage());
                 }
             }
             return user;
@@ -317,10 +306,8 @@ public class UserService {
             // Límite de longitud para prevenir ataques
             if (trimmedUrl.length() > 2048) {
                 throw new IllegalArgumentException("URL demasiado larga (máximo 2048 caracteres)");
-            }
-
-            // Log para auditoría de seguridad
-            logger.info("Actualizando URL de imagen del usuario {}: {}", id, trimmedUrl);
+            } // Log para auditoría de seguridad - sin exponer la URL completa
+            logger.info("Actualizando URL de imagen del usuario {} (longitud: {} caracteres)", id, trimmedUrl.length());
             user.setPicture(trimmedUrl);
         } else {
             user.setPicture(null);
@@ -345,10 +332,8 @@ public class UserService {
             // Límite de longitud para prevenir ataques
             if (trimmedUrl.length() > 2048) {
                 throw new IllegalArgumentException("URL demasiado larga (máximo 2048 caracteres)");
-            }
-
-            // Log para auditoría de seguridad
-            logger.info("Actualizando URL de seguro del usuario {}: {}", id, trimmedUrl);
+            } // Log para auditoría de seguridad - sin exponer la URL completa
+            logger.info("Actualizando URL de seguro del usuario {} (longitud: {} caracteres)", id, trimmedUrl.length());
             user.setInsurance(trimmedUrl);
         } else {
             user.setInsurance(null);

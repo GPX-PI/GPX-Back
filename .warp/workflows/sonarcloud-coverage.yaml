@@ -1,0 +1,132 @@
+name: "SonarCloud Coverage Analysis"
+description: "Ejecuta tests, genera cobertura con JaCoCo y sube análisis a SonarCloud"
+
+steps:
+  - name: "Verificar configuración del proyecto"
+    command: |
+      echo "🔍 Verificando configuración de SonarCloud..."
+      if (Test-Path "sonar-project.properties") {
+        echo "✅ Archivo sonar-project.properties encontrado"
+        Get-Content "sonar-project.properties" | Select-String "sonar.organization|sonar.projectKey"
+      } else {
+        echo "❌ No se encontró sonar-project.properties"
+        exit 1
+      }
+      
+      if (Test-Path "pom.xml") {
+        echo "✅ Proyecto Maven detectado"
+      } else {
+        echo "❌ No se encontró pom.xml"
+        exit 1
+      }
+
+  - name: "Ejecutar tests y generar cobertura"
+    command: |
+      echo "🧪 Ejecutando tests y generando reporte de cobertura..."
+      if (Test-Path "mvnw.cmd") {
+        .\mvnw.cmd clean test jacoco:report
+      } elseif (Get-Command mvn -ErrorAction SilentlyContinue) {
+        mvn clean test jacoco:report
+      } else {
+        echo "❌ No se encontró Maven o Maven Wrapper"
+        exit 1
+      }
+
+  - name: "Verificar reporte de cobertura"
+    command: |
+      echo "📊 Verificando reporte de cobertura..."
+      if (Test-Path "target/site/jacoco/jacoco.xml") {
+        echo "✅ Reporte de JaCoCo generado correctamente"
+        $fileSize = (Get-Item "target/site/jacoco/jacoco.xml").Length
+        echo "📁 Tamaño del reporte: $fileSize bytes"
+      } else {
+        echo "❌ No se generó el reporte de cobertura"
+        exit 1
+      }
+
+  - name: "Configurar variables de SonarCloud"
+    command: |
+      echo "⚙️ Configurando variables de entorno..."
+      
+      # Verificar que las variables estén definidas
+      if (-not $env:SONAR_TOKEN) {
+        echo "❌ SONAR_TOKEN no está definido"
+        echo "💡 Ejecuta: $env:SONAR_TOKEN='tu_token_aqui'"
+        exit 1
+      }
+      
+      if (-not $env:SONAR_ORGANIZATION) {
+        echo "📋 SONAR_ORGANIZATION no definido, usando valor del archivo de propiedades"
+      }
+      
+      if (-not $env:SONAR_PROJECT_KEY) {
+        echo "📋 SONAR_PROJECT_KEY no definido, usando valor del archivo de propiedades"
+      }
+      
+      echo "✅ Variables configuradas"
+
+  - name: "Ejecutar análisis de SonarCloud"
+    command: |
+      echo "🚀 Ejecutando análisis de SonarCloud..."
+      
+      $sonarCmd = @(
+        "sonar:sonar"
+      )
+      
+      if ($env:SONAR_ORGANIZATION) {
+        $sonarCmd += "-Dsonar.organization=$env:SONAR_ORGANIZATION"
+      }
+      
+      if ($env:SONAR_PROJECT_KEY) {
+        $sonarCmd += "-Dsonar.projectKey=$env:SONAR_PROJECT_KEY"
+      }
+      
+      $sonarCmd += "-Dsonar.host.url=https://sonarcloud.io"
+      
+      if (Test-Path "mvnw.cmd") {
+        & .\mvnw.cmd @sonarCmd
+      } else {
+        & mvn @sonarCmd
+      }
+      
+      if ($LASTEXITCODE -eq 0) {
+        echo "✅ Análisis completado exitosamente"
+        echo "🌐 Revisa los resultados en SonarCloud"
+      } else {
+        echo "❌ Error en el análisis de SonarCloud"
+        exit 1
+      }
+
+  - name: "Mostrar resumen"
+    command: |
+      echo ""
+      echo "📈 ===== RESUMEN DEL ANÁLISIS ====="
+      echo "✅ Tests ejecutados y cobertura generada"
+      echo "✅ Análisis subido a SonarCloud"
+      echo ""
+      echo "🔗 Enlaces útiles:"
+      
+      # Extraer información del archivo de propiedades
+      $org = (Get-Content "sonar-project.properties" | Select-String "sonar.organization=" | ForEach-Object { $_.Line.Split('=')[1] })
+      $projectKey = (Get-Content "sonar-project.properties" | Select-String "sonar.projectKey=" | ForEach-Object { $_.Line.Split('=')[1] })
+      
+      if ($org -and $projectKey) {
+        echo "   Dashboard: https://sonarcloud.io/dashboard?id=$projectKey"
+        echo "   Proyecto: https://sonarcloud.io/project/overview?id=$projectKey"
+      }
+      
+      echo ""
+      echo "💡 Tip: Guarda este workflow para futuros análisis"
+
+variables:
+  SONAR_TOKEN:
+    description: "Token de autenticación de SonarCloud"
+    required: true
+    secret: true
+  SONAR_ORGANIZATION:
+    description: "Organización en SonarCloud (opcional si está en sonar-project.properties)"
+    required: false
+  SONAR_PROJECT_KEY:
+    description: "Clave del proyecto en SonarCloud (opcional si está en sonar-project.properties)"
+    required: false
+

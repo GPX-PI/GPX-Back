@@ -207,7 +207,7 @@ public class TokenService {
    * Invalida una sesión específica
    */
   public void invalidateSession(String sessionId) {
-    logger.debug("🔍 TokenService.invalidateSession - Invalidando sesión {}", sessionId);
+    logger.debug("🔍 TokenService.invalidateSession - Invalidando sesión (longitud: {})", sessionId.length());
 
     // Buscar y remover la sesión
     for (Map.Entry<Long, Set<SessionInfo>> entry : activeSessions.entrySet()) {
@@ -233,7 +233,10 @@ public class TokenService {
       }
     }
 
-    logger.info("✅ TokenService.invalidateSession - Sesión {} invalidada", sessionId);
+    // NOSONAR - S5145: Log seguro - solo muestra longitud del sessionId, no el
+    // valor completo
+    // Log seguro - no exponer sessionId completo
+    logger.info("✅ TokenService.invalidateSession - Sesión invalidada (longitud: {})", sessionId.length());
   }
 
   /**
@@ -301,11 +304,14 @@ public class TokenService {
 
   private void registerActiveSession(SessionInfo sessionInfo) {
     Long userId = sessionInfo.getUserId();
-
     activeSessions.computeIfAbsent(userId, k -> ConcurrentHashMap.newKeySet()).add(sessionInfo);
     sessionsByToken.put(sessionInfo.getAccessToken(), sessionInfo);
 
-    logger.debug("Sesión {} registrada para usuario {}", sessionInfo.getSessionId(), userId);
+    // NOSONAR - S5145: Log seguro - solo muestra longitud del sessionId, no el
+    // valor completo
+    // Log seguro - no exponer sessionId completo
+    logger.debug("Sesión registrada para usuario {} (sessionId longitud: {})",
+        userId, sessionInfo.getSessionId().length());
   }
 
   private SessionInfo getSessionByRefreshToken(String refreshToken) {

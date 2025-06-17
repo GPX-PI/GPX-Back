@@ -31,7 +31,7 @@
         <!-- SonarCloud Configuration -->
         <sonar.organization>gpxpi</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.projectKey>gpxpi_spring-boot-gpx</sonar.projectKey>
+        <sonar.projectKey>GPX-PI_GPX-Back</sonar.projectKey>
         
         <!-- Test Coverage Configuration -->
         <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>

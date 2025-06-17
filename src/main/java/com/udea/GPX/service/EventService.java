@@ -150,12 +150,14 @@ public class EventService {
 
     public Event updateEventPictureUrl(Long id, String pictureUrl) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG));
-
-        // Actualizar con la nueva URL (puede ser externa o null para eliminar)
+                .orElseThrow(() -> new RuntimeException(EVENT_NOT_FOUND_MSG)); // Actualizar con la nueva URL (puede ser
+                                                                               // externa o null para eliminar)
         event.setPicture(pictureUrl != null && !pictureUrl.trim().isEmpty() ? pictureUrl : null);
 
-        logger.debug("Actualizando URL de imagen del evento {}: {}", id, pictureUrl);
+        // NOSONAR - S5145: Log seguro - solo muestra longitud, no la URL completa
+        // Log seguro - no exponer la URL completa
+        logger.debug("Actualizando URL de imagen del evento {} (longitud: {} caracteres)",
+                id, pictureUrl != null ? pictureUrl.length() : 0);
         return eventRepository.save(event);
     }
 

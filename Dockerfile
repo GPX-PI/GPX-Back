@@ -39,7 +39,7 @@ COPY src ./src
 RUN ./mvnw clean package -DskipTests
 
 # ========== STAGE 2: RUNTIME ==========
-FROM openjdk:21-jre-slim AS runtime
+FROM eclipse-temurin:21-jre-alpine AS runtime
 
 # Instalar herramientas útiles para debugging
 RUN apt-get update && apt-get install -y \

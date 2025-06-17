@@ -30,7 +30,7 @@ import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("EventController Unit Tests")
-class EventControllerTestsNew {
+class EventControllerTest {
 
     @Mock
     private EventService eventService;
@@ -453,5 +453,302 @@ class EventControllerTestsNew {
         assertNull(response.getBody());
         verify(authUtils).isCurrentUserAdmin();
         verify(eventService).removeEventPicture(99L);
+    }
+
+    // ========== TESTS PARA VALIDACIÓN DE URLs DE IMAGEN EN EVENTOS ==========
+
+    @Test
+    @DisplayName("updateEventPictureUrl - Debe aceptar URLs HTTPS válidas con extensiones de imagen")
+    void updateEventPictureUrl_withValidHttpsImageUrls_shouldAccept() {
+        // Given
+        ObjectNode requestBody = objectMapper.createObjectNode();
+        Event updatedEvent = new Event(1L, "Evento Test", "Ubicación", "Detalles", LocalDate.now(), LocalDate.now());
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        when(eventService.updateEventPictureUrl(eq(1L), anyString())).thenReturn(updatedEvent);
+
+        // Test URLs HTTPS válidas con diferentes extensiones
+        String[] validUrls = {
+                "https://example.com/image.jpg",
+                "https://example.com/image.jpeg",
+                "https://example.com/image.png",
+                "https://example.com/image.webp",
+                "https://example.com/image.gif",
+                "https://example.com/path/to/image.jpg?param=value",
+                "https://subdomain.example.com/image.png"
+        };
+
+        for (String url : validUrls) {
+            requestBody.put("pictureUrl", url);
+
+            // When
+            ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode(), "Failed for URL: " + url);
+            verify(eventService, atLeastOnce()).updateEventPictureUrl(eq(1L), eq(url));
+        }
+    }
+
+    @Test
+    @DisplayName("updateEventPictureUrl - Debe rechazar URLs HTTP (no seguras)")
+    void updateEventPictureUrl_withHttpUrls_shouldReject() {
+        // Given
+        ObjectNode requestBody = objectMapper.createObjectNode();
+        requestBody.put("pictureUrl", "http://example.com/image.jpg"); // HTTP no HTTPS
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+
+        // When
+        ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
+
+        // Then
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(eventService, never()).updateEventPictureUrl(anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("updateEventPictureUrl - Debe rechazar URLs sin extensiones de imagen válidas")
+    void updateEventPictureUrl_withInvalidExtensions_shouldReject() {
+        // Given
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+
+        String[] invalidUrls = {
+                "https://example.com/document.pdf",
+                "https://example.com/file.txt",
+                "https://example.com/video.mp4",
+                "https://example.com/audio.mp3",
+                "https://example.com/noextension"
+        };
+
+        for (String url : invalidUrls) {
+            ObjectNode requestBody = objectMapper.createObjectNode();
+            requestBody.put("pictureUrl", url);
+
+            // When
+            ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
+
+            // Then
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should reject URL: " + url);
+        }
+
+        verify(eventService, never()).updateEventPictureUrl(anyLong(), anyString());
+    }
+
+    @Test
+    @DisplayName("updateEventPictureUrl - Debe aceptar URLs de servicios de imagen conocidos")
+    void updateEventPictureUrl_withKnownImageServices_shouldAccept() {
+        // Given
+        Event updatedEvent = new Event(1L, "Evento Test", "Ubicación", "Detalles", LocalDate.now(), LocalDate.now());
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        when(eventService.updateEventPictureUrl(eq(1L), anyString())).thenReturn(updatedEvent);
+
+        String[] knownServiceUrls = {
+                "https://imgur.com/a/abc123",
+                "https://res.cloudinary.com/demo/image/upload/sample.jpg",
+                "https://drive.google.com/file/d/1ABC/view",
+                "https://www.dropbox.com/s/abc123/image.jpg",
+                "https://unsplash.com/photos/abc123",
+                "https://images.unsplash.com/photo-123",
+                "https://plus.unsplash.com/premium_photo-123",
+                "https://images.pexels.com/photos/123/image.jpg",
+                "https://lh3.googleusercontent.com/abc123",
+                "https://lh4.googleusercontent.com/abc123",
+                "https://lh5.googleusercontent.com/abc123",
+                "https://lh6.googleusercontent.com/abc123"
+        };
+
+        for (String url : knownServiceUrls) {
+            ObjectNode requestBody = objectMapper.createObjectNode();
+            requestBody.put("pictureUrl", url);
+
+            // When
+            ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode(), "Failed for service URL: " + url);
+        }
+        verify(eventService, times(knownServiceUrls.length)).updateEventPictureUrl(eq(1L), anyString());
+    }
+
+    @Test
+    @DisplayName("updateEventPictureUrl - Debe aceptar URL vacía para eliminar imagen")
+    void updateEventPictureUrl_withEmptyUrl_shouldAcceptToRemoveImage() {
+        // Given
+        ObjectNode requestBody = objectMapper.createObjectNode();
+        requestBody.put("pictureUrl", ""); // URL vacía para eliminar
+        Event updatedEvent = new Event(1L, "Evento Test", "Ubicación", "Detalles", LocalDate.now(), LocalDate.now());
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        when(eventService.updateEventPictureUrl(eq(1L), anyString())).thenReturn(updatedEvent);
+
+        // When
+        ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
+
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(eventService).updateEventPictureUrl(eq(1L), eq(""));
+    }
+
+    @Test
+    @DisplayName("updateEventPictureUrl - Debe manejar URLs con parámetros de query correctamente")
+    void updateEventPictureUrl_withQueryParameters_shouldHandleCorrectly() {
+        // Given
+        Event updatedEvent = new Event(1L, "Evento Test", "Ubicación", "Detalles", LocalDate.now(), LocalDate.now());
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+        when(eventService.updateEventPictureUrl(eq(1L), anyString())).thenReturn(updatedEvent);
+
+        String[] urlsWithParams = {
+                "https://example.com/image.jpg?v=1&size=large",
+                "https://example.com/image.png?width=800&height=600",
+                "https://example.com/path/image.webp?token=abc123&format=webp"
+        };
+
+        for (String url : urlsWithParams) {
+            ObjectNode requestBody = objectMapper.createObjectNode();
+            requestBody.put("pictureUrl", url);
+
+            // When
+            ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
+
+            // Then
+            assertEquals(HttpStatus.OK, response.getStatusCode(), "Failed for URL with params: " + url);
+        }
+
+        verify(eventService, times(urlsWithParams.length)).updateEventPictureUrl(eq(1L), anyString());
+    }
+
+    @Test
+    @DisplayName("updateEventPictureUrl - Debe rechazar URLs con protocolos no seguros")
+    void updateEventPictureUrl_withUnsafeProtocols_shouldReject() {
+        // Given
+        when(authUtils.isCurrentUserAdmin()).thenReturn(true);
+
+        String[] unsafeUrls = {
+                "ftp://example.com/image.jpg",
+                "javascript:alert('xss')",
+                "data:image/jpeg;base64,abc123",
+                "file:///etc/passwd",
+                "//example.com/image.jpg" // Protocol-relative URL
+        };
+        for (String url : unsafeUrls) {
+            ObjectNode requestBody = objectMapper.createObjectNode();
+            requestBody.put("pictureUrl", url);
+
+            // When
+            ResponseEntity<Event> response = eventController.updateEventPictureUrl(1L, requestBody);
+
+            // Then
+            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should reject unsafe URL: " + url);
+        }
+
+        verify(eventService, never()).updateEventPictureUrl(anyLong(), anyString());
+    }
+
+    // ========== TESTS PARA MÉTODOS DE VALIDACIÓN DE URLS EN EVENTCONTROLLER
+    // ==========
+
+    @Test
+    @DisplayName("hasValidImageExtension - debería validar extensiones de imagen correctamente en EventController")
+    void hasValidImageExtension_shouldValidateImageExtensions() throws Exception {
+        // Usando reflection para acceder al método privado
+        java.lang.reflect.Method method = EventController.class.getDeclaredMethod("hasValidImageExtension",
+                String.class);
+        method.setAccessible(true);
+
+        // Casos válidos - HTTPS con extensiones válidas
+        assertTrue((Boolean) method.invoke(eventController, "https://example.com/image.jpg"));
+        assertTrue((Boolean) method.invoke(eventController, "https://example.com/image.jpeg"));
+        assertTrue((Boolean) method.invoke(eventController, "https://example.com/image.png"));
+        assertTrue((Boolean) method.invoke(eventController, "https://example.com/image.webp"));
+        assertTrue((Boolean) method.invoke(eventController, "https://example.com/image.gif"));
+
+        // Casos válidos - HTTP con extensiones válidas
+        assertTrue((Boolean) method.invoke(eventController, "http://example.com/image.jpg"));
+        assertTrue((Boolean) method.invoke(eventController, "http://example.com/image.png"));
+
+        // Casos válidos - con parámetros de consulta
+        assertTrue((Boolean) method.invoke(eventController, "https://example.com/image.jpg?v=123"));
+        assertTrue(
+                (Boolean) method.invoke(eventController, "https://example.com/path/image.png?size=large&format=webp"));
+
+        // Casos inválidos - sin protocolo
+        assertFalse((Boolean) method.invoke(eventController, "example.com/image.jpg"));
+        assertFalse((Boolean) method.invoke(eventController, "//example.com/image.jpg"));
+
+        // Casos inválidos - extensiones no válidas
+        assertFalse((Boolean) method.invoke(eventController, "https://example.com/document.pdf"));
+        assertFalse((Boolean) method.invoke(eventController, "https://example.com/file.txt"));
+        assertFalse((Boolean) method.invoke(eventController, "https://example.com/video.mp4"));
+
+        // Casos inválidos - sin extensión
+        assertFalse((Boolean) method.invoke(eventController, "https://example.com/image"));
+        assertFalse((Boolean) method.invoke(eventController, "https://example.com/"));
+    }
+
+    @Test
+    @DisplayName("isValidImageUrl - debería validar URLs de imagen completas en EventController")
+    void isValidImageUrl_shouldValidateCompleteImageUrls() throws Exception {
+        java.lang.reflect.Method method = EventController.class.getDeclaredMethod("isValidImageUrl", String.class);
+        method.setAccessible(true);
+
+        // Casos válidos - URLs vacías (permitidas para eliminar imagen)
+        assertTrue((Boolean) method.invoke(eventController, ""));
+        assertTrue((Boolean) method.invoke(eventController, "   "));
+        assertTrue((Boolean) method.invoke(eventController, (String) null));
+
+        // Casos válidos - extensiones directas
+        assertTrue((Boolean) method.invoke(eventController, "https://example.com/image.jpg"));
+        assertTrue((Boolean) method.invoke(eventController, "https://example.com/image.png"));
+
+        // Casos válidos - servicios conocidos
+        assertTrue((Boolean) method.invoke(eventController, "https://imgur.com/abc123"));
+        assertTrue((Boolean) method.invoke(eventController, "https://cloudinary.com/image/upload/xyz"));
+        assertTrue((Boolean) method.invoke(eventController, "https://drive.google.com/file/d/123"));
+        assertTrue((Boolean) method.invoke(eventController, "https://dropbox.com/s/abc/image"));
+        assertTrue((Boolean) method.invoke(eventController, "https://unsplash.com/photos/123"));
+        assertTrue((Boolean) method.invoke(eventController, "https://plus.unsplash.com/premium_photo-123"));
+        assertTrue((Boolean) method.invoke(eventController, "https://pexels.com/photo/123"));
+        assertTrue((Boolean) method.invoke(eventController, "https://googleusercontent.com/abc"));
+        assertTrue((Boolean) method.invoke(eventController, "https://lh3.googleusercontent.com/abc"));
+        assertTrue((Boolean) method.invoke(eventController, "https://lh4.googleusercontent.com/abc"));
+        assertTrue((Boolean) method.invoke(eventController, "https://lh5.googleusercontent.com/abc"));
+        assertTrue((Boolean) method.invoke(eventController, "https://lh6.googleusercontent.com/abc"));
+
+        // Casos inválidos - no HTTPS
+        assertFalse((Boolean) method.invoke(eventController, "http://example.com/image.jpg"));
+        assertFalse((Boolean) method.invoke(eventController, "ftp://example.com/image.jpg"));
+
+        // Casos inválidos - extensión no válida en dominio desconocido
+        assertFalse((Boolean) method.invoke(eventController, "https://unknown-site.com/file.txt"));
+        assertFalse((Boolean) method.invoke(eventController, "https://unknown-site.com/video.mp4"));
+
+        // Casos inválidos - sin extensión en dominio desconocido
+        assertFalse((Boolean) method.invoke(eventController, "https://unknown-site.com/somefile"));
+    }
+
+    @Test
+    @DisplayName("Validación de URLs en EventController - casos edge y de seguridad")
+    void eventUrlValidation_edgeCasesAndSecurity() throws Exception {
+        java.lang.reflect.Method imageMethod = EventController.class.getDeclaredMethod("hasValidImageExtension",
+                String.class);
+        imageMethod.setAccessible(true);
+
+        // Edge cases - URLs con caracteres especiales
+        assertTrue((Boolean) imageMethod.invoke(eventController, "https://example.com/my%20image.jpg"));
+
+        // Edge cases - URLs muy largas
+        String longUrl = "https://example.com/" + "a".repeat(1000) + "/image.jpg";
+        assertTrue((Boolean) imageMethod.invoke(eventController, longUrl));
+
+        // Edge cases - múltiples puntos
+        assertTrue((Boolean) imageMethod.invoke(eventController, "https://example.com/file.name.with.dots.jpg"));
+
+        // Edge cases - extensiones en mayúsculas (deberían fallar ya que usamos
+        // endsWith exacto)
+        assertFalse((Boolean) imageMethod.invoke(eventController, "https://example.com/image.JPG"));
+
+        // Casos de seguridad - intentos de bypass
+        assertFalse((Boolean) imageMethod.invoke(eventController, "javascript:alert('xss')"));
+        assertFalse((Boolean) imageMethod.invoke(eventController, "data:text/html,<script>alert('xss')</script>"));
+        assertFalse((Boolean) imageMethod.invoke(eventController, "file:///etc/passwd"));
+        assertFalse((Boolean) imageMethod.invoke(eventController, "ftp://malicious.com/file.jpg"));
     }
 }

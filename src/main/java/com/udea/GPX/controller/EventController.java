@@ -26,6 +26,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/api/events")
 @Tag(name = "Eventos", description = "Gestión de eventos de carreras gpx")
 public class EventController {
+    // Constants for URL validation
+    private static final String HTTPS_PREFIX = "https://";
+    private static final String HTTP_PREFIX = "http://";
+
     private final EventService eventService;
     private final AuthUtils authUtils;
 
@@ -175,13 +179,14 @@ public class EventController {
         }
 
         // Debe ser HTTPS
-        if (!url.startsWith("https://")) {
+        if (!url.startsWith(HTTPS_PREFIX)) {
             return false;
         }
 
         // Debe contener una extensión de imagen válida o ser de servicios conocidos
         String lowerUrl = url.toLowerCase();
-        return lowerUrl.matches(".*\\.(jpg|jpeg|png|webp|gif)(\\?.*)?$") ||
+        // Validación sin regex compleja - S2631: Evitar ReDoS usando String methods
+        return hasValidImageExtension(lowerUrl) ||
                 lowerUrl.contains("imgur.com") ||
                 lowerUrl.contains("cloudinary.com") ||
                 lowerUrl.contains("drive.google.com") ||
@@ -194,5 +199,23 @@ public class EventController {
                 lowerUrl.contains("lh4.googleusercontent.com") ||
                 lowerUrl.contains("lh5.googleusercontent.com") ||
                 lowerUrl.contains("lh6.googleusercontent.com");
+    }
+
+    /**
+     * Valida extensiones de imagen sin regex vulnerable a ReDoS
+     * S2631 Compliant: Usa String methods en lugar de regex compleja
+     */
+    private boolean hasValidImageExtension(String url) {
+        if (!url.startsWith(HTTPS_PREFIX) && !url.startsWith(HTTP_PREFIX)) {
+            return false;
+        }
+
+        // Extraer la parte de la ruta antes de los parámetros
+        String path = url.contains("?") ? url.split("\\?")[0] : url;
+
+        // Verificar extensiones válidas
+        return path.endsWith(".jpg") || path.endsWith(".jpeg") ||
+                path.endsWith(".png") || path.endsWith(".webp") ||
+                path.endsWith(".gif");
     }
 }

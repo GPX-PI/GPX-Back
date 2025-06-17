@@ -32,7 +32,7 @@ public final class InputSanitizer {
       "^[\\p{L}\\s'\\-]{1,100}$");
 
   private static final Pattern URL_PATTERN = Pattern.compile(
-      "^https?://[A-Za-z0-9.\\-]+(?:[/][A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=%\\-]*)?$");
+      "^https?://[A-Za-z0-9.\\-]+(?:/[A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=%\\-]*)?$");
 
   private static final Pattern PHONE_PATTERN = Pattern.compile(
       "^[0-9\\s()\\+\\-]{1,20}$");
@@ -45,7 +45,7 @@ public final class InputSanitizer {
 
   // Patrón para campos sociales: permite URLs completas o usernames/texto plano
   private static final Pattern SOCIAL_FIELD_PATTERN = Pattern.compile(
-      "^(?:https?://[A-Za-z0-9.\\-]+(?:[/][A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=%\\-]*)?|[A-Za-z0-9._@\\-/]{1,200})$");
+      "^(?:https?://[A-Za-z0-9.\\-]+(?:/[A-Za-z0-9._~:/?#\\[\\]@!$&'()*+,;=%\\-]*)?|[A-Za-z0-9._@\\-/]{1,200})$");
 
   /**
    * Sanitiza texto removiendo caracteres peligrosos

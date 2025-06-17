@@ -31,8 +31,6 @@ comment:
 ignore:
   - "src/test/**/*" # Ignorar archivos de test
   - "src/main/resources/**/*" # Ignorar resources
-  - "**/config/**/*" # Ignorar configuraciones
-  - "**/dto/**/*" # DTOs suelen tener poca lógica
   - "**/GpxApplication.java" # Clase principal de Spring Boot
 
 github_checks:

@@ -44,6 +44,10 @@ public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
+    // Constants for URL validation
+    private static final String HTTPS_PREFIX = "https://";
+    private static final String HTTP_PREFIX = "http://";
+
     // Constants for field names to avoid duplication
     private static final String EMAIL_FIELD = "email";
     private static final String FIRSTNAME_FIELD = "firstname";
@@ -921,13 +925,14 @@ public class UserController {
         }
 
         // Debe ser HTTPS
-        if (!url.startsWith("https://")) {
+        if (!url.startsWith(HTTPS_PREFIX)) {
             return false;
         }
 
         // Debe contener una extensión de imagen válida o ser de servicios conocidos
         String lowerUrl = url.toLowerCase();
-        return lowerUrl.matches(".*\\.(jpg|jpeg|png|webp|gif)(\\?.*)?$") ||
+        // Validación sin regex compleja - S2631: Evitar ReDoS usando String methods
+        return hasValidImageExtension(lowerUrl) ||
                 lowerUrl.contains("imgur.com") ||
                 lowerUrl.contains("cloudinary.com") ||
                 lowerUrl.contains("drive.google.com") ||
@@ -951,16 +956,54 @@ public class UserController {
         }
 
         // Debe ser HTTPS
-        if (!url.startsWith("https://")) {
+        if (!url.startsWith(HTTPS_PREFIX)) {
             return false;
         }
 
         // Debe contener una extensión de documento válida o ser de servicios conocidos
         String lowerUrl = url.toLowerCase();
-        return lowerUrl.matches(".*\\.(pdf|doc|docx|jpg|jpeg|png)(\\?.*)?$") ||
+        // Validación sin regex compleja - S2631: Evitar ReDoS usando String methods
+        return hasValidDocumentExtension(lowerUrl) ||
                 lowerUrl.contains("drive.google.com") ||
                 lowerUrl.contains("dropbox.com") ||
                 lowerUrl.contains("onedrive.com") ||
+                lowerUrl.contains("onedrive.live.com") ||
                 lowerUrl.contains("docs.google.com");
+    }
+
+    /**
+     * Valida extensiones de imagen sin regex vulnerable a ReDoS
+     * S2631 Compliant: Usa String methods en lugar de regex compleja
+     */
+    private boolean hasValidImageExtension(String url) {
+        if (!url.startsWith(HTTPS_PREFIX) && !url.startsWith(HTTP_PREFIX)) {
+            return false;
+        }
+
+        // Extraer la parte de la ruta antes de los parámetros
+        String path = url.contains("?") ? url.split("\\?")[0] : url;
+
+        // Verificar extensiones válidas
+        return path.endsWith(".jpg") || path.endsWith(".jpeg") ||
+                path.endsWith(".png") || path.endsWith(".webp") ||
+                path.endsWith(".gif");
+    }
+
+    /**
+     * Valida extensiones de documento sin regex vulnerable a ReDoS
+     * S2631 Compliant: Usa String methods en lugar de regex compleja
+     */
+    private boolean hasValidDocumentExtension(String url) {
+        if (!url.startsWith(HTTPS_PREFIX) && !url.startsWith(HTTP_PREFIX)) {
+            return false;
+        }
+
+        // Extraer la parte de la ruta antes de los parámetros
+        String path = url.contains("?") ? url.split("\\?")[0] : url;
+
+        // Verificar extensiones válidas
+        return path.endsWith(".pdf") || path.endsWith(".doc") ||
+                path.endsWith(".docx") || path.endsWith(".jpg") ||
+                path.endsWith(".jpeg") || path.endsWith(".png");
     }
 }
