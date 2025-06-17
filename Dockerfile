@@ -3,7 +3,7 @@
 # =========================================
 
 # ========== STAGE 1: BUILD ==========
-FROM openjdk:21-jdk-slim AS build
+FROM eclipse-temurin:21-jdk-alpine AS build
 
 # Metadata
 LABEL maintainer="gpx Racing Team"
@@ -11,12 +11,11 @@ LABEL description="gpx Racing Event Management API"
 LABEL version="1.0.0"
 
 # Crear usuario no-root para build
-RUN addgroup --system spring && adduser --system spring --ingroup spring
+RUN addgroup -S spring && adduser -S spring -G spring
 
 # Instalar dependencias necesarias para build
-RUN apt-get update && apt-get install -y \
-    maven \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    maven
 
 # Establecer directorio de trabajo
 WORKDIR /app
@@ -42,13 +41,12 @@ RUN ./mvnw clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine AS runtime
 
 # Instalar herramientas útiles para debugging
-RUN apt-get update && apt-get install -y \
+RUN apk add --no-cache \
     curl \
-    netcat-traditional \
-    && rm -rf /var/lib/apt/lists/*
+    netcat-openbsd
 
 # Crear usuario no-root para runtime
-RUN addgroup --system spring && adduser --system spring --ingroup spring
+RUN addgroup -S spring && adduser -S spring -G spring
 
 # Crear directorios necesarios
 RUN mkdir -p /app/uploads/profiles /app/uploads/events /app/uploads/insurance /app/logs
