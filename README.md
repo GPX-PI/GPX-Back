@@ -2,11 +2,8 @@
 
 <!-- Badges profesionales y organizados -->
 <p align="center">
-  <a href="https://github.com/gpx-PI/gpx-Back/actions/workflows/ci.yml">
-    <img src="https://github.com/gpx-PI/gpx-Back/actions/workflows/ci.yml/badge.svg" alt="CI/CD Pipeline"/>
-  </a>
-  <a href="https://codecov.io/gh/gpx-PI/gpx-Back">
-    <img src="https://codecov.io/gh/gpx-PI/gpx-Back/graph/badge.svg?token=J6HXKK6S0H" alt="codecov"/>
+  <a href="https://sonarcloud.io/summary/new_code?id=GPX-PI_GPX-Back">
+    <img src="https://sonarcloud.io/api/project_badges/measure?project=GPX-PI_GPX-Back&metric=coverage" alt="Coverage"/>
   </a>
   <a href="https://sonarcloud.io/summary/new_code?id=GPX-PI_GPX-Back">
     <img src="https://sonarcloud.io/api/project_badges/measure?project=GPX-PI_GPX-Back&metric=alert_status" alt="Quality Gate Status"/>
