@@ -6,20 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="38f299dd-c9d1-4d1e-9267-2461cd39250c" name="Changes" comment="Add repository, service, and controller classes for User, Vehicle, Event, Category, and Stage entities">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/codecov.yml" beforeDir="false" afterPath="$PROJECT_DIR$/codecov.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/EventController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/StageResultController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/StageResultController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/EventService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/StageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/StageService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/TokenService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/TokenService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/service/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/udea/GPX/util/InputSanitizer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/udea/GPX/util/InputSanitizer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/EventControllerTestsNew.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/GpxApplicationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/GpxApplicationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/UserControllerTests.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/udea/GPX/UserControllerTests.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/udea/GPX/controller/VehicleControllerTest.java.temp" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -323,6 +309,17 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CODE_SMELLS_PROFILE" value="Project Default" />

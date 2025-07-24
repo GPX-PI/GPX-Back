@@ -92,7 +92,7 @@ public final class AppConstants {
 
     @SuppressWarnings("java:S2386") // Arrays necesarios como public para configuración
     public static final String[] ALLOWED_METHODS = {
-        "GET", "POST", "PUT", "DELETE", "OPTIONS"
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"
     };
 
     @SuppressWarnings("java:S2386") // Arrays necesarios como public para configuración
